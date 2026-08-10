@@ -1,0 +1,98 @@
+/* How AMBE Works — site theme.
+   Dark, Apple-inspired: layered near-black surfaces (never pure black),
+   tight typographic hierarchy, generous whitespace, and a small set of
+   saturated accents used sparingly as pops of colour. */
+
+:root {
+  /* Accents. Three, and no more. */
+  --ambe-accent: #6e8bff;      /* indigo — links, primary emphasis */
+  --ambe-accent-warm: #ffb454; /* amber — callouts, highlighted values */
+  --ambe-accent-cool: #35d0ba; /* teal  — voiced/unvoiced + data marks */
+}
+
+[data-md-color-scheme="slate"] {
+  /* Layered surfaces: page < content < raised. */
+  --ambe-surface-0: #0b0b0d;
+  --ambe-surface-1: #141417;
+  --ambe-surface-2: #1c1c21;
+  --ambe-hairline: #2b2b32;
+
+  --md-default-bg-color: var(--ambe-surface-0);
+  --md-default-fg-color: #ececf1;
+  --md-default-fg-color--light: #b7b7c2;
+  --md-default-fg-color--lighter: #75757f;
+  --md-default-fg-color--lightest: #3a3a42;
+
+  --md-primary-fg-color: var(--ambe-surface-1);
+  --md-primary-bg-color: #ececf1;
+
+  --md-accent-fg-color: var(--ambe-accent);
+  --md-typeset-a-color: var(--ambe-accent);
+
+  --md-code-bg-color: var(--ambe-surface-2);
+  --md-code-fg-color: #d8d8e0;
+}
+
+/* Typography: tight hierarchy, roomy measure. */
+.md-typeset {
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  line-height: 1.72;
+}
+
+.md-typeset h1 {
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: var(--md-default-fg-color);
+  margin-bottom: 1.4rem;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  letter-spacing: -0.016em;
+  margin-top: 3rem;
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset p,
+.md-typeset li {
+  color: var(--md-default-fg-color--light);
+}
+
+/* Generous whitespace in the content column. */
+.md-content__inner {
+  padding-block: 2.4rem 4rem;
+}
+
+/* Hairline rules instead of heavy borders. */
+.md-typeset hr {
+  border-bottom: 1px solid var(--ambe-hairline);
+}
+
+.md-typeset table:not([class]) {
+  background: var(--ambe-surface-1);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--ambe-surface-2);
+  font-weight: 600;
+}
+
+/* Blockquotes read as quiet asides, not alerts. */
+.md-typeset blockquote {
+  border-left: 2px solid var(--ambe-accent);
+  color: var(--md-default-fg-color--light);
+}
+
+/* Inline source citations: every technical claim names its source. */
+.md-typeset .cite {
+  font-size: 0.78em;
+  color: var(--md-default-fg-color--lighter);
+  white-space: nowrap;
+}

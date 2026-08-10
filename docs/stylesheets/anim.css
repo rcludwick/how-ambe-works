@@ -1,0 +1,72 @@
+/* Animation figure chrome — shared by every canvas/video figure on the site.
+   Purely presentational; the drawing itself lives in docs/javascripts/. */
+
+.anim-figure {
+  margin: 2.5rem 0;
+  padding: 1rem;
+  background: var(--ambe-surface-1, #141417);
+  border: 1px solid var(--ambe-hairline, #2b2b32);
+  border-radius: 14px;
+}
+
+.anim-figure canvas,
+.anim-figure video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: var(--ambe-surface-0, #0b0b0d);
+}
+
+.anim-figure__caption {
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--lighter, #75757f);
+}
+
+/* Transport row: play/pause plus scrub. */
+.anim-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.anim-controls button {
+  appearance: none;
+  border: 1px solid var(--ambe-hairline, #2b2b32);
+  background: var(--ambe-surface-2, #1c1c21);
+  color: var(--md-default-fg-color, #ececf1);
+  border-radius: 999px;
+  padding: 0.3rem 0.95rem;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.anim-controls button:hover {
+  background: var(--ambe-surface-1, #141417);
+  border-color: var(--ambe-accent, #6e8bff);
+}
+
+.anim-controls input[type="range"] {
+  flex: 1;
+  accent-color: var(--ambe-accent, #6e8bff);
+}
+
+.anim-controls__readout {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--md-default-fg-color--lighter, #75757f);
+  min-width: 6ch;
+  text-align: right;
+}
+
+/* Respect reduced-motion: figures hold on their first frame. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-figure video {
+    animation: none;
+  }
+}

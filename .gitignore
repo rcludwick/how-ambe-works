@@ -1,0 +1,17 @@
+# zensical build output
+site/
+
+# manim renders (build output — produced by .github/workflows/animations.yml)
+docs/assets/video/
+media/
+
+# caches
+.cache/
+__pycache__/
+
+# environments / deps
+.venv/
+node_modules/
+
+# macOS
+.DS_Store

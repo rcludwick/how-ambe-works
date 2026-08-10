@@ -1,0 +1,117 @@
+# Render the manim scenes to video.
+#
+# RUNNER REQUIREMENTS: manim needs `ffmpeg` and cairo (libcairo2 +
+# libpango1.0) installed on the self-hosted runner. It does NOT need a TeX
+# distribution: every scene in animations/manim/ deliberately uses Pango text
+# (`Text`, not `Tex`/`MathTex`), so no LaTeX install is required. If a scene
+# ever imports Tex/MathTex, that is a bug — rewrite it with Text rather than
+# installing TeX on the fleet.
+#
+# This is a SEPARATE workflow from pages.yml so that ordinary docs commits
+# never pay for a render. It fires only on manual dispatch or on pushes that
+# actually touch animations/**, and the rendered output is cached on the hash
+# of the scene sources, so a re-run with unchanged scenes is a cache restore
+# rather than a render.
+#
+# Triggers are deliberately limited: no `pull_request`, because this runs on
+# self-hosted hardware and a fork PR must never be able to execute code there.
+name: Animations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "animations/**"
+      - ".github/workflows/animations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: animations-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: 3.x
+          cache: pip
+
+      # Restore a previous render keyed on the scene sources. An exact hit
+      # means nothing to render; a partial hit still warms manim's own cache.
+      - name: Restore rendered video
+        id: video-cache
+        uses: actions/cache@v4
+        with:
+          path: docs/assets/video
+          key: anim-video-${{ runner.os }}-${{ hashFiles('animations/manim/**/*.py', 'animations/requirements.txt') }}
+          restore-keys: |
+            anim-video-${{ runner.os }}-
+
+      # manim's partial-movie cache: lets an edited scene re-render only the
+      # animations that actually changed.
+      - name: Cache manim intermediates
+        uses: actions/cache@v4
+        with:
+          path: media
+          key: anim-media-${{ runner.os }}-${{ hashFiles('animations/manim/**/*.py') }}
+          restore-keys: |
+            anim-media-${{ runner.os }}-
+
+      - name: Install manim
+        if: steps.video-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f animations/requirements.txt ]; then
+            pip install -r animations/requirements.txt
+          else
+            pip install manim
+          fi
+
+      - name: Check for LaTeX usage
+        if: steps.video-cache.outputs.cache-hit != 'true'
+        run: |
+          if grep -rnE '\b(Tex|MathTex|SingleStringMathTex|BulletedList)\b' animations/manim --include='*.py'; then
+            echo "::error::Scenes must use Pango Text, not LaTeX (Tex/MathTex). The runner has no TeX install."
+            exit 1
+          fi
+
+      - name: Render scenes to WebM and MP4
+        if: steps.video-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p docs/assets/video
+          shopt -s nullglob
+          scenes=(animations/manim/*.py)
+          if [ ${#scenes[@]} -eq 0 ]; then
+            echo "No scenes to render."
+            exit 0
+          fi
+          for src in "${scenes[@]}"; do
+            for fmt in webm mp4; do
+              manim render \
+                --quality h \
+                --format "$fmt" \
+                --media_dir media \
+                --all \
+                "$src"
+            done
+          done
+          # Flatten manim's media/videos/<module>/<res>/ tree into one dir.
+          find media/videos -type f \( -name '*.webm' -o -name '*.mp4' \) \
+            -exec cp -f {} docs/assets/video/ \;
+          ls -lh docs/assets/video
+
+      - name: Upload rendered animations
+        uses: actions/upload-artifact@v4
+        with:
+          name: animations
+          path: docs/assets/video/
+          if-no-files-found: warn
+          retention-days: 30

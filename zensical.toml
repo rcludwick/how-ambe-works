@@ -1,0 +1,103 @@
+[project]
+site_url = "https://rcludwick.github.io/how-ambe-works/"
+site_name = "How AMBE Works"
+site_description = "An illustrated, source-cited explanation of the AMBE voice codec"
+
+repo_url = "https://github.com/rcludwick/how-ambe-works"
+repo_name = "rcludwick/how-ambe-works"
+
+nav = [
+  { "How AMBE Works" = "index.md" },
+  { "What AMBE actually is" = "01-the-mbe-model.md" },
+  { "Analysis: pitch, voicing, amplitudes" = "02-analysis.md" },
+  { "Turning measurements into bits" = "03-quantization.md" },
+  { "The D-STAR frame on the air" = "04-the-dstar-frame.md" },
+  { "Synthesis: rebuilding the voice" = "05-synthesis.md" },
+  { "What is not in the public record" = "06-what-isnt-published.md" },
+  { "Listen: real hardware examples" = "07-listen.md" },
+  { "The patent landscape" = "08-patents.md" },
+  { "Sources and method" = "09-sources.md" },
+]
+
+extra_css = ["stylesheets/extra.css", "stylesheets/anim.css"]
+
+# Animation modules. anim-core.js is the shared runtime (canvas plumbing,
+# playback transport, precomputed-JSON loader). Per-page animation modules
+# are appended to this list as they land.
+extra_javascript = ["javascripts/anim-core.js"]
+
+[project.theme]
+language = "en"
+features = [
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+]
+
+# Dark by default: built-in "slate" scheme.
+[project.theme.palette]
+scheme = "slate"
+primary = "indigo"
+accent = "amber"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+toc = {
+  permalink = true
+}
+pymdownx.arithmatex = {
+  generic = true
+}
+pymdownx.betterem = {}
+pymdownx.caret = {}
+pymdownx.details = {}
+pymdownx.emoji = {
+  emoji_generator = "zensical.extensions.emoji.to_svg",
+  emoji_index = "zensical.extensions.emoji.twemoji",
+}
+pymdownx.highlight = {
+  anchor_linenums = true,
+  line_spans = "__span",
+  pygments_lang_class = true,
+}
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.magiclink = {}
+pymdownx.mark = {}
+pymdownx.smartsymbols = {}
+pymdownx.superfences = {
+  custom_fences = [
+    {
+      name = "mermaid",
+      class = "mermaid",
+      format = "pymdownx.superfences.fence_code_format",
+    },
+  ],
+}
+pymdownx.tabbed = {
+  alternate_style = true,
+  combine_header_slug = true
+}
+pymdownx.tasklist = {
+  custom_checkbox = true
+}
+pymdownx.tilde = {}
