@@ -127,13 +127,31 @@ jobs:
           # docs/assets/posters/ (tools/make-posters.py).
           found=$(find media/videos -type f -name '${{ matrix.class }}.mp4' | head -1)
           [ -n "$found" ] || { echo "::error::${{ matrix.class }}.mp4 was not produced"; exit 1; }
-          # Move the moov atom to the front. manim leaves it after mdat, which
-          # means a browser cannot start until it has range-requested the tail
-          # of a ten megabyte file and seeked back. That is the standard cause
-          # of a clip whose picture runs while its sound does not follow, and
-          # it is a stream copy, so it costs a second and re-encodes nothing.
-          ffmpeg -v error -y -i "$found" -c copy -movflags +faststart \
-            "out/${{ matrix.slug }}.mp4"
+          cp -f "$found" "out/${{ matrix.slug }}.mp4"
+
+      # Move the moov atom to the front, so a browser can start playing before
+      # it has the whole file. manim leaves it after mdat, which means the
+      # player must range-request the tail of a ten megabyte file and seek
+      # back, and the usual symptom is a clip whose picture runs while its
+      # sound does not follow.
+      #
+      # This runs on BOTH paths, and that is the point. Putting it inside the
+      # render step looked right and did nothing: the render is skipped on a
+      # cache hit, so the pre-faststart file came straight back out of the
+      # cache and shipped unchanged. Anything that has to be true of the
+      # artifact belongs here rather than in the render, next to the verify
+      # step that checks it.
+      #
+      # It is a stream copy, so it re-encodes nothing and costs about a
+      # second, and it is idempotent: remuxing an already-faststart file is
+      # harmless, which is what makes it safe to run every time.
+      - name: Put the moov atom first
+        run: |
+          set -euo pipefail
+          src="out/${{ matrix.slug }}.mp4"
+          [ -s "$src" ] || { echo "::error::$src is missing before the remux"; exit 1; }
+          ffmpeg -v error -y -i "$src" -c copy -movflags +faststart "$src.tmp.mp4"
+          mv -f "$src.tmp.mp4" "$src"
 
       # Guards the cache-hit path too: a cache that restored empty would
       # otherwise sail through and deploy a dead <video>.
@@ -154,6 +172,32 @@ jobs:
           # audio track. Without this the two are indistinguishable in the log.
           command -v ffprobe >/dev/null \
             || { echo "::error::ffprobe is not installed, so the video cannot be verified"; exit 1; }
+          # Walk the top-level atoms and insist moov precedes mdat. Without
+          # this the remux above can be skipped, reordered or quietly undone
+          # and nothing would notice: the file still plays locally, where the
+          # whole of it is already on disk.
+          python3 - "out/${{ matrix.slug }}.mp4" <<'PY'
+          import struct, sys
+          path = sys.argv[1]
+          order, pos, size = [], 0, __import__("os").path.getsize(path)
+          with open(path, "rb") as f:
+              while pos < size:
+                  f.seek(pos)
+                  head = f.read(8)
+                  if len(head) < 8:
+                      break
+                  length = struct.unpack(">I", head[:4])[0]
+                  order.append(head[4:8].decode("latin1"))
+                  if length == 0:
+                      break
+                  pos += length
+          if "moov" not in order or "mdat" not in order:
+              sys.exit("::error::%s has no moov/mdat: %s" % (path, " ".join(order)))
+          if order.index("moov") > order.index("mdat"):
+              sys.exit("::error::%s is not faststart (%s); the remux did not run"
+                       % (path, " ".join(order)))
+          print("faststart ok: %s" % " ".join(order))
+          PY
           ffprobe -v error -select_streams a -show_entries stream=codec_name \
             -of csv=p=0 "out/${{ matrix.slug }}.mp4" | grep -q . \
             || { echo "::error::out/${{ matrix.slug }}.mp4 has no audio track"; exit 1; }
