@@ -11,21 +11,26 @@
 # install is required. If a scene ever imports Tex/MathTex that is a bug,
 # caught by the check below; rewrite it with Text rather than installing TeX.
 #
-# This is a SEPARATE workflow from pages.yml so that ordinary docs commits
-# never pay for a render, and pages.yml calls it so the deploy actually
-# contains the video rather than an artifact nobody downloads.
+# The cache and artifact actions here run on Node 24 and need an Actions
+# Runner of at least 2.327.1. ubuntu-latest is well past that; the self-hosted
+# containers are not automatically, so update them before moving back.
 #
-# Triggers are deliberately limited: no `pull_request`. The repo is public, and
-# if this is ever moved back to self-hosted hardware a fork PR could execute
-# arbitrary code there. Keep it off.
+# This is a SEPARATE workflow from pages.yml so the render is defined once and
+# called where it is needed, rather than duplicated into the deploy.
+#
+# There is deliberately NO `push` trigger. pages.yml runs on every push to main
+# and calls this workflow, so a push trigger here would render the same commit
+# twice: two runs, eight jobs, competing for the same pool of runner slots.
+# That is what made the render-and-deploy of 93a0786 take 48 minutes when the
+# render itself took 28 — the deploy's own render jobs sat queued behind a
+# redundant copy of themselves. Docs commits do not pay for this: they reach
+# the render through pages.yml and restore from the per-scene cache in seconds.
+#
+# No `pull_request` either. The repo is public, and if this is ever moved back
+# to self-hosted hardware a fork PR could execute arbitrary code there.
 name: Animations
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "animations/**"
-      - ".github/workflows/animations.yml"
   workflow_dispatch:
   workflow_call:
 
@@ -33,8 +38,8 @@ permissions:
   contents: read
 
 concurrency:
-  # github.workflow is included so a render called by pages.yml and a
-  # standalone render do not share a group. Without it, cancel-in-progress
+  # github.workflow is included so a render called by pages.yml and a manually
+  # dispatched render do not share a group. Without it, cancel-in-progress
   # would let a docs push cancel the render its own deploy is waiting on.
   group: animations-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -56,7 +61,7 @@ jobs:
 
       # Pinned, not 3.x: on 3.13 pip finds no PyAV wheel and falls back to a
       # source build that needs the whole FFmpeg dev toolchain.
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -65,7 +70,7 @@ jobs:
       # the other three.
       - name: Restore rendered video
         id: video-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: out
           key: anim-${{ matrix.slug }}-${{ runner.os }}-${{ hashFiles(format('animations/manim/{0}', matrix.file), 'animations/requirements.txt') }}
@@ -130,7 +135,7 @@ jobs:
       # One artifact per scene. pages.yml downloads them with a pattern and
       # merges, so adding a scene needs no change there.
       - name: Upload ${{ matrix.slug }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: animations-${{ matrix.slug }}
           path: out/${{ matrix.slug }}.mp4
