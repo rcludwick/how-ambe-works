@@ -32,24 +32,41 @@ back to sound.
          poster="../assets/posters/pipeline.png">
     <source src="assets/video/pipeline.mp4" type="video/mp4">
     <track kind="captions" srclang="en" label="English"
-           src="assets/video/pipeline.vtt" default>
+           src="assets/video/pipeline.vtt">
     <p>This clip follows one 20 ms frame of speech from the waveform through
     analysis, quantization and the channel to resynthesis.</p>
   </video>
 
   <figcaption class="anim-figure__caption">
-    A hundred and nine narrated seconds for a fifth of a second of speech. Frame 48 of the
+    A hundred and fifteen narrated seconds for a fifth of a second of speech. Frame 48 of the
     male CQ capture: the window, its spectrum, the pitch, eight band
     decisions, twenty-three harmonic amplitudes, the nine bytes the chip
     actually emitted (<code>1e987ff4dc6d784858</code>), and the decoded audio
     at the far end. The 7 + 8 + 57 bar it draws is the patent's example allocation,
     not D-STAR's, which is unpublished.
     <span class="anim-figure__source">Measured values from
-    <code>assets/data/norman-b/</code>, captured from a DVSI AMBE-3000; pitch
+    <code>assets/data/lr-b/</code>, captured from a DVSI AMBE-3000; pitch
     and band voicing are DSP over the recordings, not device state.
     L = ⌊α·π/ω₀⌋: US 5,754,974. Rates: JARL D-STAR spec §1.1(3),
     §2.1.2(2).</span>
   </figcaption>
+<!-- BEGIN generated transcript: tools/make-transcripts.py -->
+<details class="anim-transcript">
+  <summary>Transcript of the narration</summary>
+  <div class="anim-transcript__body">
+    <p>A radio hears eight thousand samples a second, sixteen bits each. That is a hundred and twenty eight thousand bits every second. The channel it has to fit through carries three thousand six hundred.</p>
+    <p>Nothing is decided about the whole sentence. The audio is cut into twenty millisecond frames, a hundred and sixty samples each, fifty times a second. Every frame is coded on its own, and this is the last point at which the original waveform still exists.</p>
+    <p>Inside one frame the coder looks for a single number, the fundamental frequency. Everything voiced in that frame is treated as a harmonic of it. One frequency stands in for the whole comb.</p>
+    <p>A voice is not all buzz. The band from zero to four kilohertz is split into eight, and each one is judged on its own. Voiced or unvoiced. Eight decisions, eight bits, and the hiss in a consonant stops having to pretend it is periodic.</p>
+    <p>What is left is how loud each harmonic is. Twenty three of them in this frame. That count is not fixed. It falls as the pitch rises, which is why a deep voice and a high voice are not the same problem.</p>
+    <p>None of these numbers travel as numbers. Each one is replaced by the position of the closest entry in a table that both ends already hold. Seven bits for the fundamental, eight for the voicing, and the rest for the amplitudes.</p>
+    <p>Seventy two bits, every twenty milliseconds. These are the real ones, read off a DVSI AMBE three thousand on a bench, and they are the whole of what crosses the air.</p>
+    <p>The far end never rebuilds a waveform from the bits. It looks the indices up in the same tables and gets the measurements back. A table lookup, not a reconstruction.</p>
+    <p>Then it makes a sound that fits those measurements. One oscillator for every voiced harmonic, shaped noise for the bands marked unvoiced, added together. The phase was never transmitted, so the decoder invents it, fifty times a second.</p>
+    <p>Speech comes out. Nine bytes for a fifth of a second, and not one sample of the original survived the trip.</p>
+  </div>
+</details>
+<!-- END generated transcript -->
 </figure>
 
 ## The rates, from the top

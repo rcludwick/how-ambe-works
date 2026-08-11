@@ -86,7 +86,7 @@ mush of the same spectrum.
          poster="../assets/posters/harmonic-sum.png">
     <source src="assets/video/harmonic-sum.mp4" type="video/mp4">
     <track kind="captions" srclang="en" label="English"
-           src="assets/video/harmonic-sum.vtt" default>
+           src="assets/video/harmonic-sum.vtt">
     <p>This clip adds harmonics one at a time at their measured amplitudes
     until the sum takes on the shape of a glottal pulse.</p>
   </video>
@@ -105,6 +105,18 @@ mush of the same spectrum.
     phase, which is why the pulse is symmetric. The frame carries no phase at
     all: US 5,701,390.</span>
   </figcaption>
+<!-- BEGIN generated transcript: tools/make-transcripts.py -->
+<details class="anim-transcript">
+  <summary>Transcript of the narration</summary>
+  <div class="anim-transcript__body">
+    <p>A voice is a stack of sine waves, all sitting on multiples of one fundamental.</p>
+    <p>This is a real frame, measured through the hardware and strongly voiced across the whole band. On the left the waveform. On the right its spectrum, with every peak on a multiple of the same fundamental.</p>
+    <p>Add the sine waves back one at a time. On the left, the harmonic going in. On the right, everything so far. The amplitudes are read off the measured spectrum. The phase is not, because the frame never carries phase.</p>
+    <p>Watch how quickly it stops changing. The first few harmonics carry almost all of the shape, and the ones after them are refining something already recognisable. That is the reason a coder can spend most of its bits on the bottom of the spectrum and get away with it.</p>
+    <p>The frame carries no phase at all. The decoder regenerates it, and the ear mostly does not object.</p>
+  </div>
+</details>
+<!-- END generated transcript -->
 </figure>
 
 ### Shaped noise for everything else

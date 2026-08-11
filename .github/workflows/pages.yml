@@ -61,6 +61,13 @@ jobs:
           done
           ls -lh docs/assets/video
 
+      # The transcripts on the video pages are generated from the same scripts
+      # the narration is synthesised from. Editing a script without rerunning
+      # the tool would leave a page claiming the clip says something it no
+      # longer says, which is worse than having no transcript at all.
+      - name: Verify the narration transcripts are current
+        run: python3 tools/make-transcripts.py --check
+
       - run: pip install zensical
       - run: zensical build --clean
 

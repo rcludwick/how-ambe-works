@@ -127,7 +127,13 @@ jobs:
           # docs/assets/posters/ (tools/make-posters.py).
           found=$(find media/videos -type f -name '${{ matrix.class }}.mp4' | head -1)
           [ -n "$found" ] || { echo "::error::${{ matrix.class }}.mp4 was not produced"; exit 1; }
-          cp -f "$found" "out/${{ matrix.slug }}.mp4"
+          # Move the moov atom to the front. manim leaves it after mdat, which
+          # means a browser cannot start until it has range-requested the tail
+          # of a ten megabyte file and seeked back. That is the standard cause
+          # of a clip whose picture runs while its sound does not follow, and
+          # it is a stream copy, so it costs a second and re-encodes nothing.
+          ffmpeg -v error -y -i "$found" -c copy -movflags +faststart \
+            "out/${{ matrix.slug }}.mp4"
 
       # Guards the cache-hit path too: a cache that restored empty would
       # otherwise sail through and deploy a dead <video>.

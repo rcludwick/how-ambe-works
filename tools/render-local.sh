@@ -125,7 +125,9 @@ for row in "${targets[@]}"; do
   found=$(find media/videos -type f -name "$cls.mp4" -print0 2>/dev/null \
             | xargs -0 ls -t 2>/dev/null | head -1 || true)
   [ -n "$found" ] || die "$cls.mp4 was not produced"
-  cp -f "$found" "out/$slug.mp4"
+  # Same faststart remux CI does, so a local preview streams the way the
+  # deployed file will. Stream copy: no re-encode, about a second.
+  ffmpeg -v error -y -i "$found" -c copy -movflags +faststart "out/$slug.mp4"
 
   dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "out/$slug.mp4" 2>/dev/null || echo "?")
   has_audio=$(ffprobe -v error -select_streams a -show_entries stream=codec_name \

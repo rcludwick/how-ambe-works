@@ -54,7 +54,7 @@ actually takes away from a fifth of a second of somebody talking.
          poster="../assets/posters/decomposition.png">
     <source src="assets/video/decomposition.mp4" type="video/mp4">
     <track kind="captions" srclang="en" label="English"
-           src="assets/video/decomposition.vtt" default>
+           src="assets/video/decomposition.vtt">
     <p>This clip walks one 20 ms frame of a recorded utterance from waveform
     to spectrum to harmonics to eight band voicing decisions.</p>
   </video>
@@ -66,11 +66,24 @@ actually takes away from a fifth of a second of somebody talking.
     male CQ capture, at 2.72 s, where six bands read periodic and the top two
     read noise.
     <span class="anim-figure__source">Drawn from
-    <code>assets/data/norman-b/</code>, captured from a DVSI AMBE-3000. The
+    <code>assets/data/lr-b/</code>, captured from a DVSI AMBE-3000. The
     per-band voicing strengths are an autocorrelation measurement of the
     decoded audio, not a field the device reports. Model: Griffin &amp; Lim
     1988, §II.</span>
   </figcaption>
+<!-- BEGIN generated transcript: tools/make-transcripts.py -->
+<details class="anim-transcript">
+  <summary>Transcript of the narration</summary>
+  <div class="anim-transcript__body">
+    <p>A single voiced or unvoiced decision per frame is not enough. Real speech is periodic in some parts of the spectrum and noisy in others, at the same instant.</p>
+    <p>This is a real recording, eight kilohertz, captured through the hardware. Half a second of speech. Nothing has been decided about it yet.</p>
+    <p>Take one twenty millisecond window and look at it as a spectrum. The peaks sit on a regular grid. That spacing is the pitch, and every peak is a multiple of it.</p>
+    <p>Now cut the spectrum into bands, and ask of each band separately: does this repeat at the pitch period? Some bands answer yes and some answer no. That is the observation the whole codec is built on.</p>
+    <p>So rebuild it as two things at once. Voiced bands get sine waves on the harmonic grid. Unvoiced bands get noise. The buzz and the hiss coexist, band by band, in the same frame.</p>
+    <p>That is multi band excitation. Griffin and Lim published it in nineteen eighty eight, and everything after it is arithmetic about how few bits the description can be squeezed into.</p>
+  </div>
+</details>
+<!-- END generated transcript -->
 </figure>
 
 ## Two ways to model a voice

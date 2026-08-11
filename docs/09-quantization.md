@@ -100,7 +100,7 @@ that entry's index. The decoder looks the index up.
          poster="../assets/posters/vq.png">
     <source src="assets/video/vq.mp4" type="video/mp4">
     <track kind="captions" srclang="en" label="English"
-           src="assets/video/vq.vtt" default>
+           src="assets/video/vq.vtt">
     <p>This clip shows a cloud of two-dimensional points being clustered, and
     each cluster centre standing in for every point near it.</p>
   </video>
@@ -116,6 +116,18 @@ that entry's index. The decoder looks the index up.
     iteration. It is a picture of the idea. AMBE's own codebooks appear in
     neither the JARL specification nor the patents.</span>
   </figcaption>
+<!-- BEGIN generated transcript: tools/make-transcripts.py -->
+<details class="anim-transcript">
+  <summary>Transcript of the narration</summary>
+  <div class="anim-transcript__body">
+    <p>Every frame of speech produces a handful of measurements. Plot enough of them and they do not fill the space evenly. They clump.</p>
+    <p>So do not describe a point. Pick a set of representative points, agree on them in advance, and put the same set at both ends of the link.</p>
+    <p>Now a measurement does not travel. What travels is the position of the closest entry in that table. A number small enough to spend a few bits on.</p>
+    <p>The cost is the gap between the measurement and the entry that stood in for it. That error never goes away. It is the price of the whole scheme, and the only way to shrink it is a bigger table.</p>
+    <p>Quantize several parameters together and the clumping works harder for you, because real speech parameters move together rather than independently. That is how a fifth of a second of voice becomes nine bytes.</p>
+  </div>
+</details>
+<!-- END generated transcript -->
 </figure>
 
 Three things follow, and they explain why every serious low-rate vocoder
