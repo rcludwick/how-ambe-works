@@ -11,16 +11,9 @@ implementation.
 
 !!! warning "Not authoritative"
 
-    **This page is a summary, not an opinion.** It collects the public
-    record and the various readings people have offered of it. The
-    authors are engineers, not patent attorneys, and are not expert
-    enough to settle the questions this page raises. Where readings
-    differ, the difference is reported rather than resolved.
-
-    Nothing here is a legal opinion, a freedom-to-operate analysis, or a
-    substitute for advice from someone qualified to give it. Patent scope
-    is decided by claim construction, in court, and not by titles,
-    abstracts, or summaries like this one.
+    **This page is a summary and not to be construed as legal advice.** 
+    It collects the public record and the various readings people 
+    have offered of it. The author is not an attorney. YMMV.
 
     Expiration dates shown by Google Patents are computed and can be
     wrong, and maintenance-fee status can change at any renewal window.
@@ -31,9 +24,7 @@ implementation.
 ## Still in force
 
 Two patents are live today. Both are assigned to Digital Voice Systems,
-Inc. If you are wondering how a patent filed in 2003 is still in force
-in 2026, that is patent term adjustment, explained under
-[how to read a US patent expiry](#how-to-read-a-us-patent-expiry) below.
+Inc. 
 
 ### US 8,359,197 — "Half-rate vocoder" · expires 2028-05-20
 
@@ -41,20 +32,17 @@ in 2026, that is patent term adjustment, explained under
 · inventor John C. Hardwick · filed 2003-04-01 · granted 2013-01-22 ·
 status shown: **"Active, expires 2028-05-20"**
 
-This is the one people mean when they say the AMBE patents "run to 2028."
-
 The application was filed on 1 April 2003, so a plain twenty-year term
 would have ended on 1 April 2023. It did not issue until 22 January
 2013 — nearly ten years in prosecution — and the expiry Google Patents
 displays, 2028-05-20, sits about five years past the plain term. That gap
-is patent term adjustment for USPTO delay. Confirm the exact adjustment
-at Patent Center rather than taking either figure on trust.
+is patent term adjustment for USPTO delay.
 
-What matters most is the breadth. **The independent claims cover both
-encoding and decoding.** There are encoding claims — dividing speech into
+**The independent claims cover both encoding and decoding.** 
+Encoding includes dividing speech into
 frames, computing MBE model parameters, quantizing pitch, voicing and
-gain, combining selected bits into a parameter codeword, applying error
-control codes — and there are separate decoding claims: extracting
+gain, combining selected bits into a 12-bit parameter codeword, and applying error
+control codes.  There are separate decoding claims: extracting
 FEC codewords from a received frame, error-control decoding them,
 reconstructing pitch, voicing and gain, and synthesizing speech samples.
 A decoder-only implementation is not outside this patent the way it would
@@ -71,8 +59,7 @@ That is structurally the half-rate frame used by DMR, dPMR, NXDN and
 YSF's narrow mode. **The equivalence is community consensus, not a legal
 finding.** DVSI has never publicly equated its "AMBE+2" branding to the
 P25 half-rate specification, and no claim-by-claim mapping of the
-deployed formats onto these claims has been published — certainly not
-here.
+deployed formats onto these claims has been published.
 
 ### US 8,036,886 — "Estimation of pulsed speech model parameters" · expires 2029-10-02
 
@@ -82,10 +69,10 @@ status shown: **"Active, expires 2029-10-02"**
 
 This one runs longer but reaches far less far.
 
-Claim 1 is a method of *analysis*: divide a digitized signal into
-frequency bands by bandpass filtering, perform "an operation to emphasize
+Claim 1 is a method of *analysis*.  It divides a digitized signal into
+frequency bands by bandpass filtering, performs "an operation to emphasize
 pulse positions on at least two frequency band signals to produce
-modified frequency band signals," and determine pulsed parameters from
+modified frequency band signals," and determines pulsed parameters from
 those. That is an encoder-side measurement technique for the pulsed
 excitation class introduced by US 6,912,495. It says nothing about
 reconstructing speech.
@@ -117,8 +104,9 @@ caused the delay. This is the mechanism that matters most here: it is why
 one patent filed in 2003 is still in force in 2026.
 
 Two other things end a patent early. **Maintenance fees** are due at
-3½, 7½ and 11½ years; miss one and the patent lapses — Google Patents
-shows this as *Expired - Fee Related*. A **terminal disclaimer** filed to
+3½, 7½ and 11½ years.  Missing one results in the patent expiring. 
+Google Patents shows this as *Expired - Fee Related*. 
+A **terminal disclaimer** filed to
 overcome a double-patenting rejection caps a patent's term at its
 relative's. None of the core patents below carries one.
 
@@ -126,7 +114,7 @@ relative's. None of the core patents below carries one.
 
 These are the patents that teach the codec described on the rest of this
 site. All of them are assigned to Digital Voice Systems, Inc. All of them
-have expired at the end of their natural term — not for unpaid fees.
+have expired at the end of their natural term.
 
 | Patent | Title | Filed | Granted | Expired | Status shown |
 | --- | --- | --- | --- | --- | --- |
@@ -172,10 +160,10 @@ this site teaches comes from this group.
 ## The middle generation: all expired
 
 The next wave covers the techniques that separate AMBE and AMBE+2 from
-1990s IMBE — multi-subframe quantization, the three-state excitation
-model, transcoding, and the enhanced full-rate vocoder. Every one of them
-is now expired, two of them for unpaid maintenance fees rather than by
-running their term.
+1990s IMBE, in particular it covers the multi-subframe quantization, 
+the three-state excitation model, transcoding, and the enhanced full-rate 
+vocoder. Every one of them is now expired, two of them for unpaid 
+maintenance fees rather than by running their term.
 
 | Patent | Title | Filed (priority) | Granted | Expiry shown | Status shown |
 | --- | --- | --- | --- | --- | --- |
@@ -197,9 +185,9 @@ across two consecutive subframes, and jointly quantizing the pitch and
 voicing of those subframes into a single codeword. That pairing is what
 makes a half-rate frame possible at all. Both expired in 2017.
 
-**US 6,912,495** introduced the three-state excitation model — voiced,
-unvoiced, and *pulsed*, each with its own strength parameter varying over
-time and frequency — extending MBE past the two-state voicing decision
+**US 6,912,495** introduced the three-state excitation model: voiced,
+unvoiced, and *pulsed*.  Each has its own strength parameter varying over
+time and frequency extending MBE past the two-state voicing decision
 described elsewhere on this site. It expired on 2023-11-28. The model is
 public; note the caveat in the next section about one particular way of
 *estimating* its pulsed parameters.
@@ -208,45 +196,6 @@ public; note the caveat in the next section about one particular way of
 family as the half-rate patent below. It inherited the 2003 priority
 date, so its twenty-year term ended 2023-04-01, and Google Patents shows
 it as fee-related expired. It does not extend the family's reach.
-
-## What this means if you want to build something
-
-Reduced to practice, and again subject to the warning at the top:
-
-**Full-rate AMBE and IMBE — the D-STAR case — are taught entirely by
-expired patents.** Pitch estimation, voicing decisions,
-voicing-independent magnitudes, predictive residual-DCT quantization,
-Golay and Hamming FEC with bit prioritization, pseudo-random scrambling
-for error detection, frame repeat and mute, adaptive spectral
-enhancement, and regenerated-phase synthesis all appear in patents that
-lapsed between 2010 and 2015.
-
-**Half-rate AMBE+2 is a different question.** US 8,359,197 has claims
-covering both directions until 2028-05-20, so the usual "a decoder is
-safe" reasoning does not transfer. Anyone planning half-rate work in the
-United States before that date needs a claim-by-claim analysis from
-counsel, not a blog post — including this one.
-
-**Pulsed-excitation encoder analysis needs its own check until
-2029-10-02.** The three-state model itself is public (US 6,912,495, now
-expired); the particular band-splitting, pulse-emphasis estimation method
-of US 8,036,886 is not.
-
-**Jurisdiction matters.** Everything above is the United States. Patent
-term adjustment is a US mechanism with no counterpart in most other
-offices, so foreign counterparts of the half-rate family lapsed at their
-plain twenty-year dates. Where you develop, where you distribute, and
-where your users are can all be different answers.
-
-**Describing is not practising.** Patents restrict making, using, selling
-and importing the claimed invention. They do not restrict explaining how
-it works — which is, after all, the deal: the public gets a full
-disclosure in exchange for a limited monopoly. This site exists on that
-side of the line, and deliberately confines its implementation-level
-detail to the expired group.
-
-**Dates decay.** Statuses change with every maintenance-fee window.
-Re-check before you write code, not after.
 
 ## A third-party invalidity theory, recorded and not relied on
 
@@ -271,38 +220,12 @@ its fees and its status line still reads *Active* in 2026.
 Recording it changes nothing about the section above. Treat live patents
 as live.
 
-## Checking this yourself
-
-Everything on this page came from two places, both free:
-
-1. **[Google Patents](https://patents.google.com/)** — `patents.google
-   .com/patent/US<number>/en` gives bibliographic data, the full text,
-   claims, the legal-status timeline, and computed anticipated and
-   adjusted expiration dates. Convenient, and the fastest way to read
-   claim text. Its dates are computed and its OCR of equations and tables
-   is unreliable; for anything numeric, open the USPTO page images.
-2. **[USPTO Patent Center](https://patentcenter.uspto.gov/)** — the
-   authoritative file wrapper: actual PTA determination, actual
-   maintenance-fee payments, actual terminal disclaimers. Slower, and
-   correct. This is what governs when the two disagree.
-
-If you find an error on this page, please
-[open an issue](https://github.com/rcludwick/how-ambe-works/issues) —
-a wrong date here is worse than no date.
-
 ## Trademarks and independence
 
 AMBE, AMBE+, and AMBE+2 are trademarks of Digital Voice Systems, Inc.,
 used on this site only to identify the technology under discussion. This
 project is independent of DVSI and is not affiliated with, sponsored by,
 endorsed by, or approved by them.
-
-Nothing on this page is a criticism of DVSI. Filing patents, prosecuting
-them, paying maintenance fees, and enforcing the results is what the
-patent system is for, and the disclosures those patents required are the
-reason a page like this can be written at all. The purpose here is
-accuracy about dates and scope, so that people building open software
-know what is actually available to them and when.
 
 ---
 

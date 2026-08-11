@@ -6,7 +6,7 @@
  * DATA READ     assets/data/<clip>/frames.json    (band voicing, pitch, level)
  *               assets/data/<clip>/spectra.json   (128-bin dBFS spectra)
  *               assets/audio/<clip>-ambe.wav      (optional sound, via <audio>)
- *               clips are norman-b, norman-c, lj-c — real ThumbDV round trips.
+ *               clips are lr-b, lr-c, lj-c — real ThumbDV round trips.
  *
  * CONTROLS      • Play / Pause — steps frames at the real 50 frames/s
  *               • Frame slider — scrub (arrow keys step one 20 ms frame)
@@ -62,8 +62,8 @@ const DB_DOMAIN = [-95, -5];
 const DB_TICKS = [-90, -70, -50, -30, -10];
 
 const CLIPS = [
-  { id: "norman-b", label: "CQ", voice: "male" },
-  { id: "norman-c", label: "Shells", voice: "male" },
+  { id: "lr-b", label: "CQ", voice: "male" },
+  { id: "lr-c", label: "Shells", voice: "male" },
   { id: "lj-c", label: "Shells", voice: "female" },
 ];
 

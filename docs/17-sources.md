@@ -44,15 +44,6 @@ protocol, using the packet format described in DVSI's own publicly
 available product documentation. Audio or encoded frames go in; encoded
 frames or audio come out; both sides are recorded.
 
-That is black-box characterisation of a product's externally observable
-behaviour — the same thing a reviewer does with a radio on a bench, and
-the same thing any user of the device does every time they key up. No
-firmware was extracted, no packages were opened, no debug interface was
-probed, and no attempt was made to recover internal constants or tables.
-Where a page reports a measurement, it says what was fed in and what came
-out, so that anyone with the same $120 dongle can repeat it and contradict
-us.
-
 ---
 
 ## Bibliography
@@ -92,13 +83,6 @@ a source of technical content here:
 [US 8,359,197](https://patents.google.com/patent/US8359197B2/en) ·
 [US 8,595,002](https://patents.google.com/patent/US8595002B2/en).
 
-!!! tip "Reading the numbers in a patent"
-
-    Google Patents renders many of these patents' equations and tables as
-    image placeholders, and its OCR of numeric tables is lossy. Where this
-    site quotes a constant, a kernel, or a table, it was read from the
-    USPTO page images of the patent rather than from the OCR text. If you
-    are checking our arithmetic, do the same.
 
 ### Papers
 
@@ -162,28 +146,12 @@ Development Center technical report, DTIC
 Digital Voice Systems, Inc. publishes product-level documentation for its
 vocoder chips and software. It is used here only for device-level and
 protocol-level facts — packet formats, rate options, product capability
-claims — never for codec internals.
+claims.
 
 - [AMBE-3000 vocoder chip product page](https://www.dvsinc.com/products/a300x.shtml)
 - [Product documentation index](https://www.dvsinc.com/products/docs.shtml)
 - [AMBE+2 product page](https://www.dvsinc.com/soft_products/ambe_p2.shtml)
 - [Technical papers index](https://www.dvsinc.com/papers/tech_papers.shtml)
-
-!!! note
-
-    dvsinc.com returns HTTP 403 to command-line clients that do not send a
-    browser user-agent. All four links above resolve normally in a
-    browser; they were verified with a browser user-agent on 2026-08-10.
-
-### Hardware
-
-**DVSI AMBE-3000 vocoder chip**, in a ThumbDV-class USB dongle from NW
-Digital Radio, purchased at retail. See the chip's
-[product page](https://www.dvsinc.com/products/a300x.shtml) for its
-published capabilities. Used as described under
-*How the hardware measurements were made* above. NW Digital Radio's
-product URL has moved since the device was bought, so no link is given
-for the dongle itself.
 
 ### Background and context
 
@@ -212,41 +180,15 @@ disagrees with a patent or a specification, the primary document governs.
 
 ---
 
-## Corrections
-
-The value of this page is that it can be checked, so being wrong in
-public is the intended failure mode.
-
-If a citation does not support the claim it is attached to, if a date has
-moved, if a link has rotted, or if something here is simply incorrect,
-please [open an issue](https://github.com/rcludwick/how-ambe-works/issues)
-with the specific page and the primary source that contradicts us.
-Corrections against a primary document will be made and noted.
-
-One request in the other direction: please do not send patches containing
-codec implementation code, or excerpts from any of the implementations
-listed as not consulted above. They cannot be accepted, and their arrival
-would compromise the provenance of the whole site.
-
 ## Licensing
 
 The prose, diagrams and page content are licensed
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The tooling —
-build scripts, stylesheets, animation runtime, CI workflows — is MIT.
-Reuse the writing with attribution; reuse the tooling under MIT.
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The tooling,
+build scripts, stylesheets, animation runtime, CI workflows is MIT.
+Reuse the writing with attribution.  Reuse the tooling under MIT.
 
 AMBE, AMBE+, and AMBE+2 are trademarks of Digital Voice Systems, Inc.,
 used here only to identify the technology under discussion. This project
 is independent of DVSI and is not affiliated with, sponsored by, endorsed
 by, or approved by them.
 
----
-
-That is the end of the site. Back to [the start](index.md), or to
-[what AMBE actually is](07-multi-band-excitation.md) if you arrived here first and
-want the argument in order.
-Previously: [The patent landscape](16-patents.md).
-{: .chapter-nav }
-
-Last reviewed: 2026-08-10.
-{: .source-note }

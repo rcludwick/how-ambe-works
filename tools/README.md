@@ -21,7 +21,7 @@ mono, trims silence, and normalises each clip to −20 dBFS RMS with a −1 dBFS
 peak ceiling.
 
 Needs `piper` (default `~/.local/bin/piper`, override with `PIPER`), `sox`, and
-the voice models `en_US-norman-high` and `en_US-hfc_female-medium` (override the
+the voice models `en_US-lr-high` and `en_US-hfc_female-medium` (override the
 directory with `VOICES_DIR`).
 
 Piper is not sample-deterministic between runs, so re-running this replaces the
@@ -49,7 +49,7 @@ Turns the captured audio and channel frames into the JSON the site's animations
 draw. Needs Python 3 and numpy.
 
 ```
-python3 tools/make-data.py [featured-clip-id]     # default: norman-b
+python3 tools/make-data.py [featured-clip-id]     # default: lr-b
 ```
 
 Writes `<clip-id>/{frames,waveform,spectra}.json` for all eight clips, copies

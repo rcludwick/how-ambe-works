@@ -24,7 +24,7 @@ on a recording of a bird.
 Every clip gets its own <clip-id>/ subdirectory; the featured clip is also
 written at the top level, which is what the animations load by default.
 
-Usage: tools/make-data.py [featured-clip-id]      (default: norman-b)
+Usage: tools/make-data.py [featured-clip-id]      (default: lr-b)
 """
 
 import json
@@ -66,10 +66,10 @@ HARDWARE = {
 }
 
 CLIP_META = {
-    "norman-a": ("norman", "The quick brown fox jumps over the lazy dog."),
-    "norman-b": ("norman", "CQ CQ CQ this is a test of the AMBE voice codec."),
-    "norman-c": ("norman", "She sells sea shells by the sea shore."),
-    "norman-d": ("norman", "We were away a year ago."),
+    "lr-a": ("lr", "The quick brown fox jumps over the lazy dog."),
+    "lr-b": ("lr", "CQ CQ CQ this is a test of the AMBE voice codec."),
+    "lr-c": ("lr", "She sells sea shells by the sea shore."),
+    "lr-d": ("lr", "We were away a year ago."),
     "lj-a": ("lj", "The quick brown fox jumps over the lazy dog."),
     "lj-b": ("lj", "CQ CQ CQ this is a test of the AMBE voice codec."),
     "lj-c": ("lj", "She sells sea shells by the sea shore."),
@@ -77,19 +77,24 @@ CLIP_META = {
 }
 
 VOICES = {
-    "norman": {
-        "id": "norman",
+    "lr": {
+        "id": "lr",
         "sex": "male",
-        "model": "Piper en_US-norman-medium",
-        "dataset": "LibriVox recordings (https://librivox.org)",
-        "dataset_license": "public domain",
+        "model": "Piper en_US-libritts_r-medium",
+        "speaker": "piper speaker index 690 (LibriTTS-R speaker 240)",
+        "dataset": "LibriTTS-R (http://www.openslr.org/141/)",
+        "dataset_license": "CC BY 4.0",
+        "attribution": "Speech synthesised with a Piper voice trained on "
+                       "LibriTTS-R (OpenSLR 141), used under CC BY 4.0.",
     },
     "lj": {
         "id": "lj",
         "sex": "female",
         "model": "Piper en_US-ljspeech-high",
+        "speaker": "single-speaker model",
         "dataset": "LJ Speech (https://keithito.com/LJ-Speech-Dataset/)",
         "dataset_license": "public domain",
+        "attribution": None,
     },
 }
 
@@ -534,7 +539,7 @@ def write_json(relpath, doc):
 
 
 def main():
-    featured = sys.argv[1] if len(sys.argv) > 1 else "norman-b"
+    featured = sys.argv[1] if len(sys.argv) > 1 else "lr-b"
     os.makedirs(DATA, exist_ok=True)
     print("Featured clip: %s" % featured)
     clip_block = None

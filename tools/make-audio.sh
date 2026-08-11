@@ -7,17 +7,20 @@
 # normalises them so that the original/decoded A/B pairs on the "Listen"
 # page can be compared fairly.
 #
-# VOICE LICENSING: both voices are deliberately chosen for a public-domain
-# training corpus and a from-scratch (not fine-tuned) training run, so the
-# synthesised clips can be redistributed under this repository's CC BY 4.0
-# grant without inheriting a non-commercial or share-alike condition.
-#   en_US-norman-medium  LibriVox recordings, public domain, trained from
-#                        scratch  (rhasspy/piper-voices .../norman/medium)
-#   en_US-ljspeech-high  LJ Speech corpus, public domain, trained from
-#                        scratch  (rhasspy/piper-voices .../ljspeech/high)
-# Do NOT substitute a voice whose MODEL_CARD names a CC BY-NC-SA or
-# research-only dataset; that would make docs/assets/audio/ unredistributable
-# under the licence stated in README.md.
+# VOICE LICENSING. Everything in docs/assets/ ships under this repository's
+# CC BY 4.0 grant, so a voice whose training corpus carries a non-commercial
+# or share-alike condition cannot be used here. Two voices are cleared, and
+# both were checked against their MODEL_CARD in rhasspy/piper-voices:
+#
+#   en_US-ljspeech-high      LJ Speech, public domain            female
+#   en_US-libritts_r-medium  LibriTTS-R / OpenSLR 141, CC BY 4.0 male
+#                            (speaker index 690 = LibriTTS speaker 240)
+#
+# LibriTTS-R requires attribution; see docs/assets/audio/MANIFEST.md, which
+# also records the model checksums, the speaker choice and the exact
+# synthesis parameters. Do NOT substitute a voice without reading its
+# MODEL_CARD first: several popular Piper voices (ryan, hfc_female, lessac)
+# are trained on CC BY-NC-SA or research-only corpora.
 #
 # Output: docs/assets/audio/<voice>-<sentence>-original.wav
 #
@@ -26,14 +29,20 @@
 # "-ambe.wav" counterparts. Nothing in this repo implements AMBE.
 #
 # Requirements:
-#   piper   (default: ~/.local/bin/piper; override with PIPER)
+#   piper   (default: ~/.local/bin/piper; override with PIPER). It must
+#           accept `--model M [-s N] --output_file -` and write a WAV to
+#           stdout.
 #   sox     (brew install sox)
-#   Piper voice models en_US-norman-medium and en_US-ljspeech-high
-#           (override the directory with VOICES_DIR)
+#   python3 (only to read the voice's .onnx.json speaker table)
+#   The two voice models above, alongside their .onnx.json, in VOICES_DIR.
 #
-# The script is deliberately loud on failure: every stage is checked, and
-# a clip that is silent, clipped, mis-rated or implausibly short aborts the
-# run rather than being written out.
+# The script is deliberately loud on failure. It verifies the SHA-256 of
+# every model file before synthesising, checks that the requested speaker
+# index exists in the voice config, checks that piper actually returned a
+# RIFF, and rejects any clip that is silent, clipped, mis-rated or
+# implausibly short. Set ALLOW_MODEL_HASH_MISMATCH=1 only if you are
+# deliberately moving to a new model revision, and update MANIFEST.md in
+# the same commit.
 #
 # NOTE: Piper is not sample-deterministic across invocations. Re-running
 # this script produces new masters, and every derived asset (hardware
@@ -66,15 +75,71 @@ note() { echo "  $*"; }
 [ -x "$PIPER" ] || die "piper not executable at $PIPER (set PIPER=...)"
 command -v sox >/dev/null || die "sox not on PATH (brew install sox)"
 command -v soxi >/dev/null || die "soxi not on PATH (brew install sox)"
+command -v python3 >/dev/null || die "python3 not on PATH"
+command -v shasum >/dev/null || die "shasum not on PATH"
 [ -d "$VOICES_DIR" ] || die "voice directory not found: $VOICES_DIR (set VOICES_DIR=...)"
 
-# voice id -> model file
-VOICE_IDS=(norman lj)
-VOICE_MODELS=(en_US-norman-medium.onnx en_US-ljspeech-high.onnx)
-VOICE_LABELS=("male (en_US-norman-medium)" "female (en_US-ljspeech-high)")
+# voice id -> model, speaker index, label
+VOICE_IDS=(lr lj)
+VOICE_MODELS=(en_US-libritts_r-medium.onnx en_US-ljspeech-high.onnx)
+VOICE_SPEAKERS=(690 "")   # empty = single-speaker model, no -s flag
+VOICE_LABELS=("male (en_US-libritts_r-medium, speaker 690)" "female (en_US-ljspeech-high)")
 
-for m in "${VOICE_MODELS[@]}"; do
-  [ -f "$VOICES_DIR/$m" ] || die "missing voice model $VOICES_DIR/$m"
+# Expected SHA-256 of the rhasspy/piper-voices v1.0.0 files. Mirrored in
+# docs/assets/audio/MANIFEST.md; change both together or not at all.
+EXPECTED_SHA=(
+  "en_US-libritts_r-medium.onnx      10bb85e071d616fcf4071f369f1799d0491492ab3c5d552ec19fb548fac13195"
+  "en_US-libritts_r-medium.onnx.json b471dc60d2d8335e819c393d196d6fbf792817f40051257b269878505bc9afb3"
+  "en_US-ljspeech-high.onnx          5d4f08ba6a2a48c44592eed3ce56bf85e9de3dd4e20df90541ae68a8310c029a"
+  "en_US-ljspeech-high.onnx.json     7e1f4634af596d83cca997fb7a931ba80b70f8a316a2655ee69c55365e0ace14"
+)
+
+for row in "${EXPECTED_SHA[@]}"; do
+  # shellcheck disable=SC2086
+  set -- $row
+  f="$VOICES_DIR/$1"; want="$2"
+  [ -f "$f" ] || die "missing voice file $f
+  fetch it with:
+    curl -fLO --output-dir '$VOICES_DIR' \\
+      https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/<voice>/<quality>/$1"
+  got="$(shasum -a 256 "$f" | awk '{print $1}')"
+  if [ "$got" != "$want" ]; then
+    if [ "${ALLOW_MODEL_HASH_MISMATCH:-0}" = "1" ]; then
+      echo "make-audio.sh: WARNING: $1 hash $got != $want (override in effect)" >&2
+    else
+      die "$1 SHA-256 mismatch
+  expected $want
+  got      $got
+  This is not the model the manifest describes. Refusing to synthesise."
+    fi
+  fi
+done
+note "voice models verified against MANIFEST.md checksums"
+
+# Speaker index must actually exist in the model config, and the config must
+# agree that the model is multi-speaker.
+speaker_name() { # <onnx.json> <index>  -> LibriTTS speaker name
+  python3 - "$1" "$2" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+idx = int(sys.argv[2])
+n = cfg.get("num_speakers", 1)
+if idx >= n:
+    sys.exit(f"speaker index {idx} out of range (model has {n} speakers)")
+inv = {v: k for k, v in cfg.get("speaker_id_map", {}).items()}
+print(inv.get(idx, ""))
+PY
+}
+
+for vi in "${!VOICE_IDS[@]}"; do
+  spk="${VOICE_SPEAKERS[$vi]}"
+  [ -n "$spk" ] || continue
+  cfg="$VOICES_DIR/${VOICE_MODELS[$vi]}.json"
+  if ! name="$(speaker_name "$cfg" "$spk" 2>&1)"; then
+    die "${VOICE_MODELS[$vi]}: $name"
+  fi
+  [ -n "$name" ] || die "${VOICE_MODELS[$vi]}: speaker index $spk has no name in speaker_id_map"
+  note "${VOICE_IDS[$vi]}: piper speaker index $spk = corpus speaker $name"
 done
 
 # sentence id -> text
@@ -143,9 +208,15 @@ verify() {
 tmpdir="$(mktemp -d -t make-audio)"
 trap 'rm -rf "$tmpdir"' EXIT
 
+written=0
+
 for vi in "${!VOICE_IDS[@]}"; do
   vid="${VOICE_IDS[$vi]}"
   model="$VOICES_DIR/${VOICE_MODELS[$vi]}"
+  spk="${VOICE_SPEAKERS[$vi]}"
+  spk_args=()
+  [ -n "$spk" ] && spk_args=(-s "$spk")
+
   for si in "${!SENT_IDS[@]}"; do
     sid="${SENT_IDS[$si]}"
     text="${SENT_TEXT[$si]}"
@@ -155,11 +226,17 @@ for vi in "${!VOICE_IDS[@]}"; do
     raw="$tmpdir/${vid}-${sid}-raw.wav"
     res="$tmpdir/${vid}-${sid}-8k.wav"
 
-    # Piper renders at the model's native rate (22.05 kHz for these voices)
+    # Piper renders at the model's native rate (22.05 kHz for both voices)
     # and writes WAV on stdout via the ~/.local/bin/piper wrapper.
-    printf '%s\n' "$text" | "$PIPER" --model "$model" --output_file - >"$raw" 2>"$tmpdir/piper.err" \
+    printf '%s\n' "$text" \
+      | "$PIPER" --model "$model" "${spk_args[@]}" --output_file - \
+        >"$raw" 2>"$tmpdir/piper.err" \
       || { sed 's/^/    piper: /' "$tmpdir/piper.err" >&2; die "piper failed for $vid-$sid"; }
     [ -s "$raw" ] || die "piper produced an empty file for $vid-$sid"
+    # A wrapper that silently prints diagnostics instead of audio would
+    # otherwise sail straight into sox and produce nonsense.
+    [ "$(head -c 4 "$raw")" = "RIFF" ] \
+      || die "piper output for $vid-$sid is not a RIFF/WAV stream"
 
     # Down to the codec-native format. `gain -1` gives the resampler
     # headroom so its ringing cannot clip before normalisation.
@@ -174,9 +251,26 @@ for vi in "${!VOICE_IDS[@]}"; do
 
     normalise "$tmpdir/${vid}-${sid}-trim.wav" "$out"
     verify "$out"
+    written=$((written + 1))
   done
 done
 
+expected=$(( ${#VOICE_IDS[@]} * ${#SENT_IDS[@]} ))
+[ "$written" -eq "$expected" ] \
+  || die "wrote $written clips, expected $expected"
+
+# Nothing from a previous voice may survive in the output directory: a
+# stale <voice>-<sentence>-original.wav would silently be captured and
+# published under the wrong licence.
+shopt -s nullglob
+for f in "$out_dir"/*-original.wav; do
+  base="$(basename "$f" -original.wav)"
+  case "$base" in
+    lr-[abcd]|lj-[abcd]) ;;
+    *) die "unexpected clip $base in $out_dir — left over from an earlier voice set. Delete it (and its -ambe.wav) before publishing." ;;
+  esac
+done
+
 echo
-echo "Wrote ${#VOICE_IDS[@]} x ${#SENT_IDS[@]} original clips to $out_dir"
+echo "Wrote $written original clips to $out_dir"
 echo "Next: tools/capture-hardware.sh (pushes these through the ThumbDV)"

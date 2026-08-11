@@ -18,13 +18,15 @@ measured it.** No AMBE encoder or decoder appears anywhere in this repository.
 
 The chain is deliberately short and each stage is a file you can inspect:
 
-1. **Synthesis.** Piper text-to-speech, one male voice (`en_US-norman-medium`)
-   and one female voice (`en_US-ljspeech-high`), the same four sentences in
-   both. Both voices were trained from scratch on public-domain speech
-   corpora, which is why the clips can be redistributed under this site's
-   licence; the datasets and their licences are in the
-   [provenance table](#provenance-summary) below. Synthetic speech also means
-   the material is identical between voices and free of room and microphone
+1. **Synthesis.** Piper text-to-speech, one male voice
+   (`en_US-libritts_r-medium`, speaker 690 of the 904 it carries) and one
+   female voice (`en_US-ljspeech-high`), the same four sentences in both. Both
+   voices come from corpora that can be redistributed under this site's
+   licence, one public domain and one CC BY 4.0; the
+   [provenance table](#provenance-summary) below names them, and
+   `docs/assets/audio/MANIFEST.md` records the model checksums, the speaker
+   choice and the exact synthesis parameters. Synthetic speech also means the
+   material is identical between voices and free of room and microphone
    differences.
 2. **Format.** Resampled to 8 kHz, 16-bit, mono — AMBE's native rate.
 3. **Encode.** Pushed frame by frame into the ThumbDV, 160 samples in, 9 bytes
@@ -32,12 +34,12 @@ The chain is deliberately short and each stage is a file you can inspect:
    in, 160 samples out.
 5. **Level.** Each file scaled by one constant gain to −20 dBFS RMS (backed off
    if the peak would exceed −1 dBFS). No compression, no EQ, no noise
-   reduction. The decoded files needed between −0.40 and +0.13 dB, so the
+   reduction. The decoded files needed between −0.66 and +0.03 dB, so the
    codec had already preserved level well; the step exists so that an A/B
    comparison is about timbre and not about loudness.
 
-Across the eight clips the hardware emitted 1110 frames — 9990 bytes — for
-22.14 seconds of speech. At one 9-byte frame
+Across the eight clips the hardware emitted 1056 frames, 9504 bytes, for
+21.05 seconds of speech. At one 9-byte frame
 per 20 ms that is exactly 3600 bit/s, which is the full D-STAR voice frame:
 2400 bit/s of vocoder data plus 1200 bit/s of error correction.
 <span class="cite">— JARL D-STAR system specification; DVSI product
@@ -54,13 +56,13 @@ Three things are worth attending to on every pair, and each one is visible in
 the measurements as well as audible:
 
 **The pitch survives almost exactly.** Tracking the fundamental through both
-files, the decoded pitch follows the original to within a median of 0.72–1.55 %
-across all eight clips, and a 90th percentile of 2.5–4.7 %.
+files, the decoded pitch follows the original to within a median of 0.62–1.14 %
+across all eight clips, and a 90th percentile of 1.4–4.3 %.
 A codec spending 3600 bit/s cannot afford to
 be wrong about pitch, and this one is not.
 
 **The envelope survives.** Cross-correlating the loudness envelopes of the two
-files gives 0.962–0.985 at the matching offset on every clip.
+files gives 0.967–0.991 at the matching offset on every clip.
 Syllables land in the same places with the
 same relative weight.
 
@@ -73,15 +75,15 @@ declared either voiced or unvoiced <span class="cite">— Griffin & Lim
 places where the pair sounds different.
 
 Note what is *not* on that list: overall band level. Summed as energy over the
-energetic frames of a clip, the decoded audio comes back within about 2 dB of
-the original in every 1 kHz band from 0 to 4 kHz, on all eight clips, and as
-often above it as below. The codec is not
-simply losing the top end. It is rebuilding it out of a different kind of
-signal, and the measurement that shows this is periodicity rather than level —
-which is the thread the clips below follow.
+energetic frames of a clip, the decoded audio comes back within 2.2 dB of the
+original in every 1 kHz band from 0 to 4 kHz, on all eight clips, and more
+often above it than below (19 of the 32 band figures are positive). The codec
+is not simply losing the top end. It is rebuilding it out of a different kind
+of signal, and the measurement that shows this is periodicity rather than
+level, which is the thread the clips below follow.
 
-There is also a delay: the decoded audio arrives 31.6–35.3 ms — between one and
-two frames — after the original. The players
+There is also a delay: the decoded audio arrives 31.6 to 34.4 ms after the
+original, which is between one and two frames. The players
 below are independent, so you will not notice it, but it matters if you ever
 line the two files up.
 
@@ -99,26 +101,26 @@ line the two files up.
 
 ---
 
-## Male voice — `en_US-norman-medium`
+## Male voice — `en_US-libritts_r-medium`
 
-Median fundamental across these four clips: 104–123 Hz.
+Median fundamental across these four clips: 132–153 Hz.
 
 ### a) "The quick brown fox jumps over the lazy dog."
 
 <div class="ab-pair">
   <div class="ab-side">
     <span class="ab-label">Original</span>
-    <audio controls preload="none" src="assets/audio/norman-a-original.wav"
+    <audio controls preload="none" src="assets/audio/lr-a-original.wav"
            aria-label="Sentence a, male voice, quick brown fox — original"></audio>
   </div>
   <div class="ab-side ab-side--codec">
     <span class="ab-label">Through the AMBE-3000</span>
-    <audio controls preload="none" src="assets/audio/norman-a-ambe.wav"
+    <audio controls preload="none" src="assets/audio/lr-a-ambe.wav"
            aria-label="Sentence a, male voice, quick brown fox — through the AMBE-3000"></audio>
   </div>
 </div>
 
-The stock pangram, here mostly as a baseline: 84 % of its energetic frames
+The stock pangram, here mostly as a baseline: 89 % of its energetic frames
 carry a detectable fundamental, so the harmonic model is on home ground and the
 two files track each other closely. Listen
 instead to the joins — the *ck* in "quick", the *x* in "fox", the *j* in
@@ -131,18 +133,18 @@ least to work with.
 <div class="ab-pair">
   <div class="ab-side">
     <span class="ab-label">Original</span>
-    <audio controls preload="none" src="assets/audio/norman-b-original.wav"
+    <audio controls preload="none" src="assets/audio/lr-b-original.wav"
            aria-label="Sentence b, male voice, CQ test — original"></audio>
   </div>
   <div class="ab-side ab-side--codec">
     <span class="ab-label">Through the AMBE-3000</span>
-    <audio controls preload="none" src="assets/audio/norman-b-ambe.wav"
+    <audio controls preload="none" src="assets/audio/lr-b-ambe.wav"
            aria-label="Sentence b, male voice, CQ test — through the AMBE-3000"></audio>
   </div>
 </div>
 
 The on-air case: a CQ call is the first thing anyone hears through this codec.
-4.03 seconds of speech became 202 frames — 1818 bytes total.
+3.17 seconds of speech became 159 frames, 1431 bytes in total.
 This is the clip the animations elsewhere on
 the site are built from, so if a waveform or spectrum figure looks familiar,
 this is what it is showing. Listen to the hard *K* of each "CQ": the burst is
@@ -153,12 +155,12 @@ present but blunted, because a click is the least harmonic thing a voice does.
 <div class="ab-pair">
   <div class="ab-side">
     <span class="ab-label">Original</span>
-    <audio controls preload="none" src="assets/audio/norman-c-original.wav"
+    <audio controls preload="none" src="assets/audio/lr-c-original.wav"
            aria-label="Sentence c, male voice, she sells sea shells — original"></audio>
   </div>
   <div class="ab-side ab-side--codec">
     <span class="ab-label">Through the AMBE-3000</span>
-    <audio controls preload="none" src="assets/audio/norman-c-ambe.wav"
+    <audio controls preload="none" src="assets/audio/lr-c-ambe.wav"
            aria-label="Sentence c, male voice, she sells sea shells — through the AMBE-3000"></audio>
   </div>
 </div>
@@ -185,12 +187,12 @@ at roughly the right level. Listen for the difference between "sells" and
 <div class="ab-pair">
   <div class="ab-side">
     <span class="ab-label">Original</span>
-    <audio controls preload="none" src="assets/audio/norman-d-original.wav"
+    <audio controls preload="none" src="assets/audio/lr-d-original.wav"
            aria-label="Sentence d, male voice, we were away a year ago — original"></audio>
   </div>
   <div class="ab-side ab-side--codec">
     <span class="ab-label">Through the AMBE-3000</span>
-    <audio controls preload="none" src="assets/audio/norman-d-ambe.wav"
+    <audio controls preload="none" src="assets/audio/lr-d-ambe.wav"
            aria-label="Sentence d, male voice, we were away a year ago — through the AMBE-3000"></audio>
   </div>
 </div>
@@ -206,10 +208,10 @@ decoded sit closest together.
 
 ## Female voice — `en_US-ljspeech-high`
 
-Median fundamental across these four clips: 174–213 Hz — around 70 Hz above the
+Median fundamental across these four clips: 174–219 Hz, about 45 Hz above the
 male voice. That matters to a harmonic codec:
-at 113 Hz there are thirty-five harmonics below 4 kHz to describe, at 190 Hz
-there are twenty-one. The same bits are spread across fewer, more widely
+at 135 Hz there are twenty-nine harmonics below 4 kHz to describe, at 180 Hz
+there are twenty-two. The same bits are spread across fewer, more widely
 spaced components. <span class="cite">— Griffin & Lim 1988</span>
 
 ### a) "The quick brown fox jumps over the lazy dog."
@@ -228,7 +230,7 @@ spaced components. <span class="cite">— Griffin & Lim 1988</span>
 </div>
 
 The same sentence as the male pangram above, which makes the two directly
-comparable: play `norman-a` and this one back to back and the codec's
+comparable: play `lr-a` and this one back to back and the codec's
 character — what it keeps, what it smooths — shows up as the thing they have in
 common, rather than as a property of one voice.
 
@@ -247,10 +249,10 @@ common, rather than as a property of one voice.
   </div>
 </div>
 
-4.02 seconds, 201 frames, 1809 bytes. Summed
-over this clip's energetic frames, the decoded spectrum sits within 1.2 dB of
-the original in the three lowest 1 kHz bands and 2.1 dB *above* it in the
-3–4 kHz band. The round trip is close to
+4.16 seconds, 208 frames, 1872 bytes. Summed
+over this clip's energetic frames, the decoded spectrum sits within 0.2 dB of
+the original in the 0–1 and 2–3 kHz bands, 2.2 dB below it in the 1–2 kHz band
+and 1.9 dB *above* it in the 3–4 kHz band. The round trip is close to
 level-neutral across the whole band; what it does not preserve is what that
 energy is made of. Listen to the word "codec" itself, where a hard *k* is
 followed immediately by a voiced vowel.

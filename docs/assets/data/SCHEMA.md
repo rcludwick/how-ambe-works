@@ -14,6 +14,15 @@ tools/capture-hardware.sh  # originals -> real AMBE-3000 -> frames + decoded WAV
 tools/make-data.py         # audio + frames -> the JSON described here
 ```
 
+**Provenance of the current build: 2026-08-11.** The clip behind every file
+here is `lr-b`, `"CQ CQ CQ this is a test of the AMBE voice codec."`, spoken by
+the Piper voice `en_US-libritts_r-medium` (speaker index 690, LibriTTS-R
+speaker 240, CC BY 4.0), synthesised at 22050 Hz and resampled to 8 kHz, then
+round-tripped through a DVSI AMBE-3000. The full recipe, model checksums,
+speaker choice and corpus licences are in `docs/assets/audio/MANIFEST.md`.
+Sustained device throughput, which sets what a bigger capture would cost, is in
+`probe-rate.md` next to this file.
+
 ## Provenance: two kinds of number, never mixed
 
 Every value in these files is one of exactly two things, and the files are
@@ -67,8 +76,9 @@ back in the other direction, on the same physical device.
 docs/assets/data/
   SCHEMA.md          this document
   clips.json         index of all eight clips
+  probe-rate.md      measured device throughput, and the method
   frames.json    \
-  waveform.json   >  the featured clip (norman-b), also present in norman-b/
+  waveform.json   >  the featured clip (lr-b), also present in lr-b/
   spectra.json   /
   <clip-id>/         the same three files for each of the eight clips
     frames.json
@@ -78,8 +88,9 @@ docs/assets/data/
     <clip-id>.ambe   raw hardware output: concatenated 9-byte channel frames
 ```
 
-Clip ids are `<voice>-<sentence>`, voice ∈ {`ryan` (male), `hfc` (female)},
-sentence ∈ {`a`, `b`, `c`, `d`}. The featured clip is `norman-b`; load
+Clip ids are `<voice>-<sentence>`, voice ∈ {`lr` (male,
+`en_US-libritts_r-medium`), `lj` (female, `en_US-ljspeech-high`)}, sentence ∈
+{`a`, `b`, `c`, `d`}. The featured clip is `lr-b`; load
 `assets/data/frames.json` for it, or `assets/data/lj-c/frames.json` for
 another.
 
@@ -123,8 +134,8 @@ Each entry of `clips`:
 
 | Field | Type | Units | Provenance | Meaning |
 | --- | --- | --- | --- | --- |
-| `id` | string | — | — | e.g. `norman-b` |
-| `voice` | object | — | — | `{id, sex, model}`; `sex` is the voice's intended sex, `model` names the Piper voice |
+| `id` | string | — | — | e.g. `lr-b` |
+| `voice` | object | — | — | see below |
 | `sentence` | string | — | — | `a`–`d` |
 | `text` | string | — | — | exact sentence spoken |
 | `original_audio` | string | — | — | site-root-relative WAV path |
@@ -137,13 +148,32 @@ Each entry of `clips`:
 | `decoded_delay_ms` | number | ms | derived | same, in milliseconds |
 | `decoded_delay_correlation` | number | 0–1 | derived | peak correlation at that delay; ≥0.97 on every clip here |
 
+### The `voice` object
+
+The same object appears in `clips.json` and in the `clip` block of all three
+per-clip files.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `id` | string | `lr` or `lj`, the clip-id prefix |
+| `sex` | string | `male` or `female`. For `lr` this is a measurement of pitch, not a corpus fact: see `docs/assets/audio/MANIFEST.md` §1 |
+| `model` | string | the Piper voice, e.g. `Piper en_US-libritts_r-medium` |
+| `speaker` | string | which speaker of a multi-speaker model was used |
+| `dataset` | string | the training corpus, with a URL |
+| `dataset_license` | string | that corpus's licence |
+| `attribution` | string or `null` | the credit line a reuser must carry; `null` when the corpus is public domain |
+
+`speaker`, `dataset`, `dataset_license` and `attribution` are metadata about how
+the audio was made. Nothing in the animation code reads them; they are there so
+that a file taken out of this repository still says where its speech came from.
+
 ### The delay field, and why you need it
 
 The decoded WAV is *not* sample-aligned with the original: the chip's encode
-and decode pipelines each add latency, and measured end to end it is 257–273
-samples (32–34 ms, i.e. between one and two frames) on these clips. Delay was
-measured by cross-correlating the 20 ms RMS envelopes of the two files and
-taking the peak; the correlation at that peak (0.972–0.986) is also the
+and decode pipelines each add latency, and measured end to end it is 253–275
+samples (31.6–34.4 ms, i.e. between one and two frames) on these clips. Delay
+was measured by cross-correlating the 20 ms RMS envelopes of the two files and
+taking the peak; the correlation at that peak (0.967–0.991) is also the
 cleanest single number for "the decoded audio really is the same speech".
 
 `waveform.json` has this shift already applied to its decoded track, and
@@ -174,7 +204,7 @@ equal 500 Hz bands covering 0–4000 Hz. It indexes `band_voicing` and
 | Field | Type | Units | Meaning |
 | --- | --- | --- | --- |
 | `id` | string | — | clip id |
-| `voice` | object | — | `{id, sex, model}` |
+| `voice` | object | — | the voice object described above |
 | `text` | string | — | sentence spoken |
 | `original_audio` | string | — | site-root-relative WAV path |
 | `decoded_audio` | string | — | site-root-relative WAV path |
@@ -229,8 +259,8 @@ How each derived value is computed, exactly:
   Viterbi pass over the whole clip that charges 0.55 per octave of frame-to-
   frame jump plus 0.20 to enter or leave an unvoiced state, with unvoiced
   costed at `1 − 0.35`. The chosen lag is refined by parabolic interpolation.
-  On this set the original and decoded tracks agree to a median 0.7–1.1 % and a
-  90th percentile of 1.9–6.9 %.
+  On this set the original and decoded tracks agree to a median 0.6–1.1 % and a
+  90th percentile of 1.4–4.3 %.
 - **Voicing, whole frame.** Simply `decoded_f0_confidence ≥ 0.35`. The
   threshold was chosen by eye against the audio; it is a display convenience,
   not a specification.
@@ -320,11 +350,16 @@ spectrum of what came out of the loudspeaker, on both sides.
 - `<clip-id>-ambe.wav` — the same audio after a round trip through the real
   AMBE-3000 hardware.
 
+`docs/assets/audio/MANIFEST.md` is the authority on how they were made: voice
+models and their checksums, the speaker chosen from the 904 in the male model,
+synthesis parameters, the exact resample command, and the corpus licence for
+each voice. The male clips carry a CC BY 4.0 attribution requirement.
+
 **Normalisation.** Every WAV, original and decoded alike, was scaled by a
 single constant gain so its RMS lands on −20 dBFS, backed off if that would
 push its peak above −1 dBFS. No compression, limiting, EQ or noise reduction
 was applied to any file. The gains applied to the decoded files were small
-(−0.72 to +0.27 dB) because the codec preserved level well; the point of the
+(−0.66 to +0.03 dB) because the codec preserved level well; the point of the
 step is that an A/B comparison hears timbre, not loudness.
 
 The originals were additionally trimmed of leading and trailing silence and

@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * SLUG          harmonics        <div data-anim="harmonics"></div>
  *
- * DATA READ     assets/data/norman-b/frames.json   (male recording, on demand)
+ * DATA READ     assets/data/lr-b/frames.json   (male recording, on demand)
  *               assets/data/lj-b/frames.json    (female recording, on demand)
  *               — only `frames[].derived.orig_f0_hz` / `orig_f0_confidence`
  *                 and `frames[].i` / `t` are used, to snap the pitch slider to
@@ -145,7 +145,7 @@ const FIGURE_HTML = `
   <div class="anim-controls__group" role="group" aria-label="Snap to a real measured frame"
        style="flex-wrap: wrap; max-width: 100%">
     <div class="anim-toggle-group" style="flex-wrap: wrap; max-width: 100%">
-      <button class="anim-btn" type="button" data-voice="norman" aria-pressed="false">Male recording</button>
+      <button class="anim-btn" type="button" data-voice="lr" aria-pressed="false">Male recording</button>
       <button class="anim-btn" type="button" data-voice="lj" aria-pressed="false">Female recording</button>
     </div>
     <button class="anim-btn" type="button" data-role="next" disabled>Next frame ›</button>
@@ -170,7 +170,7 @@ const FIGURE_HTML = `
 /* --- module ------------------------------------------------------------- */
 
 const VOICES = {
-  norman: { clip: "norman-b", label: "male" },
+  lr: { clip: "lr-b", label: "male" },
   lj: { clip: "lj-b", label: "female" },
 };
 
@@ -194,8 +194,8 @@ export function mount(root) {
   const state = {
     pitch: DEFAULT_PITCH_HZ, // what is drawn (eases toward target)
     target: DEFAULT_PITCH_HZ, // what the reader asked for
-    voice: null, // "norman" | "lj" | null (free mode)
-    picks: { norman: null, lj: null },
+    voice: null, // "lr" | "lj" | null (free mode)
+    picks: { lr: null, lj: null },
     pickIndex: 0,
     source: null, // {clip, i, t, f0, conf} when snapped to a real frame
   };

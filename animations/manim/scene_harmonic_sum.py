@@ -8,14 +8,15 @@ of a couple of dozen numbers.
 DATA READ (all precomputed / measured — this file performs no AMBE analysis
 or synthesis, it only draws numbers that already exist on disk):
 
-  docs/assets/data/norman-b/spectra.json   per-frame magnitude spectrum, dBFS
-  docs/assets/data/norman-b/frames.json    per-frame derived pitch estimate
-  docs/assets/audio/norman-b-original.wav  PCM samples, plotted as a waveform
+  docs/assets/data/lj-b/spectra.json   per-frame magnitude spectrum, dBFS
+  docs/assets/data/lj-b/frames.json    per-frame derived pitch estimate
+  docs/assets/audio/lj-b-original.wav  PCM samples, plotted as a waveform
 
-Frame 121 (t = 2.42 s) of the featured hardware capture was chosen because
-it is strongly voiced across the whole 0-4 kHz band: all eight measured
-bands score above 0.7, and all 22 harmonics below 4 kHz sit within 25 dB of
-the strongest one, so every one of them is visible on a linear plot.
+Frame 141 (t = 2.82 s) of the female clip was chosen because it is strongly
+voiced across the whole 0-4 kHz band: all eight measured bands score 0.80 or
+above, and its fundamental of 175 Hz puts 22 harmonics below 4 kHz, ten of
+them within 25 dB of the strongest. Rebuilding the capture changes the
+waveform, so re-pick a frame meeting those criteria whenever it is rebuilt.
 
 WHAT IS DRAWN, AND HOW HONEST IT IS:
 
@@ -132,7 +133,7 @@ DATA = ROOT / "docs" / "assets" / "data"
 AUDIO = ROOT / "docs" / "assets" / "audio"
 
 CLIP = "lj-b"
-FRAME = 74           # t = 1.48 s; every band voiced, 23 harmonics below 4 kHz
+FRAME = 141          # t = 2.82 s; every band voiced, 22 harmonics below 4 kHz
 SAMPLE_RATE = 8000
 FRAME_SAMPLES = 160  # 20 ms
 
