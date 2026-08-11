@@ -27,8 +27,15 @@
  *               reinvented per sound: "the numbers differ; the description
  *               does not have to be reinvented." That is a claim the reader
  *               should be able to check, so the figure runs the identical
- *               measurement across eight recordings and lets them look. The
+ *               measurement across six recordings and lets them look. The
  *               shapes are wildly different. The axes never change.
+ *
+ *               Three sentences, not the four in the capture set. The "CQ CQ
+ *               CQ" clip is deliberately absent: it is the callsign-free
+ *               fragment of a radio call, which means nothing yet to a reader
+ *               who has not reached the D-STAR chapters, and chapter 01 is
+ *               about speech rather than about radio. It is still in the data
+ *               and still used elsewhere on the site.
  *
  *               It is also the first place on the site a real spectrum
  *               appears, so it is deliberately plain: no harmonic comb, no
@@ -68,7 +75,6 @@ function fittedTicks(domain, pixels, perLabel = 62) {
 const SENTENCES = [
   { id: "c", label: "She sells sea shells" },
   { id: "a", label: "The quick brown fox" },
-  { id: "b", label: "CQ CQ CQ" },
   { id: "d", label: "We were away" },
 ];
 
@@ -84,7 +90,7 @@ const FLOOR_DB = -85;
 
 const FIGURE_HTML = `
 <div class="anim-figure__head">
-  <p class="anim-figure__title">Energy at each frequency, across eight recordings</p>
+  <p class="anim-figure__title">Energy at each frequency, across six recordings</p>
 </div>
 
 <div class="anim-figure__frame" data-state="loading">
