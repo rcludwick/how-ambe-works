@@ -13,6 +13,9 @@ repo_name = "rcludwick/how-ambe-works"
 # docs/ so the work in progress is visible in the repo.
 nav = [
   { "How AMBE Works" = "index.md" },
+  { "Part I: The mathematics you need" = [
+    { "Why sinusoids" = "01-why-sinusoids.md" },
+  ] },
   { "Part III: The model" = [
     { "Multi-band excitation" = "07-multi-band-excitation.md" },
     { "Analysis: pitch, voicing, amplitudes" = "08-analysis.md" },

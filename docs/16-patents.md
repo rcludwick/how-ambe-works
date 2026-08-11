@@ -9,7 +9,7 @@ today, and what that actually constrains for someone building an open
 implementation.
 {: .lede }
 
-!!! warning "Not authoritative"
+!!! warning "This is not authoritative"
 
     **This page is a summary and not to be construed as legal advice.** 
     It collects the public record and the various readings people 
