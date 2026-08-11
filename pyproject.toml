@@ -1,0 +1,42 @@
+# Python dependencies for this repository, managed with uv.
+#
+# There is no Python package here to install. This file exists so that `uv`
+# can build an environment reproducibly, and so the Python VERSION is pinned
+# rather than left to whatever `python3` happens to be.
+#
+# That pin is not fussiness. manim depends on PyAV, and PyAV publishes no
+# wheel for 3.13 or 3.14 yet, so a newer interpreter silently falls back to
+# building FFmpeg bindings from source and fails. Pinning 3.12 here means
+# `uv run` cannot pick the wrong one, and `uv` will fetch 3.12 if the machine
+# does not have it.
+#
+#   uv sync --group animations     # environment for rendering the scenes
+#   uv run manim render ...        # or just let uv manage it per command
+#   tools/render-local.sh          # which wraps the above
+#
+# Regenerate the lock after editing:  uv lock
+[project]
+name = "how-ambe-works"
+version = "0"
+description = "Tooling for the How AMBE Works site: manim scenes, data and audio."
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+# Nothing here is importable as a library, so do not try to build it.
+[tool.uv]
+package = false
+
+[dependency-groups]
+# Rendering the animations. Pinned to the manim the scenes were authored
+# against: 0.19 and 0.21 differ in layout and in CLI flags, and the scenes are
+# tuned to the former.
+animations = [
+  "manim==0.19.1",
+  "numpy>=1.26",
+]
+
+# Building the site. Kept separate so an animation render does not drag in the
+# static site generator, and vice versa.
+docs = [
+  "zensical",
+]

@@ -59,21 +59,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Pinned, not 3.x: on 3.13 pip finds no PyAV wheel and falls back to a
-      # source build that needs the whole FFmpeg dev toolchain.
-      - uses: actions/setup-python@v7
+      # uv reads .python-version and pyproject.toml, so the interpreter is
+      # pinned in the repository rather than here. That pin matters: PyAV has
+      # no wheel above 3.12, and a newer interpreter silently falls back to
+      # building FFmpeg bindings from source.
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.12"
-          cache: pip
+          enable-cache: true
 
       # Keyed on this scene alone, so editing one scene does not invalidate
-      # the other three.
+      # the other three. The narration audio is part of the key because a
+      # re-recorded line changes both the sound and the scene's timing.
       - name: Restore rendered video
         id: video-cache
         uses: actions/cache@v6
         with:
           path: out
-          key: anim-${{ matrix.slug }}-${{ runner.os }}-${{ hashFiles(format('animations/manim/{0}', matrix.file), 'animations/requirements.txt') }}
+          key: anim-${{ matrix.slug }}-${{ runner.os }}-${{ hashFiles(format('animations/manim/{0}', matrix.file), 'animations/manim/narration.py', format('animations/narration/audio/{0}-*.wav', matrix.slug), 'uv.lock') }}
 
       - name: Install render dependencies
         if: steps.video-cache.outputs.cache-hit != 'true'
@@ -86,13 +88,7 @@ jobs:
 
       - name: Install manim
         if: steps.video-cache.outputs.cache-hit != 'true'
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f animations/requirements.txt ]; then
-            pip install -r animations/requirements.txt
-          else
-            pip install manim
-          fi
+        run: uv sync --group animations
 
       - name: Check for LaTeX usage
         if: steps.video-cache.outputs.cache-hit != 'true'
@@ -111,7 +107,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out
-          manim render \
+          uv run --group animations manim render \
             --quality m \
             --format mp4 \
             --media_dir media \

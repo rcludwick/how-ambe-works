@@ -1,8 +1,0 @@
-# Render dependencies for animations/manim/*.py.
-#
-# Pinned so the render workflow gets the same CLI flags and layout engine the
-# scenes were authored and checked against (manim CE 0.19.1, macOS + Linux).
-# The scenes deliberately use Pango text only, so no TeX distribution is
-# needed; the runner needs ffmpeg and cairo/pango.
-manim==0.19.1
-numpy>=1.26

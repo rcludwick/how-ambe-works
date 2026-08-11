@@ -15,3 +15,6 @@ node_modules/
 
 # macOS
 .DS_Store
+
+# local render output (tools/render-local.sh)
+out/
