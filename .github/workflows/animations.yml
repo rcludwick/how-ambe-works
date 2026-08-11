@@ -77,12 +77,22 @@ jobs:
           path: out
           key: anim-${{ matrix.slug }}-${{ runner.os }}-${{ hashFiles(format('animations/manim/{0}', matrix.file), 'animations/manim/narration.py', format('animations/narration/audio/{0}-*.wav', matrix.slug), 'uv.lock') }}
 
+      # ffmpeg is installed on BOTH paths, unlike everything else here, because
+      # the verify step below probes the video with ffprobe and that step runs
+      # whether or not the render did. Installing it only on a cache miss made
+      # every cache hit fail with "ffprobe: command not found", which the
+      # verify step reported as "has no audio track": a broken check reading as
+      # a broken video. The runner image does not ship ffmpeg.
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Install render dependencies
         if: steps.video-cache.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
-            ffmpeg libcairo2-dev libpango1.0-dev pkg-config \
+            libcairo2-dev libpango1.0-dev pkg-config \
             libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \
             libavfilter-dev libswscale-dev libswresample-dev
 
@@ -134,6 +144,10 @@ jobs:
             || { echo "::error::out/${{ matrix.slug }}.vtt is missing or empty"; exit 1; }
           head -1 "out/${{ matrix.slug }}.vtt" | grep -q '^WEBVTT' \
             || { echo "::error::out/${{ matrix.slug }}.vtt is not a WebVTT file"; exit 1; }
+          # Named separately so a missing tool never masquerades as a missing
+          # audio track. Without this the two are indistinguishable in the log.
+          command -v ffprobe >/dev/null \
+            || { echo "::error::ffprobe is not installed, so the video cannot be verified"; exit 1; }
           ffprobe -v error -select_streams a -show_entries stream=codec_name \
             -of csv=p=0 "out/${{ matrix.slug }}.mp4" | grep -q . \
             || { echo "::error::out/${{ matrix.slug }}.mp4 has no audio track"; exit 1; }
