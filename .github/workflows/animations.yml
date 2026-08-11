@@ -95,11 +95,13 @@ jobs:
           fi
           for src in "${scenes[@]}"; do
             for fmt in webm mp4; do
+              # --write_all renders every Scene in the file. (It is spelled
+              # --write_all / -a in manim CE; there is no --all.)
               manim render \
                 --quality h \
                 --format "$fmt" \
                 --media_dir media \
-                --all \
+                --write_all \
                 "$src"
             done
           done
