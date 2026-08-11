@@ -20,7 +20,7 @@
 # (~16 ms per 20 ms frame), so a 3 s clip takes a few seconds each way.
 #
 # Env:
-#   RIG   path to the thumbdv-rig binary
+#   RIG   path to the thumbdv-rig binary (default: whatever is on PATH)
 #   PORT  serial device of the ThumbDV (default /dev/cu.usbserial-DK0EOQVS)
 
 set -euo pipefail
@@ -29,7 +29,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 audio_dir="$repo_root/docs/assets/audio"
 frames_dir="$repo_root/docs/assets/data/frames"
 
-RIG="${RIG:-$HOME/dev/ambe/target/debug/thumbdv-rig}"
+RIG="${RIG:-$(command -v thumbdv-rig || true)}"
 PORT="${PORT:-/dev/cu.usbserial-DK0EOQVS}"
 
 TARGET_RMS_DB=-20.0
@@ -38,7 +38,8 @@ MIN_RMS_DB=-45.0
 
 die() { echo "capture-hardware.sh: FATAL: $*" >&2; exit 1; }
 
-[ -x "$RIG" ] || die "thumbdv-rig not executable at $RIG (set RIG=...)"
+[ -n "$RIG" ] && [ -x "$RIG" ] \
+  || die "no thumbdv-rig binary (set RIG=/path/to/thumbdv-rig, or put it on PATH)"
 [ -e "$PORT" ] || die "no ThumbDV at $PORT (set PORT=...)"
 command -v sox >/dev/null || die "sox not on PATH"
 command -v soxi >/dev/null || die "soxi not on PATH"
