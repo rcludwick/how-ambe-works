@@ -16,6 +16,7 @@ nav = [
   { "Part I: The mathematics you need" = [
     { "Why sinusoids" = "01-why-sinusoids.md" },
     { "The Fourier transform and the DFT" = "02-fourier-and-the-dft.md" },
+    { "Windows, frames, and the tradeoff" = "03-windows-and-frames.md" },
   ] },
   { "Part III: The model" = [
     { "Multi-band excitation" = "07-multi-band-excitation.md" },
