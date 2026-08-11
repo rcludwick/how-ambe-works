@@ -1,8 +1,8 @@
 # Build and deploy the site to GitHub Pages.
 #
 # Triggers are deliberately limited to `push` on main and manual dispatch.
-# Do NOT add a `pull_request` trigger: this job runs on self-hosted hardware,
-# and a pull_request trigger would let a fork PR execute arbitrary code on it.
+# Do NOT add a `pull_request` trigger: the repo is public, and if this is ever
+# moved back to self-hosted hardware a fork PR could execute code on it.
 name: Pages
 
 on:
@@ -32,7 +32,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/configure-pages@v6
       - uses: actions/checkout@v7
