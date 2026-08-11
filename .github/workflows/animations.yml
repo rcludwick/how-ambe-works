@@ -1,20 +1,22 @@
 # Render the manim scenes to video.
 #
-# RUNNER REQUIREMENTS: manim needs `ffmpeg` plus cairo and pango, installed
-# by the apt step below. It does NOT need a TeX distribution: every scene in
+# One job per scene, run in parallel. Rendering is CPU-bound and the scenes are
+# independent, so four concurrent jobs finish in roughly the time of the
+# slowest one rather than the sum of all four. Each job caches its own scene,
+# so editing one scene re-renders only that scene.
+#
+# RUNNER REQUIREMENTS: manim needs `ffmpeg` plus cairo and pango, installed by
+# the apt step below. It does NOT need a TeX distribution: every scene in
 # animations/manim/ uses Pango text (`Text`, not `Tex`/`MathTex`), so no LaTeX
 # install is required. If a scene ever imports Tex/MathTex that is a bug,
 # caught by the check below; rewrite it with Text rather than installing TeX.
 #
 # This is a SEPARATE workflow from pages.yml so that ordinary docs commits
-# never pay for a render. It fires only on manual dispatch or on pushes that
-# actually touch animations/**, and the rendered output is cached on the hash
-# of the scene sources, so a re-run with unchanged scenes is a cache restore
-# rather than a render.
+# never pay for a render, and pages.yml calls it so the deploy actually
+# contains the video rather than an artifact nobody downloads.
 #
-# Triggers are deliberately limited: no `pull_request`. This currently runs on
-# GitHub-hosted runners, but the repo is public, and if it is ever moved back
-# to self-hosted hardware a pull_request trigger would let a fork PR execute
+# Triggers are deliberately limited: no `pull_request`. The repo is public, and
+# if this is ever moved back to self-hosted hardware a fork PR could execute
 # arbitrary code there. Keep it off.
 name: Animations
 
@@ -25,10 +27,6 @@ on:
       - "animations/**"
       - ".github/workflows/animations.yml"
   workflow_dispatch:
-  # pages.yml calls this so the deploy actually contains the rendered video
-  # rather than an artifact nobody downloads. Artifacts uploaded by a called
-  # workflow are visible to other jobs in the same run, which is what makes
-  # the hand-off work.
   workflow_call:
 
 permissions:
@@ -44,6 +42,15 @@ concurrency:
 jobs:
   render:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { file: scene_decomposition.py, class: Decomposition, slug: decomposition }
+          - { file: scene_harmonic_sum.py, class: HarmonicSum, slug: harmonic-sum }
+          - { file: scene_pipeline.py, class: Pipeline, slug: pipeline }
+          - { file: scene_vq.py, class: VectorQuantization, slug: vq }
     steps:
       - uses: actions/checkout@v7
 
@@ -54,30 +61,15 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      # Restore a previous render keyed on the scene sources. An exact hit
-      # means nothing to render; a partial hit still warms manim's own cache.
+      # Keyed on this scene alone, so editing one scene does not invalidate
+      # the other three.
       - name: Restore rendered video
         id: video-cache
         uses: actions/cache@v4
         with:
-          path: docs/assets/video
-          key: anim-video-${{ runner.os }}-${{ hashFiles('animations/manim/**/*.py', 'animations/requirements.txt') }}
-          restore-keys: |
-            anim-video-${{ runner.os }}-
+          path: out
+          key: anim-${{ matrix.slug }}-${{ runner.os }}-${{ hashFiles(format('animations/manim/{0}', matrix.file), 'animations/requirements.txt') }}
 
-      # manim's partial-movie cache: lets an edited scene re-render only the
-      # animations that actually changed.
-      - name: Cache manim intermediates
-        uses: actions/cache@v4
-        with:
-          path: media
-          key: anim-media-${{ runner.os }}-${{ hashFiles('animations/manim/**/*.py') }}
-          restore-keys: |
-            anim-media-${{ runner.os }}-
-
-      # ubuntu-latest has ffmpeg but not cairo/pango, which manim renders text
-      # with. Still no TeX: the scenes use Pango Text, enforced by the check
-      # below.
       - name: Install render dependencies
         if: steps.video-cache.outputs.cache-hit != 'true'
         run: |
@@ -100,82 +92,47 @@ jobs:
       - name: Check for LaTeX usage
         if: steps.video-cache.outputs.cache-hit != 'true'
         run: |
-          if grep -rnE '\b(Tex|MathTex|SingleStringMathTex|BulletedList)\b' animations/manim --include='*.py'; then
-            echo "::error::Scenes must use Pango Text, not LaTeX (Tex/MathTex). The runner has no TeX install."
+          if grep -nE '\b(Tex|MathTex|SingleStringMathTex|BulletedList)\b' \
+               "animations/manim/${{ matrix.file }}"; then
+            echo "::error::Scenes must use Pango Text, not LaTeX. The runner has no TeX install."
             exit 1
           fi
 
-      - name: Render scenes to MP4
+      # MP4 only. H.264 plays in every browser that matters, and manim's WebM
+      # path goes through libvpx, which doubles the job for a format nothing
+      # here needs.
+      - name: Render ${{ matrix.class }}
         if: steps.video-cache.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          mkdir -p docs/assets/video
-          shopt -s nullglob
-          scenes=(animations/manim/*.py)
-          if [ ${#scenes[@]} -eq 0 ]; then
-            echo "No scenes to render."
-            exit 0
-          fi
-          # MP4 only. H.264 plays in every browser that matters, and manim's
-          # WebM path goes through libvpx, which doubled an already slow job
-          # for a format nothing here needs.
-          for src in "${scenes[@]}"; do
-            for fmt in mp4; do
-              # --write_all renders every Scene in the file. (It is spelled
-              # --write_all / -a in manim CE; there is no --all.)
-              manim render \
-                --quality m \
-                --format "$fmt" \
-                --media_dir media \
-                --write_all \
-                "$src"
-            done
-          done
-          # Flatten manim's media/videos/<module>/<res>/ tree into one dir.
-          find media/videos -type f -name '*.mp4' \
-            -exec cp -f {} docs/assets/video/ \;
-          # manim names its output after the Scene class; the pages reference
-          # a slug. Rename to the slugs the <video> elements in docs/*.md ask
-          # for. A new scene needs a line here and a poster image in
+          mkdir -p out
+          manim render \
+            --quality m \
+            --format mp4 \
+            --media_dir media \
+            "animations/manim/${{ matrix.file }}" "${{ matrix.class }}"
+          # manim names its output after the Scene class; the pages reference a
+          # slug. A new scene needs a matrix row above and a poster image in
           # docs/assets/posters/ (tools/make-posters.py).
-          (
-            cd docs/assets/video
-            for pair in \
-              "Decomposition:decomposition" \
-              "HarmonicSum:harmonic-sum" \
-              "Pipeline:pipeline" \
-              "VectorQuantization:vq"
-            do
-              cls="${pair%%:*}"
-              slug="${pair##*:}"
-              for ext in mp4; do
-                if [ -f "$cls.$ext" ]; then mv -f "$cls.$ext" "$slug.$ext"; fi
-              done
-            done
-          )
-          ls -lh docs/assets/video
+          found=$(find media/videos -type f -name '${{ matrix.class }}.mp4' | head -1)
+          [ -n "$found" ] || { echo "::error::${{ matrix.class }}.mp4 was not produced"; exit 1; }
+          cp -f "$found" "out/${{ matrix.slug }}.mp4"
 
-      # Fail loudly if a slug the pages reference has no file. Without this
-      # the deploy succeeds and the reader gets a dead <video> element, which
-      # is exactly how all four went missing before.
-      - name: Verify every referenced slug rendered
+      # Guards the cache-hit path too: a cache that restored empty would
+      # otherwise sail through and deploy a dead <video>.
+      - name: Verify the file exists
         run: |
           set -euo pipefail
-          missing=0
-          for slug in decomposition harmonic-sum pipeline vq; do
-            if [ ! -s "docs/assets/video/$slug.mp4" ]; then
-              echo "::error::docs/assets/video/$slug.mp4 is missing or empty"
-              missing=1
-            fi
-          done
-          [ "$missing" -eq 0 ]
+          [ -s "out/${{ matrix.slug }}.mp4" ] \
+            || { echo "::error::out/${{ matrix.slug }}.mp4 is missing or empty"; exit 1; }
+          ls -lh out
 
-      - name: Upload rendered animations
+      # One artifact per scene. pages.yml downloads them with a pattern and
+      # merges, so adding a scene needs no change there.
+      - name: Upload ${{ matrix.slug }}
         uses: actions/upload-artifact@v4
         with:
-          name: animations
-          path: docs/assets/video/
-          # error, not warn: pages.yml consumes this artifact, and a silent
-          # empty upload deploys a site whose four video figures 404.
+          name: animations-${{ matrix.slug }}
+          path: out/${{ matrix.slug }}.mp4
           if-no-files-found: error
           retention-days: 30

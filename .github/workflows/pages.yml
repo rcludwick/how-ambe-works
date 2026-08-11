@@ -41,10 +41,13 @@ jobs:
           python-version: 3.x
 
       # Must land before `zensical build`, which copies docs/ into site/.
+      # The render is a matrix with one artifact per scene, so this merges
+      # them by pattern; adding a scene needs no change here.
       - name: Fetch rendered animations
         uses: actions/download-artifact@v4
         with:
-          name: animations
+          pattern: animations-*
+          merge-multiple: true
           path: docs/assets/video
 
       - name: Verify the video arrived
