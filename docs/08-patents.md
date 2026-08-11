@@ -9,24 +9,24 @@ today, and what that actually constrains for someone building an open
 implementation.
 {: .lede }
 
-!!! warning "This is engineering research, not legal advice"
+!!! warning "Not authoritative"
 
-    Nothing on this page is a legal opinion, a freedom-to-operate
-    analysis, or a substitute for a patent attorney. It is a reading of
-    the public record — bibliographic data, legal-status timelines, and
-    claim text from Google Patents — assembled by engineers so that other
-    engineers know where to look.
+    **This page is a summary, not an opinion.** It collects the public
+    record and the various readings people have offered of it. The
+    authors are engineers, not patent attorneys, and are not expert
+    enough to settle the questions this page raises. Where readings
+    differ, the difference is reported rather than resolved.
 
-    Patent scope is decided by claim construction, not by titles or
-    abstracts, and it is decided in court. Expiration dates shown by
-    Google Patents are computed and can be wrong; maintenance-fee status
-    can change at any renewal window. Verify anything you intend to rely
-    on at [USPTO Patent Center](https://patentcenter.uspto.gov/), and if
-    the answer matters commercially, get advice from someone qualified to
-    give it.
+    Nothing here is a legal opinion, a freedom-to-operate analysis, or a
+    substitute for advice from someone qualified to give it. Patent scope
+    is decided by claim construction, in court, and not by titles,
+    abstracts, or summaries like this one.
 
-    **All dates and statuses on this page were checked against
-    patents.google.com on 2026-08-10.** They will drift. Re-check them.
+    Expiration dates shown by Google Patents are computed and can be
+    wrong, and maintenance-fee status can change at any renewal window.
+    Dates and statuses here reflect patents.google.com as of 2026-08-10
+    and will drift. Verify anything you intend to rely on at
+    [USPTO Patent Center](https://patentcenter.uspto.gov/).
 
 ## Still in force
 
