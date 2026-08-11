@@ -54,6 +54,9 @@ extra_javascript = [
 
 [project.theme]
 language = "en"
+# The CSS sets the Apple system font stack, so the theme's webfonts were
+# fetched from fonts.googleapis.com on every page view and never used.
+font = false
 features = [
   "announce.dismiss",
   "content.code.annotate",
