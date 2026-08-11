@@ -13,6 +13,10 @@
  *
  * CONTROLS      • four sentences, and a male / female voice toggle
  *               • a slider that moves through the sentence, 20 ms at a time
+ *               • play, which runs the recording and drives that slider from
+ *                 the audio clock, so the spectrum changes in time with what
+ *                 is being heard. Hearing "sh" while the curve jumps high and
+ *                 broad is the fastest way to believe the bottom panel.
  *
  * WHAT IT DRAWS Top: energy against time, so the reader can find a vowel.
  *               Bottom: the spectrum of the selected 32 ms window.
@@ -47,6 +51,7 @@ import {
   onThemeChange,
   loadJSON,
   ticks,
+  createAudioPlayer,
 } from "./anim-core.js";
 
 const SLUG = "utterance-spectra";
@@ -88,6 +93,8 @@ const FIGURE_HTML = `
 </div>
 
 <div class="anim-controls">
+  <button class="anim-btn anim-btn--play" type="button" data-role="play"
+          aria-pressed="false">Play</button>
   <div class="anim-controls__group" role="group" aria-label="Sentence">
     ${SENTENCES.map(
       (s, i) =>
@@ -117,9 +124,10 @@ const FIGURE_HTML = `
 </div>
 
 <p class="anim-figure__caption">
-  Drag through a sentence and watch the bottom panel change shape. A vowel puts
-  its energy in a few low humps. A fricative like the "sh" in "she sells" puts
-  it high and spreads it out. Silence drops the whole curve to the floor.
+  Press play and watch the bottom panel change shape as you hear it, or drag
+  through the sentence yourself. A vowel puts its energy in a few low humps.
+  A fricative like the "sh" in "she sells" puts it high and spreads it out.
+  Silence drops the whole curve to the floor.
   Then change the sentence, or the speaker, and notice what does not change:
   the measurement, and the axes it is reported on. Every one of these is the
   same question asked of a different 32&nbsp;ms of audio, which is what makes it
@@ -146,11 +154,14 @@ export async function mount(root) {
   const frameEl = root.querySelector('[data-role="frame"]');
   const windowEl = root.querySelector('[data-role="r-window"]');
   const peakEl = root.querySelector('[data-role="r-peak"]');
+  const playEl = root.querySelector('[data-role="play"]');
   const sentenceEls = Array.from(root.querySelectorAll("[data-sentence]"));
   const voiceEls = Array.from(root.querySelectorAll("[data-voice]"));
 
   const state = { sentence: "c", voice: "lj", position: 0.4, data: null };
   const cache = new Map();
+  /** Rebuilt whenever the clip changes, because the sound has to change too. */
+  let player = null;
 
   const handle = setupCanvas(canvas, { onResize: () => render() });
 
@@ -298,8 +309,35 @@ export async function mount(root) {
         : `${Math.round(doc.bin_centre_hz[peakBin])} Hz, at ${bins[peakBin]} dBFS`;
   }
 
+  /**
+   * Point the play button at the current clip. Rebuilt rather than retargeted
+   * on every clip change, which also stops whatever was playing: leaving the
+   * previous sentence running under a redrawn spectrum would put the picture
+   * and the sound on different recordings.
+   */
+  function attachPlayer() {
+    if (player) player.destroy();
+    playEl.disabled = false;
+    player = createAudioPlayer({
+      src: state.data.doc.clip.original_audio,
+      button: playEl,
+      onFrame: (seconds) => {
+        if (seconds !== null) {
+          // The audio clock drives the slider, so the spectrum on screen is
+          // the 32 ms being heard, and the reader can take over by dragging.
+          const duration = state.data.doc.clip.duration_s;
+          state.position = Math.max(0, Math.min(1, seconds / duration));
+          frameEl.value = String(Math.round(state.position * 100));
+        }
+        render();
+      },
+    });
+  }
+
   async function reload() {
-    if (await load()) render();
+    if (!(await load())) return;
+    attachPlayer();
+    render();
   }
 
   for (const el of sentenceEls) {
@@ -321,6 +359,9 @@ export async function mount(root) {
     });
   }
   frameEl.addEventListener("input", () => {
+    // Dragging takes control back from the audio clock, which would otherwise
+    // fight the reader for the slider on the next frame.
+    if (player && player.playing()) player.stop();
     state.position = Number(frameEl.value) / 100;
     render();
   });
@@ -329,6 +370,7 @@ export async function mount(root) {
   await reload();
 
   return () => {
+    if (player) player.destroy();
     offTheme();
     handle.destroy();
   };

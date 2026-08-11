@@ -701,6 +701,121 @@ export function createTransport(root, options) {
 }
 
 /* ---------------------------------------------------------------------------
+ * Audio playback — a clip, a button, and a playhead the figure can draw
+ * ------------------------------------------------------------------------ */
+
+/**
+ * @typedef {Object} AudioPlayer
+ * @property {() => void} toggle
+ * @property {() => void} stop
+ * @property {() => number|null} time  playhead in seconds, or null when idle
+ * @property {() => boolean} playing
+ * @property {() => void} destroy
+ */
+
+/**
+ * Wire a button to a sound file and report the playhead while it runs.
+ *
+ * For figures drawn against time, where hearing the audio and watching a
+ * cursor cross the picture says more than either alone. The figure supplies
+ * the drawing: this only owns the element, the button state and the frame
+ * callback.
+ *
+ * The clip is fetched on first press (`preload="none"`), so a page carrying
+ * several of these costs nothing until a reader asks for one.
+ *
+ * Reduced motion is deliberately NOT honoured here. Playback is explicitly
+ * requested by a press rather than started on scroll, and a reader who asked
+ * to hear a recording still needs to see where in it they are.
+ *
+ * @param {Object} options
+ * @param {string} options.src site-root-relative path, or an absolute URL
+ * @param {HTMLElement} options.button the `.anim-btn--play` to wire up
+ * @param {(seconds: number|null) => void} options.onFrame called each animation
+ *        frame while playing, and once with `null` when playback ends
+ * @param {string} [options.playLabel="Play"]
+ * @param {string} [options.stopLabel="Stop"]
+ * @returns {AudioPlayer}
+ */
+export function createAudioPlayer(options) {
+  const { src, button, onFrame } = options;
+  const playLabel = options.playLabel || "Play";
+  const stopLabel = options.stopLabel || "Stop";
+
+  const audio = new Audio();
+  audio.preload = "none";
+  audio.src = assetURL(src);
+
+  let raf = 0;
+  let playing = false;
+
+  function tick() {
+    if (!playing) return;
+    onFrame(audio.currentTime);
+    raf = requestAnimationFrame(tick);
+  }
+
+  function setLabel() {
+    button.textContent = playing ? stopLabel : playLabel;
+    button.setAttribute("aria-pressed", String(playing));
+  }
+
+  function stop() {
+    playing = false;
+    audio.pause();
+    audio.currentTime = 0;
+    cancelAnimationFrame(raf);
+    setLabel();
+    onFrame(null);
+  }
+
+  function toggle() {
+    if (playing) {
+      stop();
+      return;
+    }
+    // A rejected play() is the ordinary autoplay-policy path, not a bug, so it
+    // resets the control rather than throwing into the console.
+    const started = audio.play();
+    playing = true;
+    setLabel();
+    raf = requestAnimationFrame(tick);
+    if (started && typeof started.catch === "function") {
+      started.catch(() => {
+        button.disabled = true;
+        stop();
+      });
+    }
+  }
+
+  const onEnded = () => stop();
+  const onError = () => {
+    button.disabled = true;
+    stop();
+  };
+
+  button.addEventListener("click", toggle);
+  audio.addEventListener("ended", onEnded);
+  audio.addEventListener("error", onError);
+  setLabel();
+
+  return {
+    toggle,
+    stop,
+    time: () => (playing ? audio.currentTime : null),
+    playing: () => playing,
+    destroy() {
+      cancelAnimationFrame(raf);
+      audio.pause();
+      button.removeEventListener("click", toggle);
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
+      audio.src = "";
+    },
+  };
+}
+
+/* ---------------------------------------------------------------------------
  * Mounting
  * ------------------------------------------------------------------------ */
 

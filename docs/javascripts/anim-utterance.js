@@ -13,6 +13,13 @@
  *               this figure came out of the chip.
  *
  * CONTROLS      • vowel / fricative, which moves the closeup window
+ *               • play, which plays the recording with a cursor tracking it
+ *
+ * AUDIO         `clip.original_audio` from the same JSON, so the figure and
+ *               the sound are always the same recording. It is the audio
+ *               BEFORE the codec, matching the samples drawn. Nothing here
+ *               plays the decoded track; chapter 12 is where the two are
+ *               compared.
  *
  * WHAT IT DRAWS Top: the whole sentence, as an envelope. Bottom: 60 ms of it
  *               at full sample resolution, with one pitch period marked when
@@ -51,6 +58,7 @@ import {
   onThemeChange,
   loadJSON,
   ticks,
+  createAudioPlayer,
 } from "./anim-core.js";
 
 const SLUG = "utterance";
@@ -93,6 +101,8 @@ const FIGURE_HTML = `
 </div>
 
 <div class="anim-controls">
+  <button class="anim-btn anim-btn--play" type="button" data-role="play"
+          aria-pressed="false">Play</button>
   <div class="anim-controls__group" role="group" aria-label="Which part of the sentence to magnify">
     ${WINDOWS.map(
       (w, i) =>
@@ -115,13 +125,15 @@ const CAPTIONS = {
     "Magnified, a vowel is a train of pulses. Each one is the vocal folds " +
     "closing, and they arrive at a steady rate. This is what makes the " +
     "compression at the top of the page look easy: describe one pulse, say " +
-    "how often it repeats, and you appear to have described the vowel.",
+    "how often it repeats, and you appear to have described the vowel. " +
+    "Press play to hear the sentence, and watch where in it this window sits.",
   unvoiced:
     "The same sentence, a fraction of a second later. There is no pulse and " +
     "no rate to send. A fricative is air forced through a narrow gap, and it " +
     "is noise. Any description built on a repeating shape has nothing to hold " +
     "on to here, which is why a coder ends up having to decide, band by band, " +
-    "which of the two it is looking at.",
+    "which of the two it is looking at. Play it and listen for the hiss as " +
+    "the cursor crosses the marked window.",
 };
 
 const SOURCE_NOTE =
@@ -144,9 +156,10 @@ export async function mount(root) {
   const canvas = root.querySelector("canvas");
   const readoutEl = root.querySelector('[data-role="r-window"]');
   const captionEl = root.querySelector('[data-role="caption"]');
+  const playEl = root.querySelector('[data-role="play"]');
   const buttons = Array.from(root.querySelectorAll("[data-window]"));
 
-  const state = { which: "voiced", data: null };
+  const state = { which: "voiced", data: null, playhead: null };
 
   const handle = setupCanvas(canvas, { onResize: () => render() });
 
@@ -241,6 +254,18 @@ export async function mount(root) {
     ctx.moveTo(top.x(winEnd), top.area.top);
     ctx.lineTo(top.x(winEnd), top.area.bottom);
     ctx.stroke();
+
+    // The playhead, when the recording is running. Drawn last inside the clip
+    // so it rides over the envelope rather than under it.
+    if (state.playhead !== null) {
+      const px = top.x(Math.min(state.playhead, duration));
+      ctx.strokeStyle = th.accentCool;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(px, top.area.top);
+      ctx.lineTo(px, top.area.bottom);
+      ctx.stroke();
+    }
     ctx.restore();
 
     drawLabel(ctx, `“${d.clip.text}”`, top.area.left + 6, top.area.top + 2, {
@@ -342,10 +367,20 @@ export async function mount(root) {
     });
   }
 
+  const player = createAudioPlayer({
+    src: data.clip.original_audio,
+    button: playEl,
+    onFrame: (seconds) => {
+      state.playhead = seconds;
+      render();
+    },
+  });
+
   const offTheme = onThemeChange(() => render());
   render();
 
   return () => {
+    player.destroy();
     offTheme();
     handle.destroy();
   };
