@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import wave
 from pathlib import Path
 
@@ -69,7 +70,16 @@ from manim import (
     VGroup,
     VMobject,
     config,
+    logger,
 )
+
+# manim imports a scene file by path, and which directory ends up on sys.path
+# depends on how it was invoked. Put this file's own directory there so the
+# shared narration helper resolves whether the render was started from the
+# repository root, from tools/render-local.sh, or from CI.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from narration import Narrator  # noqa: E402  (needs the sys.path line above)
 
 # --------------------------------------------------------------------------
 # Output format. 1920x1080 at 30 fps, set here rather than left to the CLI so
@@ -287,11 +297,23 @@ class HarmonicSum(Scene):
         self.footer = None
         self.title = None
 
-        self.beat_title()
-        self.beat_measured()
-        self.beat_build()
-        self.beat_handful()
-        self.beat_close()
+        # The narration sets the pace: each beat runs, then the scene holds
+        # until its line has finished speaking. Rewriting a line in
+        # animations/narration/harmonic-sum.txt re-times the scene around it.
+        nar = Narrator(self, "harmonic-sum")
+
+        with nar.beat("title", floor=1.2):
+            self.beat_title()
+        with nar.beat("measured", floor=1.2):
+            self.beat_measured()
+        with nar.beat("build", floor=1.2):
+            self.beat_build()
+        with nar.beat("handful", floor=1.2):
+            self.beat_handful()
+        with nar.beat("close", floor=1.2):
+            self.beat_close()
+
+        logger.info(nar.report())
 
     # -- chrome ------------------------------------------------------------
     def set_footer(self, left: str, right: str = "", run_time: float = 0.4):

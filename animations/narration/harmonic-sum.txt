@@ -1,0 +1,27 @@
+# Narration for the HarmonicSum scene (scene_harmonic_sum.py).
+# Format and conventions: see pipeline.txt.
+
+[title]
+A voice is a stack of sine waves, all sitting on multiples of one fundamental.
+
+[measured]
+This is a real frame, measured through the hardware and strongly voiced across
+the whole band. On the left the waveform. On the right its spectrum, with every
+peak on a multiple of the same fundamental.
+
+[build]
+Add the sine waves back one at a time.
+On the left, the harmonic going in. On the right, everything so far.
+The amplitudes are read off the measured spectrum. The phase is not, because
+the frame never carries phase.
+
+[handful]
+Watch how quickly it stops changing. The first few harmonics carry almost all
+of the shape, and the ones after them are refining something already
+recognisable.
+That is the reason a coder can spend most of its bits on the bottom of the
+spectrum and get away with it.
+
+[close]
+The frame carries no phase at all. The decoder regenerates it, and the ear
+mostly does not object.

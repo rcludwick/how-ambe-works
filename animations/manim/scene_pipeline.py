@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -76,8 +77,17 @@ from manim import (
     VGroup,
     VMobject,
     config,
+    logger,
     rate_functions,
 )
+
+# manim imports a scene file by path, and which directory ends up on sys.path
+# depends on how it was invoked. Put this file's own directory there so the
+# shared narration helper resolves whether the render was started from the
+# repository root, from tools/render-local.sh, or from CI.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from narration import Narrator  # noqa: E402  (needs the sys.path line above)
 
 # --------------------------------------------------------------------------
 # Output format. Fixed deliverable: 1920x1080, 30 fps.
@@ -456,72 +466,95 @@ class Pipeline(MovingCameraScene):
 
         s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 = stages
 
-        # Timings below total ~68 s. Every pan is 2.5 s, which is what makes the
-        # whole thing feel like one move rather than ten slides.
-        # ---- 1. speech in --------------------------------------------- ~6 s
-        self.reveal(s0["title"], s0["quote"], run_time=2.0)
-        self.play(Create(s0["wave"]), run_time=2.2, rate_func=rate_functions.ease_out_sine)
-        self.reveal(s0["note"], s0["badge"], run_time=1.3)
+        # The narration sets the pace. Each `beat` starts its line, runs the
+        # animations underneath it, and then holds the stage until the line has
+        # finished. The run_times below are therefore the speed of each MOVE,
+        # not the length of each stage: a stage lasts as long as its sentence.
+        #
+        # This is also the fix for the scene reading too fast. It used to total
+        # about 68 s with no dwell anywhere, so every stage cut to the next the
+        # instant its last object had faded in and nothing was ever left on
+        # screen long enough to read. `floor` keeps that dwell even when the
+        # audio is missing, so a silent render is still paced.
+        nar = Narrator(self, "pipeline")
 
-        # ---- 2. framing ---------------------------------------------- ~11 s
-        self.pan(cam, 1, s0, [s1["title"], s1["wave"]], run_time=2.5)
-        self.reveal(*s1["dividers"], run_time=1.4, lag=0.05)
-        self.reveal(s1["window"], s1["maths"], s1["note"], run_time=1.8)
+        # ---- 1. speech in ----------------------------------------------------
+        with nar.beat("speech-in", floor=3.0):
+            self.reveal(s0["title"], s0["quote"], run_time=2.0)
+            self.play(Create(s0["wave"]), run_time=2.2, rate_func=rate_functions.ease_out_sine)
+            self.reveal(s0["note"], s0["badge"], run_time=1.3)
 
-        # ---- 3. pitch ------------------------------------------------ ~18 s
-        self.pan(cam, 2, s1, [s2["title"], s2["axis"]], run_time=2.5)
-        self.play(Create(s2["curve"]), run_time=1.6)
-        self.reveal(*s2["combs"], run_time=1.5, lag=0.035)
-        self.reveal(s2["f0"], s2["law"], s2["badge"], s2["source"], run_time=1.4)
+        # ---- 2. framing ------------------------------------------------------
+        with nar.beat("framing", floor=3.0):
+            self.pan(cam, 1, s0, [s1["title"], s1["wave"]], run_time=2.5)
+            self.reveal(*s1["dividers"], run_time=1.4, lag=0.05)
+            self.reveal(s1["window"], s1["maths"], s1["note"], run_time=1.8)
 
-        # ---- 4. voicing ---------------------------------------------- ~23 s
-        self.pan(cam, 3, s2, [s3["title"], s3["axis"]], run_time=2.5)
-        self.reveal(*s3["bars"], run_time=1.8, lag=0.09)
-        self.reveal(s3["note"], s3["badge"], run_time=1.3)
+        # ---- 3. pitch --------------------------------------------------------
+        with nar.beat("pitch", floor=3.0):
+            self.pan(cam, 2, s1, [s2["title"], s2["axis"]], run_time=2.5)
+            self.play(Create(s2["curve"]), run_time=1.6)
+            self.reveal(*s2["combs"], run_time=1.5, lag=0.035)
+            self.reveal(s2["f0"], s2["law"], s2["badge"], s2["source"], run_time=1.4)
 
-        # ---- 5. spectrum --------------------------------------------- ~29 s
-        self.pan(cam, 4, s3, [s4["title"], s4["axis"], s4["ghost"]], run_time=2.5)
-        self.play(
-            LaggedStart(*[Create(m) for m in s4["sticks"]], lag_ratio=0.03),
-            run_time=1.8,
-        )
-        self.reveal(s4["note"], run_time=1.2)
+        # ---- 4. voicing ------------------------------------------------------
+        with nar.beat("voicing", floor=3.0):
+            self.pan(cam, 3, s2, [s3["title"], s3["axis"]], run_time=2.5)
+            self.reveal(*s3["bars"], run_time=1.8, lag=0.09)
+            self.reveal(s3["note"], s3["badge"], run_time=1.3)
 
-        # ---- 6. quantize --------------------------------------------- ~36 s
-        self.pan(cam, 5, s4, [s5["title"], s5["cards"]], run_time=2.5)
-        self.reveal(*s5["arrows"], *s5["indices"], run_time=1.8, lag=0.10)
-        self.reveal(s5["budget"], run_time=1.4)
-        self.reveal(s5["quote"], s5["caveat"], run_time=1.6)
+        # ---- 5. spectrum -----------------------------------------------------
+        with nar.beat("spectrum", floor=3.0):
+            self.pan(cam, 4, s3, [s4["title"], s4["axis"], s4["ghost"]], run_time=2.5)
+            self.play(
+                LaggedStart(*[Create(m) for m in s4["sticks"]], lag_ratio=0.03),
+                run_time=1.8,
+            )
+            self.reveal(s4["note"], run_time=1.2)
 
-        # ---- 7. on the air ------------------------------------------- ~44 s
-        self.pan(cam, 6, s5, [s6["title"]], run_time=2.5)
-        self.reveal(*s6["bits"], run_time=1.6, lag=0.006)
-        self.reveal(s6["hex"], s6["badge"], run_time=1.2)
-        self.play(Create(s6["carrier"]), run_time=1.4)
-        self.reveal(s6["split"], s6["note"], run_time=1.6)
+        # ---- 6. quantize -----------------------------------------------------
+        with nar.beat("quantize", floor=3.5):
+            self.pan(cam, 5, s4, [s5["title"], s5["cards"]], run_time=2.5)
+            self.reveal(*s5["arrows"], *s5["indices"], run_time=1.8, lag=0.10)
+            self.reveal(s5["budget"], run_time=1.4)
+            self.reveal(s5["quote"], run_time=1.6)
 
-        # ---- 8. decode ----------------------------------------------- ~50 s
-        self.pan(cam, 7, s6, [s7["title"], s7["bits"]], run_time=2.5)
-        self.reveal(*s7["arrows"], *s7["cards"], run_time=2.0, lag=0.10)
-        self.reveal(s7["note"], run_time=1.2)
+        # ---- 7. on the air ---------------------------------------------------
+        with nar.beat("air", floor=3.0):
+            self.pan(cam, 6, s5, [s6["title"]], run_time=2.5)
+            self.reveal(*s6["bits"], run_time=1.6, lag=0.006)
+            self.reveal(s6["hex"], s6["badge"], run_time=1.2)
+            self.play(Create(s6["carrier"]), run_time=1.4)
+            self.reveal(s6["split"], s6["note"], run_time=1.6)
 
-        # ---- 9. synthesize ------------------------------------------- ~59 s
-        self.pan(cam, 8, s7, [s8["title"], s8["equation"]], run_time=2.5)
-        self.play(
-            LaggedStart(*[Create(h) for h in s8["harmonics"]], lag_ratio=0.15),
-            run_time=1.8,
-        )
-        self.play(Create(s8["sum"]), run_time=1.3)
-        self.reveal(s8["sum_label"], run_time=0.7)
-        self.play(Create(s8["noise"]), run_time=1.0)
-        self.reveal(s8["note"], run_time=1.1)
+        # ---- 8. decode -------------------------------------------------------
+        with nar.beat("decode", floor=3.0):
+            self.pan(cam, 7, s6, [s7["title"], s7["bits"]], run_time=2.5)
+            self.reveal(*s7["arrows"], *s7["cards"], run_time=2.0, lag=0.10)
+            self.reveal(s7["note"], run_time=1.2)
 
-        # ---- 10. speech out ------------------------------------------ ~68 s
-        self.pan(cam, 9, s8, [s9["title"]], run_time=2.5)
-        self.play(Create(s9["wave"]), run_time=2.2, rate_func=rate_functions.ease_out_sine)
-        self.reveal(s9["note"], s9["badge"], run_time=1.2)
-        self.reveal(s9["closing"], run_time=1.8)
-        self.wait(1.4)
+        # ---- 9. synthesize ---------------------------------------------------
+        with nar.beat("synthesize", floor=3.0):
+            self.pan(cam, 8, s7, [s8["title"], s8["equation"]], run_time=2.5)
+            self.play(
+                LaggedStart(*[Create(h) for h in s8["harmonics"]], lag_ratio=0.15),
+                run_time=1.8,
+            )
+            self.play(Create(s8["sum"]), run_time=1.3)
+            self.reveal(s8["sum_label"], run_time=0.7)
+            self.play(Create(s8["noise"]), run_time=1.0)
+            self.reveal(s8["note"], run_time=1.1)
+
+        # ---- 10. speech out --------------------------------------------------
+        with nar.beat("speech-out", floor=3.0):
+            self.pan(cam, 9, s8, [s9["title"]], run_time=2.5)
+            self.play(Create(s9["wave"]), run_time=2.2, rate_func=rate_functions.ease_out_sine)
+            self.reveal(s9["note"], s9["badge"], run_time=1.2)
+            self.reveal(s9["closing"], run_time=1.8)
+
+        # A last hold so the closing line is not cut off by the file ending.
+        self.wait(1.8)
+        logger.info(nar.report())
 
     # -- playback helpers --------------------------------------------------
     def reveal(self, *pieces, run_time: float, lag: float = 0.0) -> None:
@@ -873,14 +906,14 @@ class Pipeline(MovingCameraScene):
             INK3,
         )
         quote.move_to(np.array([0.2, -2.22, 0.0]))
-        caveat = cite(
-            "That is the patent's example allocation. D-STAR spends part of the same 3600 bps on\n"
-            "error correction, and its exact field layout has never been published.",
-            INK4,
-        )
-        caveat.move_to(np.array([0.2, -2.94, 0.0]))
+        # The caveat that used to sit under the quote (that this is the
+        # patent's example allocation, not D-STAR's, whose field layout is
+        # unpublished) has been removed: at this camera position it landed on
+        # top of the budget bars. It is not lost. The figcaption in
+        # docs/10-the-dstar-frame.md carries the same qualification in prose,
+        # where it can be read at leisure rather than in a passing frame.
 
-        group = place(STAGE_X[5], [title, cards, *arrows, *indices, budget, quote, caveat])
+        group = place(STAGE_X[5], [title, cards, *arrows, *indices, budget, quote])
         return {
             "group": group,
             "title": title,
@@ -889,7 +922,6 @@ class Pipeline(MovingCameraScene):
             "indices": indices,
             "budget": budget,
             "quote": quote,
-            "caveat": caveat,
         }
 
     def stage_air(self) -> dict:

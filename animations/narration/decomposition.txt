@@ -1,0 +1,32 @@
+# Narration for the Decomposition scene (scene_decomposition.py).
+# Format and conventions: see pipeline.txt.
+
+[title]
+A single voiced or unvoiced decision per frame is not enough.
+Real speech is periodic in some parts of the spectrum and noisy in others, at
+the same instant.
+
+[waveform]
+This is a real recording, eight kilohertz, captured through the hardware.
+Half a second of speech. Nothing has been decided about it yet.
+
+[spectrum]
+Take one twenty millisecond window and look at it as a spectrum.
+The peaks sit on a regular grid. That spacing is the pitch, and every peak is a
+multiple of it.
+
+[bands]
+Now cut the spectrum into bands, and ask of each band separately: does this
+repeat at the pitch period?
+Some bands answer yes and some answer no. That is the observation the whole
+codec is built on.
+
+[model]
+So rebuild it as two things at once. Voiced bands get sine waves on the
+harmonic grid. Unvoiced bands get noise.
+The buzz and the hiss coexist, band by band, in the same frame.
+
+[close]
+That is multi band excitation. Griffin and Lim published it in nineteen eighty
+eight, and everything after it is arithmetic about how few bits the description
+can be squeezed into.

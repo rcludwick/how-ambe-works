@@ -46,6 +46,8 @@ Rendering
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
 import numpy as np
 from manim import (
@@ -66,9 +68,18 @@ from manim import (
     Text,
     VGroup,
     config,
+    logger,
     interpolate_color,
     rate_functions,
 )
+
+# manim imports a scene file by path, and which directory ends up on sys.path
+# depends on how it was invoked. Put this file's own directory there so the
+# shared narration helper resolves whether the render was started from the
+# repository root, from tools/render-local.sh, or from CI.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from narration import Narrator  # noqa: E402  (needs the sys.path line above)
 
 # --------------------------------------------------------------------------
 # Output format. Fixed deliverable: 1920x1080, 30 fps.
@@ -286,106 +297,117 @@ class VectorQuantization(MovingCameraScene):
         arm(plot, rise=0.0)
         self.add(plot, heading, *dots, *centroid_marks, c_cloud, c_book, c_assign)
 
+        # The narration sets the pace: each section runs, then the scene holds
+        # until its line has finished speaking. Rewriting a line in
+        # animations/narration/vq.txt re-times the scene around it.
+        nar = Narrator(self, "vq")
+
         # ---- 1. the cloud ------------------------------------------- ~8 s
-        self.play(Restore(heading), Restore(plot), run_time=2.2)
-        self.play(
-            LaggedStart(*[Restore(d) for d in dots], lag_ratio=0.004),
-            run_time=2.8,
-        )
-        self.play(Restore(c_cloud), run_time=1.6)
+        with nar.beat("cloud", floor=1.2):
+            self.play(Restore(heading), Restore(plot), run_time=2.2)
+            self.play(
+                LaggedStart(*[Restore(d) for d in dots], lag_ratio=0.004),
+                run_time=2.8,
+            )
+            self.play(Restore(c_cloud), run_time=1.6)
 
         # ---- 2. the codebook ---------------------------------------- ~13 s
-        self.play(
-            LaggedStart(*[Restore(m) for m in centroid_marks], lag_ratio=0.05),
-            c_cloud.animate.set_opacity(0.0),
-            run_time=2.6,
-        )
-        self.play(Restore(c_book), run_time=1.5)
+        with nar.beat("codebook", floor=1.2):
+            self.play(
+                LaggedStart(*[Restore(m) for m in centroid_marks], lag_ratio=0.05),
+                c_cloud.animate.set_opacity(0.0),
+                run_time=2.6,
+            )
+            self.play(Restore(c_book), run_time=1.5)
 
         # ---- 3. assignment ------------------------------------------ ~19 s
-        self.play(
-            LaggedStart(*[Create(s) for s in spokes], lag_ratio=0.0025),
-            *[d.animate.set_color(entry_colour(int(OWNER[i]))) for i, d in enumerate(dots)],
-            c_book.animate.set_opacity(0.0),
-            run_time=3.2,
-        )
-        self.play(Restore(c_assign), run_time=1.4)
+        with nar.beat("assignment", floor=1.2):
+            self.play(
+                LaggedStart(*[Create(s) for s in spokes], lag_ratio=0.0025),
+                *[d.animate.set_color(entry_colour(int(OWNER[i]))) for i, d in enumerate(dots)],
+                c_book.animate.set_opacity(0.0),
+                run_time=3.2,
+            )
+            self.play(Restore(c_assign), run_time=1.4)
 
         # ---- 4. one vector, close up -------------------------------- ~30 s
-        hero_dot = dots[HERO_I]
-        hero_mark = centroid_marks[HERO_C]
-        halo = Dot(to_scene(HERO_P), radius=0.20, color=WARM, fill_opacity=0.0)
-        halo.set_stroke(WARM, width=2.4, opacity=1.0)
-        arm(halo, rise=0.0)
-        self.add(halo)
+        with nar.beat("one-vector", floor=1.2):
+            hero_dot = dots[HERO_I]
+            hero_mark = centroid_marks[HERO_C]
+            halo = Dot(to_scene(HERO_P), radius=0.20, color=WARM, fill_opacity=0.0)
+            halo.set_stroke(WARM, width=2.4, opacity=1.0)
+            arm(halo, rise=0.0)
+            self.add(halo)
 
-        # Sized small on purpose: the close-up magnifies everything ~2.2x, so
-        # these read at roughly 30 pt on screen while the camera is in tight.
-        coords = Text(
-            f"( {HERO_P[0]:+.4f} ,  {HERO_P[1]:+.4f} )",
-            font=MONO,
-            font_size=13,
-            color=WARM,
-        )
-        coords.next_to(halo, UP, buff=0.16)
-        index_chip = self.chip(f"entry {HERO_C:02d}", WARM, size=13)
-        index_chip.next_to(to_scene(CENTROIDS[HERO_C]), RIGHT, buff=0.16)
-        arm(coords, index_chip, rise=0.12)
-        self.add(coords, index_chip)
+            # Sized small on purpose: the close-up magnifies everything ~2.2x, so
+            # these read at roughly 30 pt on screen while the camera is in tight.
+            coords = Text(
+                f"( {HERO_P[0]:+.4f} ,  {HERO_P[1]:+.4f} )",
+                font=MONO,
+                font_size=13,
+                color=WARM,
+            )
+            coords.next_to(halo, UP, buff=0.16)
+            index_chip = self.chip(f"entry {HERO_C:02d}", WARM, size=13)
+            index_chip.next_to(to_scene(CENTROIDS[HERO_C]), RIGHT, buff=0.16)
+            arm(coords, index_chip, rise=0.12)
+            self.add(coords, index_chip)
 
-        self.play(
-            cam.animate.scale(0.46).move_to(to_scene((HERO_P + CENTROIDS[HERO_C]) / 2)),
-            c_assign.animate.set_opacity(0.0),
-            run_time=2.4,
-            rate_func=rate_functions.ease_in_out_sine,
-        )
-        self.play(
-            Restore(coords), Restore(halo), hero_dot.animate.set_color(WARM), run_time=1.8
-        )
-        self.play(
-            hero_mark.animate.set_stroke(WARM, width=3.0).scale(1.35),
-            Restore(index_chip),
-            run_time=1.8,
-        )
-        self.play(cam.animate.restore(), run_time=2.2, rate_func=rate_functions.ease_in_out_sine)
+            self.play(
+                cam.animate.scale(0.46).move_to(to_scene((HERO_P + CENTROIDS[HERO_C]) / 2)),
+                c_assign.animate.set_opacity(0.0),
+                run_time=2.4,
+                rate_func=rate_functions.ease_in_out_sine,
+            )
+            self.play(
+                Restore(coords), Restore(halo), hero_dot.animate.set_color(WARM), run_time=1.8
+            )
+            self.play(
+                hero_mark.animate.set_stroke(WARM, width=3.0).scale(1.35),
+                Restore(index_chip),
+                run_time=1.8,
+            )
+            self.play(cam.animate.restore(), run_time=2.2, rate_func=rate_functions.ease_in_out_sine)
 
-        c_cost = card(
-            body("Two floats in. Four bits out."),
-            small(
-                f"{K} entries need log₂ {K} = 4 bits. The decoder looks entry\n"
-                f"{HERO_C:02d} up and gets the centroid back — never your exact vector."
-            ),
-        )
-        c_cost.move_to(np.array([3.85, 1.55, 0.0]))
-        arm(c_cost)
-        self.add(c_cost)
-        self.play(Restore(c_cost), run_time=1.6)
+            c_cost = card(
+                body("Two floats in. Four bits out."),
+                small(
+                    f"{K} entries need log₂ {K} = 4 bits. The decoder looks entry\n"
+                    f"{HERO_C:02d} up and gets the centroid back — never your exact vector."
+                ),
+            )
+            c_cost.move_to(np.array([3.85, 1.55, 0.0]))
+            arm(c_cost)
+            self.add(c_cost)
+            self.play(Restore(c_cost), run_time=1.6)
 
         # ---- 5. more dimensions ------------------------------------- ~41 s
-        panel_bits = self.build_cost_panel()
-        arm(*panel_bits["pieces"])
-        self.add(*panel_bits["pieces"])
+        with nar.beat("dimensions", floor=1.2):
+            panel_bits = self.build_cost_panel()
+            arm(*panel_bits["pieces"])
+            self.add(*panel_bits["pieces"])
 
-        fade_plane = [plot, *dots, *centroid_marks, *spokes, halo, coords, index_chip]
-        self.play(
-            *[m.animate.set_opacity(0.0) for m in fade_plane],
-            c_cost.animate.set_opacity(0.0),
-            heading.animate.set_opacity(0.0),
-            run_time=1.6,
-        )
-        self.play(
-            Restore(panel_bits["lead"]),
-            LaggedStart(*[Restore(b) for b in panel_bits["entry"]], lag_ratio=0.05),
-            run_time=2.6,
-        )
-        self.play(
-            Restore(panel_bits["row_a"]),
-            Restore(panel_bits["row_b"]),
-            run_time=2.4,
-        )
-        self.play(Restore(panel_bits["ratio"]), run_time=1.5)
-        self.play(Restore(panel_bits["closing"]), run_time=2.2)
+            fade_plane = [plot, *dots, *centroid_marks, *spokes, halo, coords, index_chip]
+            self.play(
+                *[m.animate.set_opacity(0.0) for m in fade_plane],
+                c_cost.animate.set_opacity(0.0),
+                heading.animate.set_opacity(0.0),
+                run_time=1.6,
+            )
+            self.play(
+                Restore(panel_bits["lead"]),
+                LaggedStart(*[Restore(b) for b in panel_bits["entry"]], lag_ratio=0.05),
+                run_time=2.6,
+            )
+            self.play(
+                Restore(panel_bits["row_a"]),
+                Restore(panel_bits["row_b"]),
+                run_time=2.4,
+            )
+            self.play(Restore(panel_bits["ratio"]), run_time=1.5)
+            self.play(Restore(panel_bits["closing"]), run_time=2.2)
         self.wait(1.8)
+        logger.info(nar.report())
 
     # -- pieces ------------------------------------------------------------
     def chip(self, label: str, colour: str, size: int = 20) -> VGroup:

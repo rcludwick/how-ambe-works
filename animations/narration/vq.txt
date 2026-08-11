@@ -1,0 +1,24 @@
+# Narration for the VectorQuantization scene (scene_vq.py).
+# Format and conventions: see pipeline.txt.
+
+[cloud]
+Every frame of speech produces a handful of measurements. Plot enough of them
+and they do not fill the space evenly. They clump.
+
+[codebook]
+So do not describe a point. Pick a set of representative points, agree on them
+in advance, and put the same set at both ends of the link.
+
+[assignment]
+Now a measurement does not travel. What travels is the position of the closest
+entry in that table. A number small enough to spend a few bits on.
+
+[one-vector]
+The cost is the gap between the measurement and the entry that stood in for it.
+That error never goes away. It is the price of the whole scheme, and the only
+way to shrink it is a bigger table.
+
+[dimensions]
+Quantize several parameters together and the clumping works harder for you,
+because real speech parameters move together rather than independently.
+That is how a fifth of a second of voice becomes nine bytes.

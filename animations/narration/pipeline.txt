@@ -1,0 +1,68 @@
+# Narration for the Pipeline scene (scene_pipeline.py, class Pipeline).
+#
+# FORMAT   A line "[cue-id]" opens a cue. Everything after it, until the next
+#          cue or the end of the file, is the text spoken for that cue. Lines
+#          starting with # are comments. Blank lines inside a cue become
+#          sentence pauses.
+#
+# The cue ids here must match the nar.beat("...") calls in the scene. The scene
+# holds each stage open until its line has finished, so the length of what is
+# written here is the length of that stage on screen. Cutting a sentence
+# genuinely makes the video shorter.
+#
+# WRITTEN FOR THE EAR, so numbers are spelled the way they are said rather than
+# the way they are printed. Piper reads "8 kHz" as "eight k h z". STYLE.md
+# applies otherwise: short sentences, no em dashes, no announcing significance.
+
+[speech-in]
+A radio hears eight thousand samples a second, sixteen bits each.
+That is a hundred and twenty eight thousand bits every second.
+The channel it has to fit through carries three thousand six hundred.
+
+[framing]
+Nothing is decided about the whole sentence.
+The audio is cut into twenty millisecond frames, a hundred and sixty samples
+each, fifty times a second. Every frame is coded on its own, and this is the
+last point at which the original waveform still exists.
+
+[pitch]
+Inside one frame the coder looks for a single number, the fundamental
+frequency. Everything voiced in that frame is treated as a harmonic of it.
+One frequency stands in for the whole comb.
+
+[voicing]
+A voice is not all buzz. The band from zero to four kilohertz is split into
+eight, and each one is judged on its own. Voiced or unvoiced.
+Eight decisions, eight bits, and the hiss in a consonant stops having to
+pretend it is periodic.
+
+[spectrum]
+What is left is how loud each harmonic is. Twenty three of them in this frame.
+That count is not fixed. It falls as the pitch rises, which is why a deep voice
+and a high voice are not the same problem.
+
+[quantize]
+None of these numbers travel as numbers. Each one is replaced by the position
+of the closest entry in a table that both ends already hold.
+Seven bits for the fundamental, eight for the voicing, and the rest for the
+amplitudes.
+
+[air]
+Seventy two bits, every twenty milliseconds. These are the real ones, read off
+a DVSI AMBE three thousand on a bench, and they are the whole of what crosses
+the air.
+
+[decode]
+The far end never rebuilds a waveform from the bits. It looks the indices up in
+the same tables and gets the measurements back. A table lookup, not a
+reconstruction.
+
+[synthesize]
+Then it makes a sound that fits those measurements. One oscillator for every
+voiced harmonic, shaped noise for the bands marked unvoiced, added together.
+The phase was never transmitted, so the decoder invents it, fifty times a
+second.
+
+[speech-out]
+Speech comes out. Nine bytes for a fifth of a second, and not one sample of the
+original survived the trip.
