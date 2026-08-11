@@ -722,3 +722,60 @@
     break-inside: avoid;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Three-forms readout
+
+   Used by the complex-plane figure, where the point on screen is written three
+   ways at once and the whole argument is that the three never disagree. Laid
+   out as labelled rows rather than a paragraph so the eye can check them
+   against each other.
+   ------------------------------------------------------------------------ */
+
+.anim-forms {
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.7rem;
+}
+
+.md-typeset .anim-forms__row,
+.anim-forms__row {
+  align-items: baseline;
+  display: grid;
+  gap: 0 0.7rem;
+  grid-template-columns: 9.5rem 1fr;
+  margin: 0;
+}
+
+.anim-forms__row + .anim-forms__row {
+  margin-top: 0.3rem;
+}
+
+.anim-forms__tag {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+  text-align: right;
+}
+
+.md-typeset .anim-forms code,
+.anim-forms code {
+  background: none;
+  border: 0;
+  color: var(--ambe-text);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+
+/* The label column costs more than it earns on a phone: stack instead. */
+@media screen and (max-width: 30em) {
+  .anim-forms__row {
+    grid-template-columns: 1fr;
+  }
+
+  .anim-forms__tag {
+    text-align: left;
+  }
+}

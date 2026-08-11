@@ -14,13 +14,25 @@ reproducible from what is in the repository.
     tools/make-narration.py --check         # verify without regenerating
     VOICE=en_US-aj7hr-medium tools/make-narration.py    # a different voice
 
-VOICE, AND WHY IT IS THIS ONE
+VOICE, AND AN UNRESOLVED PROBLEM WITH IT
     The default is en_US-libritts_r-medium, the same voice tools/make-audio.sh
     uses for the male speech samples. Its corpus is LibriTTS-R (OpenSLR 141),
-    CC BY 4.0, which this site can redistribute. Do NOT substitute a voice
-    without reading its MODEL_CARD: several popular Piper voices carry
-    non-commercial or share-alike terms that are incompatible with the CC BY
-    4.0 grant on this material.
+    CC BY 4.0, which this site can redistribute.
+
+    The corpus is not the whole story. That voice's MODEL_CARD also says
+    "Fine-tuned from English lessac medium", and the Blizzard 2013 Lessac
+    corpus behind lessac is licensed for research purposes only, explicitly
+    excluding commercial use. So the DATASET is clean and the MODEL LINEAGE
+    may not be. Most Piper voices descend from lessac and inherit this.
+
+    That is unresolved, and it applies to the lr-* clips already on the listen
+    page as much as to this narration. Voices published by Bryce Beattie
+    (kristin, cori, ljspeech, john) are trained from scratch on public-domain
+    corpora and carry no lessac ancestry, and are the obvious replacements if
+    the lineage is judged to matter.
+
+    Do NOT substitute a voice without reading its MODEL_CARD, and read the
+    Training line as well as the Dataset line.
 
     Swapping in a voice trained on your own recordings needs no code change:
     export it to <name>.onnx alongside its .onnx.json in VOICES_DIR and set
@@ -38,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import math
 import os
 import re
 import shutil
@@ -62,9 +75,16 @@ SPEAKER = os.environ.get("SPEAKER", "690")
 #: the render, which is both slower and lossier than doing it once here.
 RATE = "44100"
 
-#: Narration sits under nothing, so it can be quieter than the speech samples
-#: without fighting anything. Matches the -20 dBFS the rest of the audio uses.
-TARGET_DBFS = "-20"
+#: Level normalisation, matching tools/make-audio.sh and SCHEMA.md exactly:
+#: a single constant gain that puts RMS on TARGET_RMS_DB, unless that would
+#: push the peak above PEAK_CEIL_DB, in which case the ceiling wins. No
+#: compression, no limiting, no EQ.
+#:
+#: Note this is RMS, not peak. `sox norm -20` sets the PEAK to -20 dBFS, which
+#: is about 19 dB quieter than intended and was the first thing this script
+#: got wrong.
+TARGET_RMS_DB = -20.0
+PEAK_CEIL_DB = -1.0
 
 CUE_RE = re.compile(r"^\[([a-z0-9-]+)\]\s*$")
 
@@ -116,6 +136,37 @@ def duration(path: Path) -> float:
         return handle.getnframes() / float(handle.getframerate())
 
 
+def gain_for(path: Path, label: str) -> float:
+    """
+    The single constant gain that lands RMS on target without clipping.
+
+    `sox -n stat` reports linear amplitudes on stderr. Whichever of the two
+    constraints binds first wins, which for speech is almost always the RMS
+    target: narration has a high crest factor, so its peak reaches the ceiling
+    well before its RMS gets loud.
+    """
+    proc = subprocess.run(
+        ["sox", str(path), "-n", "stat"], capture_output=True, check=False
+    )
+    stats = {}
+    for line in proc.stderr.decode().splitlines():
+        if ":" in line:
+            key, _, value = line.partition(":")
+            try:
+                stats[key.strip()] = float(value.strip())
+            except ValueError:
+                pass
+
+    rms = stats.get("RMS     amplitude") or stats.get("RMS amplitude") or 0.0
+    peak = stats.get("Maximum amplitude") or 0.0
+    if rms <= 0 or peak <= 0:
+        die(f"could not measure levels for {label}: {proc.stderr.decode()[:300]}")
+
+    rms_db = 20 * math.log10(rms)
+    peak_db = 20 * math.log10(peak)
+    return min(TARGET_RMS_DB - rms_db, PEAK_CEIL_DB - peak_db)
+
+
 def synthesise(text: str, out_path: Path, model: Path, tmp: Path) -> None:
     """Piper -> raw wav -> sox -> normalised, trimmed, 44.1 kHz mono."""
     raw = tmp / "raw.wav"
@@ -138,19 +189,27 @@ def synthesise(text: str, out_path: Path, model: Path, tmp: Path) -> None:
             f"{proc.stdout[:80]!r} {proc.stderr.decode()[:200]}")
     raw.write_bytes(proc.stdout)
 
-    # Trim leading/trailing silence, then normalise. `norm` before `silence`
-    # would set the level from whatever noise floor Piper emitted.
+    # Trim leading and trailing silence first: measuring the level before this
+    # would read whatever noise floor Piper left on the ends.
+    trimmed = tmp / "trimmed.wav"
     sox = subprocess.run(
         [
-            "sox", str(raw), "-r", RATE, "-c", "1", "-b", "16", str(out_path),
+            "sox", str(raw), "-r", RATE, "-c", "1", "-b", "16", str(trimmed),
             "silence", "1", "0.05", "0.5%", "reverse",
             "silence", "1", "0.05", "0.5%", "reverse",
-            "norm", TARGET_DBFS,
         ],
         capture_output=True, check=False,
     )
+    if sox.returncode != 0 or not trimmed.is_file():
+        die(f"sox trim failed for {out_path.name}: {sox.stderr.decode()[:400]}")
+
+    gain_db = gain_for(trimmed, out_path.name)
+    sox = subprocess.run(
+        ["sox", str(trimmed), str(out_path), "gain", f"{gain_db:.3f}"],
+        capture_output=True, check=False,
+    )
     if sox.returncode != 0 or not out_path.is_file():
-        die(f"sox failed for {out_path.name}: {sox.stderr.decode()[:400]}")
+        die(f"sox gain failed for {out_path.name}: {sox.stderr.decode()[:400]}")
 
 
 def main() -> int:

@@ -53,6 +53,20 @@ the length of the hypotenuse is how much of that frequency is present,
 and the angle is its phase. Magnitude and phase, recovered together,
 falling out of the mechanism rather than being imposed on it.
 
+Drag the point below. The pair of numbers read off the axes, and the
+length and angle drawn to it, are the same point written two ways.
+Neither is more real than the other. Then press Spin and watch the right
+panel: a point going round at a steady rate projects to a cosine, and
+where it starts is the phase.
+
+<div data-anim="complex"></div>
+
+Writing that pair as a single complex number is bookkeeping rather than
+new physics. It lets one symbol carry both numbers at once, so the sine
+test and the cosine test collapse into a single multiplication. That is
+why the sum in the next section is written with a power of e instead of
+as two separate sums.
+
 That pair of correlations, run at one frequency, is the whole idea. Doing
 it at every frequency is the Fourier transform.
 

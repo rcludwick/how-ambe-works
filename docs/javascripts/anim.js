@@ -31,3 +31,4 @@ import "./anim-frames.js"; //    data-anim="frames"     — 02
 import "./anim-envelope.js"; //  data-anim="envelope"   — 03
 import "./anim-bits.js"; //      data-anim="bits"       — 04
 import "./anim-synth.js"; //     data-anim="synth"      — 05
+import "./anim-complex.js"; //   data-anim="complex"     — 02
