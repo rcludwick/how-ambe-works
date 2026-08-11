@@ -28,6 +28,74 @@ implementation.
     **All dates and statuses on this page were checked against
     patents.google.com on 2026-08-10.** They will drift. Re-check them.
 
+## Still in force
+
+Two patents are live today. Both are assigned to Digital Voice Systems,
+Inc. If you are wondering how a patent filed in 2003 is still in force
+in 2026, that is patent term adjustment, explained under
+[how to read a US patent expiry](#how-to-read-a-us-patent-expiry) below.
+
+### US 8,359,197 — "Half-rate vocoder" · expires 2028-05-20
+
+[patents.google.com/patent/US8359197B2](https://patents.google.com/patent/US8359197B2/en)
+· inventor John C. Hardwick · filed 2003-04-01 · granted 2013-01-22 ·
+status shown: **"Active, expires 2028-05-20"**
+
+This is the one people mean when they say the AMBE patents "run to 2028."
+
+The application was filed on 1 April 2003, so a plain twenty-year term
+would have ended on 1 April 2023. It did not issue until 22 January
+2013 — nearly ten years in prosecution — and the expiry Google Patents
+displays, 2028-05-20, sits about five years past the plain term. That gap
+is patent term adjustment for USPTO delay. Confirm the exact adjustment
+at Patent Center rather than taking either figure on trust.
+
+What matters most is the breadth. **The independent claims cover both
+encoding and decoding.** There are encoding claims — dividing speech into
+frames, computing MBE model parameters, quantizing pitch, voicing and
+gain, combining selected bits into a 12-bit parameter codeword, applying
+error control codes — and there are separate decoding claims: extracting
+FEC codewords from a received frame, error-control decoding them,
+reconstructing pitch, voicing and gain, and synthesizing speech samples.
+A decoder-only implementation is not outside this patent the way it would
+be outside an analysis-only patent.
+
+The frame the claims describe is 3600 bps: 72 bits per 20 ms frame, of
+which 49 are voice or tone bits (7 pitch, 5 voicing, 37 spectral
+magnitude) and 23 are FEC — one [24,12] extended Golay code and one
+[23,12] Golay code protecting the 24 most error-sensitive bits, with the
+remaining 25 bits unprotected.
+
+That is structurally the half-rate frame used by DMR, dPMR, NXDN and
+YSF's narrow mode. **The equivalence is community consensus, not a legal
+finding.** DVSI has never publicly equated its "AMBE+2" branding to the
+P25 half-rate specification, and no claim-by-claim mapping of the
+deployed formats onto these claims has been published — certainly not
+here.
+
+### US 8,036,886 — "Estimation of pulsed speech model parameters" · expires 2029-10-02
+
+[patents.google.com/patent/US8036886B2](https://patents.google.com/patent/US8036886B2/en)
+· inventor Daniel W. Griffin · filed 2006-12-22 · granted 2011-10-11 ·
+status shown: **"Active, expires 2029-10-02"**
+
+This one runs longer but reaches far less far.
+
+Claim 1 is a method of *analysis*: divide a digitized signal into
+frequency bands by bandpass filtering, perform "an operation to emphasize
+pulse positions on at least two frequency band signals to produce
+modified frequency band signals," and determine pulsed parameters from
+those. That is an encoder-side measurement technique for the pulsed
+excitation class introduced by US 6,912,495. It says nothing about
+reconstructing speech.
+
+Two practical consequences. A **decoder** does not perform this analysis
+and is unaffected by these claims. An **encoder** that needs to detect
+pulsed frames either has to wait, or has to arrive at that decision by a
+route the claims do not describe. The plain twenty-year term from the
+2006 filing would have ended in December 2026; the 2029 date again
+reflects term adjustment for examination delay.
+
 ## How to read a US patent expiry
 
 Three rules cover everything below.
@@ -139,72 +207,6 @@ public; note the caveat in the next section about one particular way of
 family as the half-rate patent below. It inherited the 2003 priority
 date, so its twenty-year term ended 2023-04-01, and Google Patents shows
 it as fee-related expired. It does not extend the family's reach.
-
-## Still in force
-
-Two patents are live today. Both are assigned to Digital Voice Systems,
-Inc.
-
-### US 8,359,197 — "Half-rate vocoder" · expires 2028-05-20
-
-[patents.google.com/patent/US8359197B2](https://patents.google.com/patent/US8359197B2/en)
-· inventor John C. Hardwick · filed 2003-04-01 · granted 2013-01-22 ·
-status shown: **"Active, expires 2028-05-20"**
-
-This is the one people mean when they say the AMBE patents "run to 2028."
-
-The application was filed on 1 April 2003, so a plain twenty-year term
-would have ended on 1 April 2023. It did not issue until 22 January
-2013 — nearly ten years in prosecution — and the expiry Google Patents
-displays, 2028-05-20, sits about five years past the plain term. That gap
-is patent term adjustment for USPTO delay. Confirm the exact adjustment
-at Patent Center rather than taking either figure on trust.
-
-What matters most is the breadth. **The independent claims cover both
-encoding and decoding.** There are encoding claims — dividing speech into
-frames, computing MBE model parameters, quantizing pitch, voicing and
-gain, combining selected bits into a 12-bit parameter codeword, applying
-error control codes — and there are separate decoding claims: extracting
-FEC codewords from a received frame, error-control decoding them,
-reconstructing pitch, voicing and gain, and synthesizing speech samples.
-A decoder-only implementation is not outside this patent the way it would
-be outside an analysis-only patent.
-
-The frame the claims describe is 3600 bps: 72 bits per 20 ms frame, of
-which 49 are voice or tone bits (7 pitch, 5 voicing, 37 spectral
-magnitude) and 23 are FEC — one [24,12] extended Golay code and one
-[23,12] Golay code protecting the 24 most error-sensitive bits, with the
-remaining 25 bits unprotected.
-
-That is structurally the half-rate frame used by DMR, dPMR, NXDN and
-YSF's narrow mode. **The equivalence is community consensus, not a legal
-finding.** DVSI has never publicly equated its "AMBE+2" branding to the
-P25 half-rate specification, and no claim-by-claim mapping of the
-deployed formats onto these claims has been published — certainly not
-here.
-
-### US 8,036,886 — "Estimation of pulsed speech model parameters" · expires 2029-10-02
-
-[patents.google.com/patent/US8036886B2](https://patents.google.com/patent/US8036886B2/en)
-· inventor Daniel W. Griffin · filed 2006-12-22 · granted 2011-10-11 ·
-status shown: **"Active, expires 2029-10-02"**
-
-This one runs longer but reaches far less far.
-
-Claim 1 is a method of *analysis*: divide a digitized signal into
-frequency bands by bandpass filtering, perform "an operation to emphasize
-pulse positions on at least two frequency band signals to produce
-modified frequency band signals," and determine pulsed parameters from
-those. That is an encoder-side measurement technique for the pulsed
-excitation class introduced by US 6,912,495. It says nothing about
-reconstructing speech.
-
-Two practical consequences. A **decoder** does not perform this analysis
-and is unaffected by these claims. An **encoder** that needs to detect
-pulsed frames either has to wait, or has to arrive at that decision by a
-route the claims do not describe. The plain twenty-year term from the
-2006 filing would have ended in December 2026; the 2029 date again
-reflects term adjustment for examination delay.
 
 ## What this means if you want to build something
 
