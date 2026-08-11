@@ -189,6 +189,16 @@ The prose, diagrams and page content are licensed
 build scripts, stylesheets, animation runtime, CI workflows is MIT.
 Reuse the writing with attribution.  Reuse the tooling under MIT.
 
+The speech on [Listen](12-listen.md) was synthesised with Piper, not
+recorded. The male clips use a voice trained on LibriTTS-R (OpenSLR 141),
+which is CC BY 4.0 and requires the credit *speech synthesised with a Piper
+voice trained on LibriTTS-R (OpenSLR 141), used under CC BY 4.0*. The
+corpus is Koizumi et al., *LibriTTS-R: A Restored Multi-Speaker
+Text-to-Speech Corpus*, 2023. The female clips use a voice trained on the
+LJ Speech Dataset, which is public domain.
+`docs/assets/audio/MANIFEST.md` records both, the model checksums, and a
+fine-tuning lineage on the male voice that it states rather than resolves.
+
 AMBE, AMBE+, and AMBE+2 are trademarks of Digital Voice Systems, Inc.,
 used here only to identify the technology under discussion. This project
 is independent of DVSI and is not affiliated with, sponsored by, endorsed

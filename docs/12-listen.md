@@ -319,10 +319,17 @@ Both voices were chosen for their licence as much as for their sound. A Piper
 voice inherits the terms of the corpus it was trained on, and several of the
 popular English voices are trained on datasets carrying a non-commercial or
 share-alike condition that cannot be redistributed under this site's CC BY 4.0
-grant. The two used here are trained from scratch on public-domain speech, so
-the WAV files on this page carry no upstream restriction. `tools/make-audio.sh`
-records that requirement at the top of the file, so that a future substitution
-does not quietly reintroduce the problem.
+grant. Neither of these two does. The female clips come from a public-domain
+corpus and carry no upstream condition. The male clips come from LibriTTS-R,
+which is CC BY 4.0 and requires a credit: *speech synthesised with a Piper voice
+trained on LibriTTS-R (OpenSLR 141), used under CC BY 4.0*. That credit is
+repeated in [Sources and method](17-sources.md), and anyone who reuses an
+`lr-*.wav` file takes the requirement with it. The fine-tuning lineage named in
+the table above is a separate and unsettled question;
+`docs/assets/audio/MANIFEST.md` states it and makes no claim about how far it
+reaches into a synthesised waveform. `tools/make-audio.sh` records the licence
+rule at the top of the file, so that a future substitution does not quietly
+reintroduce a voice that cannot ship here.
 {: .source-note }
 
 Nothing on this page was produced by, or compared against, a software AMBE
@@ -382,5 +389,5 @@ an open implementation.
 Previously: [What is not in the public record](13-what-is-not-established.md).
 {: .chapter-nav }
 
-Last reviewed: 2026-08-10.
+Last reviewed: 2026-08-11.
 {: .source-note }
