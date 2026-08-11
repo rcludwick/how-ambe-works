@@ -92,13 +92,15 @@ that entry's index. The decoder looks the index up.
 
   <!-- The render is build output: .github/workflows/animations.yml renders
        animations/manim/scene_vq.py and writes
-       docs/assets/video/vq.{webm,mp4}. Those files are not committed (see
+       docs/assets/video/vq.mp4 and .vtt. Those are not committed (see
        .gitignore), so this element shows its poster until the workflow has
        run. The builder rewrites relative `src` but not `poster`, hence the
        page-relative poster path. -->
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/vq.png">
     <source src="assets/video/vq.mp4" type="video/mp4">
+    <track kind="captions" srclang="en" label="English"
+           src="assets/video/vq.vtt" default>
     <p>This clip shows a cloud of two-dimensional points being clustered, and
     each cluster centre standing in for every point near it.</p>
   </video>

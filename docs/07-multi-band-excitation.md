@@ -53,6 +53,8 @@ actually takes away from a fifth of a second of somebody talking.
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/decomposition.png">
     <source src="assets/video/decomposition.mp4" type="video/mp4">
+    <track kind="captions" srclang="en" label="English"
+           src="assets/video/decomposition.vtt" default>
     <p>This clip walks one 20 ms frame of a recorded utterance from waveform
     to spectrum to harmonics to eight band voicing decisions.</p>
   </video>

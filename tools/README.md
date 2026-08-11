@@ -1,12 +1,20 @@
 # tools/ — how the audio and the animation data are made
 
-Three scripts, run in order. Each one refuses to write anything it cannot
-verify, so a broken stage stops the chain instead of poisoning the assets.
+Three scripts build the site's assets, run in order. Each one refuses to write
+anything it cannot verify, so a broken stage stops the chain instead of
+poisoning the assets.
 
 ```
 tools/make-audio.sh        # Piper TTS  -> docs/assets/audio/*-original.wav
 tools/capture-hardware.sh  # originals  -> real AMBE-3000 -> *.ambe + *-ambe.wav
 tools/make-data.py         # audio+bits -> docs/assets/data/*.json
+```
+
+Two more serve the animations, and are not part of that chain:
+
+```
+tools/make-narration.py    # scripts    -> animations/narration/audio/*.wav
+tools/render-local.sh      # scenes     -> out/*.mp4 + out/*.vtt
 ```
 
 None of this is a codec. `make-audio.sh` is text-to-speech and resampling,
@@ -60,3 +68,42 @@ Every field it emits, its units, and whether it was measured off the chip or
 derived by DSP, is documented in `docs/assets/data/SCHEMA.md`. That document is
 the contract the animation code is written against — change the script and you
 must change it too.
+
+## 4. `make-narration.py`
+
+Turns `animations/narration/<slug>.txt` into the per-cue WAVs the manim scenes
+play, using the same Piper install and the same level discipline as
+`make-audio.sh` (RMS to −20 dBFS, single constant gain, −1 dBFS peak ceiling).
+
+```
+tools/make-narration.py             # every script
+tools/make-narration.py pipeline    # one scene
+tools/make-narration.py --check     # what exists, what is missing, how long
+```
+
+The output is committed. The render never runs Piper: it reads finished WAVs,
+so CI needs no voice models and a render is reproducible from the repository.
+Regenerating re-times every scene that plays the audio, because each stage is
+held open until its line has finished.
+
+Read the VOICE section in the script's header before changing voices. The
+current voice's MODEL_CARD clears its *corpus* but shows a fine-tune lineage
+back to a research-only model, which is unresolved.
+
+## 5. `render-local.sh`
+
+Renders the scenes without waiting on CI, which takes about half an hour for
+the pipeline scene. Defaults to 480p15, which turns a scene around in about a
+minute.
+
+```
+tools/render-local.sh               # every scene
+tools/render-local.sh pipeline      # one scene
+tools/render-local.sh -q h -o vq    # 1080p60, then open it
+tools/render-local.sh -l            # list the scenes
+```
+
+Writes `out/<slug>.mp4` and `out/<slug>.vtt`, the same names CI publishes, and
+reports each clip's duration and whether audio and captions came out. Needs
+`uv`, which pins Python 3.12 from `.python-version`; PyAV has no wheel above
+3.12 and a newer interpreter fails in a way that reads as a manim problem.

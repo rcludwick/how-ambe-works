@@ -85,6 +85,8 @@ mush of the same spectrum.
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/harmonic-sum.png">
     <source src="assets/video/harmonic-sum.mp4" type="video/mp4">
+    <track kind="captions" srclang="en" label="English"
+           src="assets/video/harmonic-sum.vtt" default>
     <p>This clip adds harmonics one at a time at their measured amplitudes
     until the sum takes on the shape of a glottal pulse.</p>
   </video>

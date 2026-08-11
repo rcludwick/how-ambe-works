@@ -63,6 +63,34 @@ class Narrator:
         self.dir = Path(audio_dir) if audio_dir else AUDIO_DIR
         self.missing: list[str] = []
         self.spoken: list[tuple[str, float]] = []
+        #: (start, end, text) for every line actually played, which is what the
+        #: caption track is written from.
+        self.timeline: list[tuple[float, float, str]] = []
+
+    # -- the spoken text, for captions -------------------------------------
+
+    def text_for(self, cue: str) -> str:
+        """
+        The words of a cue, read back out of the narration script.
+
+        The script is the single source of truth for what is said. Re-deriving
+        the caption from it means the captions cannot drift from the audio the
+        way a hand-maintained second copy would.
+        """
+        script = self.dir.parent / f"{self.slug}.txt"
+        if not script.is_file():
+            return ""
+        want, buf, collecting = f"[{cue}]", [], False
+        for raw in script.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if line.startswith("[") and line.endswith("]"):
+                if collecting:
+                    break
+                collecting = line == want
+                continue
+            if collecting and not line.startswith("#"):
+                buf.append(line)
+        return " ".join(" ".join(buf).split())
 
     # -- lookup ------------------------------------------------------------
 
@@ -97,8 +125,12 @@ class Narrator:
             return 0.0
 
         seconds = self.duration(cue)
+        start = self.scene.renderer.time
         self.scene.add_sound(str(path))
         self.spoken.append((cue, seconds))
+        text = self.text_for(cue)
+        if text:
+            self.timeline.append((start, start + seconds, text))
         return seconds
 
     @contextlib.contextmanager
@@ -129,6 +161,47 @@ class Narrator:
             self.scene.wait(remaining)
 
     # -- reporting ---------------------------------------------------------
+
+    def write_captions(self, out_dir: Path | None = None) -> Path | None:
+        """
+        Write a WebVTT track for what was actually spoken, and when.
+
+        The video carries speech, so it needs a text alternative. Deriving it
+        here rather than by hand means the timings come from the same clock
+        that scheduled the audio, and the words come from the same script that
+        was fed to the synthesiser, so the two cannot drift apart.
+
+        Written next to the rendered video, as <slug>.vtt.
+        """
+        if not self.timeline:
+            return None
+        target = Path(out_dir) if out_dir else Path("out")
+        target.mkdir(parents=True, exist_ok=True)
+        path = target / f"{self.slug}.vtt"
+
+        def stamp(seconds: float) -> str:
+            ms = int(round(seconds * 1000))
+            h, ms = divmod(ms, 3_600_000)
+            m, ms = divmod(ms, 60_000)
+            s, ms = divmod(ms, 1000)
+            return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
+
+        lines = ["WEBVTT", ""]
+        for index, (start, end, text) in enumerate(self.timeline, start=1):
+            lines += [str(index), f"{stamp(start)} --> {stamp(end)}"]
+            # Wrap so a long line does not cover the picture it describes.
+            words, row = text.split(), ""
+            for word in words:
+                if len(row) + len(word) + 1 > 62:
+                    lines.append(row)
+                    row = word
+                else:
+                    row = f"{row} {word}".strip()
+            if row:
+                lines.append(row)
+            lines.append("")
+        path.write_text("\n".join(lines), encoding="utf-8")
+        return path
 
     def report(self) -> str:
         """One line per cue, for the render log."""

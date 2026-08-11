@@ -121,11 +121,22 @@ jobs:
 
       # Guards the cache-hit path too: a cache that restored empty would
       # otherwise sail through and deploy a dead <video>.
+      #
+      # The caption track is checked just as hard as the video. The scenes
+      # carry narration now, so a missing .vtt is a page shipping speech with
+      # no text alternative, which is a defect and not a cosmetic one.
       - name: Verify the file exists
         run: |
           set -euo pipefail
           [ -s "out/${{ matrix.slug }}.mp4" ] \
             || { echo "::error::out/${{ matrix.slug }}.mp4 is missing or empty"; exit 1; }
+          [ -s "out/${{ matrix.slug }}.vtt" ] \
+            || { echo "::error::out/${{ matrix.slug }}.vtt is missing or empty"; exit 1; }
+          head -1 "out/${{ matrix.slug }}.vtt" | grep -q '^WEBVTT' \
+            || { echo "::error::out/${{ matrix.slug }}.vtt is not a WebVTT file"; exit 1; }
+          ffprobe -v error -select_streams a -show_entries stream=codec_name \
+            -of csv=p=0 "out/${{ matrix.slug }}.mp4" | grep -q . \
+            || { echo "::error::out/${{ matrix.slug }}.mp4 has no audio track"; exit 1; }
           ls -lh out
 
       # One artifact per scene. pages.yml downloads them with a pattern and
@@ -134,6 +145,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: animations-${{ matrix.slug }}
-          path: out/${{ matrix.slug }}.mp4
+          path: |
+            out/${{ matrix.slug }}.mp4
+            out/${{ matrix.slug }}.vtt
           if-no-files-found: error
           retention-days: 30

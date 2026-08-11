@@ -130,8 +130,10 @@ for row in "${targets[@]}"; do
   dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "out/$slug.mp4" 2>/dev/null || echo "?")
   has_audio=$(ffprobe -v error -select_streams a -show_entries stream=codec_name \
                 -of csv=p=0 "out/$slug.mp4" 2>/dev/null | head -1)
-  printf '    \033[32mok\033[0m  out/%s.mp4  %ss video  %s  (%ds to render)\n' \
-    "$slug" "${dur%.*}" "${has_audio:+audio: $has_audio}${has_audio:-no audio track}" "$((t1 - t0))"
+  if [ -n "$has_audio" ]; then label="audio: $has_audio"; else label="NO AUDIO TRACK"; fi
+  vtt=""; [ -f "out/$slug.vtt" ] && vtt="  captions: out/$slug.vtt"
+  printf '    \033[32mok\033[0m  out/%s.mp4  %ss video  %s%s  (%ds to render)\n' \
+    "$slug" "${dur%.*}" "$label" "$vtt" "$((t1 - t0))"
 
   [ "$OPEN" = 1 ] && open "out/$slug.mp4"
 done

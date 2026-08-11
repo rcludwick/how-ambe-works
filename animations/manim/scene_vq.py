@@ -407,6 +407,7 @@ class VectorQuantization(MovingCameraScene):
             self.play(Restore(panel_bits["ratio"]), run_time=1.5)
             self.play(Restore(panel_bits["closing"]), run_time=2.2)
         self.wait(1.8)
+        nar.write_captions()
         logger.info(nar.report())
 
     # -- pieces ------------------------------------------------------------

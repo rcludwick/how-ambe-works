@@ -309,6 +309,7 @@ class Decomposition(Scene):
         with nar.beat("close", floor=1.2):
             self.beat_close()
 
+        nar.write_captions()
         logger.info(nar.report())
 
     # -- chrome ------------------------------------------------------------

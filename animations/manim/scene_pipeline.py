@@ -5,7 +5,7 @@ Slug
                 docs/07-multi-band-excitation.md and docs/10-the-dstar-frame.md)
 
 What it is
-    One continuous ~68 s camera move along a single horizontal strip, from
+    One continuous ~109 s camera move along a single horizontal strip, from
     speech going in to speech coming out: waveform -> 20 ms framing ->
     analysis into model parameters -> quantization into a 72-bit frame ->
     the frame on the air -> decode -> synthesis -> waveform. Ten stages laid
@@ -36,6 +36,11 @@ Sources cited on screen
     4800 bps); US 5,754,974 (the 7 + 8 + 57 budget example, and the harmonic
     count following from the pitch); Griffin & Lim 1988 and US 5,701,390
     (synthesis). All expired; see docs/16-patents.md.
+
+Narration
+    Every stage is narrated, and the narration sets the pace: a stage is held
+    open until its line has finished. See animations/narration/pipeline.txt
+    and animations/manim/narration.py.
 
 Controls
     None — this is a linear video. The interactive, draggable versions of the
@@ -554,6 +559,7 @@ class Pipeline(MovingCameraScene):
 
         # A last hold so the closing line is not cut off by the file ending.
         self.wait(1.8)
+        nar.write_captions()
         logger.info(nar.report())
 
     # -- playback helpers --------------------------------------------------
