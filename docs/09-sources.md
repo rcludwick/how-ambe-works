@@ -13,11 +13,10 @@ us.
 **Everything technical on this site was written from four kinds of source,
 and nothing else:**
 
-1. **Expired US patents.** Ten of them, all assigned to Digital Voice
-   Systems, Inc., granted between 1992 and 1999 and lapsed between 2010
-   and 2015. A patent must enable the invention it claims, which makes an
-   expired patent an unusually complete public teaching document. These
-   are the backbone of the site.
+1. **US patents.** Ten of them, all assigned to Digital Voice Systems,
+   Inc., granted between 1992 and 1999. A patent must enable the
+   invention it claims, which makes it an unusually complete public
+   teaching document. These are the backbone of the site.
 2. **Published academic literature.** The Griffin and Lim 1988 paper that
    introduced the Multi-Band Excitation model, and the Hardwick and Lim
    1988 paper that turned it into a 4.8 kbps coder. Both are in the
@@ -38,54 +37,6 @@ something that *isn't* from a source — an inference, an opinion, or a
 piece of ordinary engineering reasoning — it says so, in a marked source
 note, rather than letting it borrow authority from the citations around
 it.
-
-### What was deliberately not consulted
-
-**No third-party codec implementation source code was read, fetched,
-cloned, searched, or consulted in writing any part of this site.**
-
-Open-source AMBE and IMBE implementations exist. Some are widely used and
-some are well written. They were all excluded on purpose. Named
-explicitly, so the claim is falsifiable rather than vague: mbelib,
-mbelib-testing, DSDcc, jmbe, OP25, SerialDV, OpenDV, ambeserver-install,
-MMDVMHost, and md380tools. Not their repositories, not web views of them,
-not mirrors or forks, not vendored copies inside other projects.
-
-Two reasons. The licences on those projects vary from permissive to
-GPL-3.0 to entirely unstated, and prose derived from reading them would
-inherit an unclear provenance that no reader could untangle. More
-importantly, an explanation assembled by reverse-engineering someone
-else's implementation explains *that implementation*, not the codec — and
-tends to propagate its author's guesses as though they were facts. Working
-from primary sources is slower and produces a document you can actually
-audit.
-
-### What is deliberately not here
-
-**There is no working AMBE encoder or decoder in this repository, in any
-language.** This is not an accident of scope; it is a constraint the
-project holds itself to.
-
-- Code shown in the pages is **pseudocode**, labelled as such, printed as
-  plain text rather than in a compilable language, and written with the
-  interpolation details, window definitions, band-edge arithmetic and
-  constants deliberately absent. It will not run.
-- There are **no quantizer codebooks and no bit-packing routines**. Some
-  of the expired patents print such tables in full; this site does not
-  reproduce them.
-- The **animation code draws precomputed data**. It performs no pitch
-  estimation, no voicing decision, no spectral analysis, no quantization
-  and no synthesis. The data it draws was captured from hardware and
-  stored as JSON. Generic display DSP — plotting a waveform, taking an
-  FFT of something already on screen — is the extent of the arithmetic.
-- **The subject here is full-rate AMBE and IMBE**, the codec D-STAR uses.
-  AMBE+2 and the half-rate codec are covered at the level of history and
-  patent status rather than mechanism, because they are a different codec
-  and not what this site set out to explain. See
-  [The patent landscape](08-patents.md) for where each patent stands.
-
-If you want a working codec, this is not that repository, and no part of
-it can be compiled into one.
 
 ### How the hardware measurements were made
 
@@ -114,7 +65,7 @@ us.
 Every URL below was checked with `curl -sI` on **2026-08-10**. Notes flag
 the ones that need a browser.
 
-### Expired patents — the primary technical sources
+### US patents, the primary technical sources
 
 All assigned to Digital Voice Systems, Inc. Expiry dates and legal-status
 detail are on [The patent landscape](08-patents.md).

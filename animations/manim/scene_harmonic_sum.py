@@ -8,9 +8,9 @@ of a couple of dozen numbers.
 DATA READ (all precomputed / measured — this file performs no AMBE analysis
 or synthesis, it only draws numbers that already exist on disk):
 
-  docs/assets/data/ryan-b/spectra.json   per-frame magnitude spectrum, dBFS
-  docs/assets/data/ryan-b/frames.json    per-frame derived pitch estimate
-  docs/assets/audio/ryan-b-original.wav  PCM samples, plotted as a waveform
+  docs/assets/data/norman-b/spectra.json   per-frame magnitude spectrum, dBFS
+  docs/assets/data/norman-b/frames.json    per-frame derived pitch estimate
+  docs/assets/audio/norman-b-original.wav  PCM samples, plotted as a waveform
 
 Frame 121 (t = 2.42 s) of the featured hardware capture was chosen because
 it is strongly voiced across the whole 0-4 kHz band: all eight measured
@@ -131,8 +131,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "docs" / "assets" / "data"
 AUDIO = ROOT / "docs" / "assets" / "audio"
 
-CLIP = "ryan-b"
-FRAME = 121          # t = 2.42 s; every band voiced, 22 visible harmonics
+CLIP = "lj-b"
+FRAME = 74           # t = 1.48 s; every band voiced, 23 harmonics below 4 kHz
 SAMPLE_RATE = 8000
 FRAME_SAMPLES = 160  # 20 ms
 
@@ -348,7 +348,7 @@ class HarmonicSum(Scene):
         """0:04 - 0:12  what was recorded, and where its peaks sit."""
         self.set_title(
             "This is the frame we measured.",
-            f"clip ryan-b, frame {FRAME} at t = {FRAME_T:.2f} s — strongly voiced in every band",
+            f"clip {CLIP}, frame {FRAME} at t = {FRAME_T:.2f} s — strongly voiced in every band",
         )
         self.set_footer(
             "spectra.json · 256-point FFT, Hann window, centred on the frame",

@@ -8,10 +8,10 @@ reassembled as harmonics-plus-noise.
 DATA READ (all precomputed / measured — this file performs no AMBE analysis
 or synthesis, it only draws numbers that already exist on disk):
 
-  docs/assets/data/ryan-b/waveform.json  2.5 ms min/max envelope of the clip
-  docs/assets/data/ryan-b/spectra.json   per-frame magnitude spectrum, dBFS
-  docs/assets/data/ryan-b/frames.json    per-frame derived pitch + band voicing
-  docs/assets/audio/ryan-b-original.wav  PCM samples, plotted as a waveform
+  docs/assets/data/norman-b/waveform.json  2.5 ms min/max envelope of the clip
+  docs/assets/data/norman-b/spectra.json   per-frame magnitude spectrum, dBFS
+  docs/assets/data/norman-b/frames.json    per-frame derived pitch + band voicing
+  docs/assets/audio/norman-b-original.wav  PCM samples, plotted as a waveform
 
 The clip is a real DVSI AMBE-3000 hardware capture (see
 docs/assets/data/SCHEMA.md). Frame 141 (t = 2.82 s) was chosen because its
@@ -130,8 +130,8 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "docs" / "assets" / "data"
 AUDIO = ROOT / "docs" / "assets" / "audio"
 
-CLIP = "ryan-b"
-FRAME = 141          # t = 2.82 s; six voiced bands, two unvoiced
+CLIP = "norman-b"
+FRAME = 136          # t = 2.72 s; six voiced bands, top two unvoiced
 SAMPLE_RATE = 8000
 FRAME_SAMPLES = 160  # 20 ms
 
@@ -345,7 +345,7 @@ class Decomposition(Scene):
             f"{DURATION_S:.2f} s of speech, 8 kHz — “{CLIP_TEXT}”",
         )
         self.set_footer(
-            "DVSI AMBE-3000 hardware capture · clip ryan-b",
+            "DVSI AMBE-3000 hardware capture · clip norman-b",
             "waveform.json · 2.5 ms min/max envelope",
         )
 

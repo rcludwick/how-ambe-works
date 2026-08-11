@@ -110,8 +110,7 @@ function buildMarkup(root) {
   root.classList.add("anim-figure");
   root.innerHTML = `
     <div class="anim-figure__head">
-      <h4 class="anim-figure__title">Two generators, one voice</h4>
-      <span class="badge measured">measured</span>
+      <p class="anim-figure__title">Two generators, one voice</p>
       <p class="anim-figure__subtitle">Oscillator bank + shaped noise, mixed by band</p>
     </div>
 

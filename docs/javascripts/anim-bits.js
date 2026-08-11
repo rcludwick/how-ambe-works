@@ -126,8 +126,7 @@ function buildMarkup(root) {
   root.classList.add("anim-figure");
   root.innerHTML = `
     <div class="anim-figure__head">
-      <h4 class="anim-figure__title">Nine bytes of speech, bit by bit</h4>
-      <span class="badge measured">measured</span>
+      <p class="anim-figure__title">Nine bytes of speech, bit by bit</p>
       <p class="anim-figure__subtitle">Real channel frames off a DVSI AMBE-3000</p>
     </div>
 

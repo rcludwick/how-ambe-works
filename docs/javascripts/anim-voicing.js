@@ -69,8 +69,7 @@ const CLIPS = [
 
 const FIGURE_HTML = `
 <div class="anim-figure__head">
-  <h4 class="anim-figure__title">Eight bands, eight decisions, every 20 ms</h4>
-  <span class="badge measured">hardware capture</span>
+  <p class="anim-figure__title">Eight bands, eight decisions, every 20 ms</p>
 </div>
 <p class="anim-figure__subtitle" data-role="subtitle">&nbsp;</p>
 

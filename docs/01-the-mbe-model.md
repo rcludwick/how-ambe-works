@@ -38,8 +38,7 @@ actually takes away from a fifth of a second of somebody talking.
 
 <figure class="anim-figure anim-figure--wide">
   <div class="anim-figure__head">
-    <h4 class="anim-figure__title">Taking one frame apart</h4>
-    <span class="badge measured">measured</span>
+    <p class="anim-figure__title">Taking one frame apart</p>
   </div>
 
   <!-- The render is build output: .github/workflows/animations.yml renders
@@ -62,8 +61,8 @@ actually takes away from a fifth of a second of somebody talking.
   <figcaption class="anim-figure__caption">
     One 20 ms frame, taken apart: the waveform, the window the coder looks
     through, the spectrum inside it, the harmonic comb that spectrum gets
-    fitted with, and the eight band decisions that fall out. Frame 141 of the
-    male CQ capture, at 2.82 s, where six bands read periodic and the top two
+    fitted with, and the eight band decisions that fall out. Frame 136 of the
+    male CQ capture, at 2.72 s, where six bands read periodic and the top two
     read noise.
     <span class="anim-figure__source">Drawn from
     <code>assets/data/norman-b/</code>, captured from a DVSI AMBE-3000. The
@@ -106,9 +105,11 @@ ear hears as buzz
 <span class="cite">Griffin &amp; Lim 1988, §I</span>.
 
 It gets worse in noise. Gold and Tierney's measurements, quoted in the
-paper, showed a contemporary vocoder losing 18.7 DRT intelligibility points
-in aircraft noise where the uncoded noisy speech lost only 10.3 — an extra
-8.4 points that they named the vocoder's "aggravation factor"
+paper, showed a contemporary 2400 bit/s vocoder costing 18.7 DRT
+intelligibility points against uncoded speech in F15 noise, but only 10.3
+points against uncoded speech in the clean condition. Both figures are
+vocoder-versus-uncoded gaps; the extra 8.4 points that the noise condition
+costs is what they named the vocoder's "aggravation factor"
 <span class="cite">Griffin &amp; Lim 1988, §I, citing Gold &amp; Tierney</span>.
 The paper's hypothesis for where those points go is worth sitting with:
 listeners *use* the distinction between "this frequency region is periodic"
@@ -306,12 +307,11 @@ and [what is not in the public record](06-what-isnt-published.md) records
 the gap.
 
 **AMBE+2** — the later half-rate generation, used by DMR, YSF and NXDN. It
-is a real system and it exists, but it is not expired: US 8,359,197,
-"Half-rate vocoder" (Hardwick, DVSI, issued 2013), is listed as active with
-an anticipated expiry of 20 May 2028. This site describes that AMBE+2 exists
-and discusses the landscape on the [patents page](08-patents.md); it does
-not teach how to build one. Everything implementation-level here stays
-inside full-rate AMBE and IMBE, covered by patents that have expired.
+is a real system and it exists. US 8,359,197, "Half-rate vocoder"
+(Hardwick, DVSI, issued 2013), is listed as active with an anticipated
+expiry of 20 May 2028; see the [patents page](08-patents.md). This site
+sticks to full-rate AMBE and IMBE, the codec D-STAR uses, because that is
+its subject.
 
 ## What the model does not contain
 

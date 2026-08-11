@@ -87,8 +87,7 @@ that entry's index. The decoder looks the index up.
 
 <figure class="anim-figure anim-figure--wide">
   <div class="anim-figure__head">
-    <h4 class="anim-figure__title">One index for a whole shape</h4>
-    <span class="badge patent">illustration</span>
+    <p class="anim-figure__title">One index for a whole shape</p>
   </div>
 
   <!-- The render is build output: .github/workflows/animations.yml renders
@@ -114,7 +113,7 @@ that entry's index. The decoder looks the index up.
     <span class="anim-figure__source">Synthetic data from a seeded generator
     in <code>animations/manim/scene_vq.py</code>, clustered by ordinary Lloyd
     iteration. It is a picture of the idea. AMBE's own codebooks appear in
-    neither the JARL specification nor the expired patents.</span>
+    neither the JARL specification nor the patents.</span>
   </figcaption>
 </figure>
 
@@ -134,7 +133,7 @@ does this:
 
 That last point is why this chapter will not show you a codebook. The
 tables used by D-STAR's AMBE variant have never been published — not in the
-JARL specification, and not in the expired DVSI patents, which give the
+JARL specification, and not in the DVSI patents, which give the
 *mechanism* and the vector *sizes* without listing entries. They exist,
 they are searched by nearest-neighbour distance, they are the reason the
 codec sounds the way it does, and their contents are not public.
@@ -330,7 +329,7 @@ up from the other side: the channel coding uses it too.
 ## Sources for this chapter
 
 [^011]: **US 5,630,011** — *Quantization of harmonic amplitudes representing
-    speech* (expired). Source for the prediction-from-previous-frame
+    speech*. Source for the prediction-from-previous-frame
     structure, the decay factor γ ≈ 0.7 and its range 0 ≦ γ ≦ 1, the
     adaptive decay factor's dependence on L, the resampling of the previous
     spectrum when the harmonic count changes, mean removal from the
@@ -340,7 +339,7 @@ up from the other side: the channel coding uses it too.
     <https://patents.google.com/patent/US5630011A/en>
 
 [^974]: **US 5,754,974** — *Spectral magnitude representation for
-    multi-band excitation speech coders* (expired). Source for the 20 ms /
+    multi-band excitation speech coders*. Source for the 20 ms /
     72-bit frame at 3.6 kbps, the 7 / 8 / 57 example allocation, the eight
     voicing bands spanning 0–4 kHz, the formula L = floor(απ/ω₀) with
     α = 0.925 giving a 3700 Hz bandwidth, and the differential block DCT of
@@ -348,7 +347,7 @@ up from the other side: the channel coding uses it too.
     <https://patents.google.com/patent/US5754974A/en>
 
 [^405]: **US 5,870,405** — *Digital transmission of acoustic signals over a
-    noisy communication channel* (expired). Source for the 6-bit
+    noisy communication channel*. Source for the 6-bit
     non-uniform gain quantizer, the six-point DCT of the gain vector, the
     scalar quantizers whose step sizes depend on L, and the higher-order
     coefficient step sizes expressed in units of σ.
@@ -356,7 +355,7 @@ up from the other side: the channel coding uses it too.
 
 [^050]: **US 5,649,050** — *Apparatus and method for maintaining data rate
     integrity of a signal despite mismatch of readiness between sequential
-    transmission line components* (expired). Cited only for its statement
+    transmission line components*. Cited only for its statement
     of the MBE parameter set — fundamental frequency, spectral envelope and
     voiced character. This patent concerns buffering and time-scale
     modification and contains no quantization detail.

@@ -9,8 +9,7 @@
    ---------------------------------------------------------------------------
    <figure class="anim-figure" data-anim="pitch-track">
      <div class="anim-figure__head">
-       <h4 class="anim-figure__title">Pitch track over one utterance</h4>
-       <span class="badge measured">measured</span>
+       <p class="anim-figure__title">Pitch track over one utterance</p>
      </div>
 
      <div class="anim-figure__scroll">          <!-- optional: wide plots -->

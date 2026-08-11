@@ -21,7 +21,9 @@
 #
 # Env:
 #   RIG   path to the thumbdv-rig binary (default: whatever is on PATH)
-#   PORT  serial device of the ThumbDV (default /dev/cu.usbserial-DK0EOQVS)
+#   PORT  serial device of the ThumbDV. Default: the first /dev/cu.usbserial-*
+#         on macOS, else /dev/ttyUSB0. Set PORT explicitly if more than one
+#         USB serial adapter is attached.
 
 set -euo pipefail
 
@@ -30,7 +32,15 @@ audio_dir="$repo_root/docs/assets/audio"
 frames_dir="$repo_root/docs/assets/data/frames"
 
 RIG="${RIG:-$(command -v thumbdv-rig || true)}"
-PORT="${PORT:-/dev/cu.usbserial-DK0EOQVS}"
+# Resolve a default port rather than hard-coding one device's serial number.
+default_port() {
+  local p
+  for p in /dev/cu.usbserial-* /dev/ttyUSB*; do
+    [ -e "$p" ] && { echo "$p"; return; }
+  done
+  echo /dev/ttyUSB0
+}
+PORT="${PORT:-$(default_port)}"
 
 TARGET_RMS_DB=-20.0
 PEAK_CEIL_DB=-1.0

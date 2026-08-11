@@ -73,8 +73,7 @@ mush of the same spectrum.
 
 <figure class="anim-figure anim-figure--wide">
   <div class="anim-figure__head">
-    <h4 class="anim-figure__title">Building a voice out of cosines</h4>
-    <span class="badge measured">measured</span>
+    <p class="anim-figure__title">Building a voice out of cosines</p>
   </div>
 
   <!-- The render is build output: .github/workflows/animations.yml renders
@@ -92,14 +91,14 @@ mush of the same spectrum.
   </video>
 
   <figcaption class="anim-figure__caption">
-    Twenty-two harmonics of one frame, added in one at a time at the
+    Twenty-three harmonics of one frame, added in one at a time at the
     amplitudes measured off the recording. The waveform sharpens from a bare
     sine into a pulse as the count rises, and the pulse is a consequence of
     the phases, not of the amplitudes. Change the phases and the picture
     changes completely while the spectrum, and very nearly the sound, does
     not. That is the freedom the decoder is left with.
-    <span class="anim-figure__source">Frame 121 of
-    <code>assets/data/norman-b/</code> (all eight bands measured periodic),
+    <span class="anim-figure__source">Frame 74 of
+    <code>assets/data/lj-b/</code> (all eight bands measured periodic),
     captured from a DVSI AMBE-3000. Amplitudes are read off the measured
     spectrum at multiples of the measured pitch; the sum is drawn at zero
     phase, which is why the pulse is symmetric. The frame carries no phase at
@@ -237,7 +236,7 @@ the kernel has something smooth to chew on at the edges.
 
 !!! note "Reading these equations yourself"
 
-    US 5,701,390 is expired and its full text is public, but the Google
+    US 5,701,390's full text is public, but the Google
     Patents rendering of this section substitutes image placeholders for
     the equations. The kernel definition, its span, and its scaling
     constant have to be read off the USPTO page images of columns 9–10
@@ -488,7 +487,7 @@ squawk. Frame repeat and mute exist to keep that out of anyone's ears.
 
 ## Sources for this page
 
-All of these are expired US patents or published literature; every one is
+All of these are US patents or published literature; every one is
 listed with a link on [Sources and method](09-sources.md).
 
 | Claim on this page | Source |

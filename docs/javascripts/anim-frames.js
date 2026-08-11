@@ -133,8 +133,7 @@ const STYLE = `
 
 const TEMPLATE = `
   <div class="anim-figure__head">
-    <h4 class="anim-figure__title">Fifty frames a second, one at a time</h4>
-    <span class="badge measured">measured</span>
+    <p class="anim-figure__title">Fifty frames a second, one at a time</p>
   </div>
 
   <div class="anim-figure__scroll">
@@ -195,8 +194,7 @@ const CAPTION = `
   The whole utterance is on top; the bright sliver is one frame. Drag it —
   or press Play and watch it walk — and the panel underneath changes fifty
   times a second. That sliver is all the coder ever sees at once: 160 samples
-  of speech, in and out, replaced by the 72 bits shown as
-  <span class="badge measured">measured</span> hex. 72 bits × 50 frames per
+  of speech, in and out, replaced by the 72 bits shown as hex. 72 bits × 50 frames per
   second = 3600 bit/s, which is the whole D-STAR voice channel including its
   FEC <span class="cite">JARL D-STAR system specification</span>. Try dragging
   slowly across a vowel and watching the pitch hold steady, then across a

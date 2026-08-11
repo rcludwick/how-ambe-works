@@ -24,7 +24,7 @@ on a recording of a bird.
 Every clip gets its own <clip-id>/ subdirectory; the featured clip is also
 written at the top level, which is what the animations load by default.
 
-Usage: tools/make-data.py [featured-clip-id]      (default: ryan-b)
+Usage: tools/make-data.py [featured-clip-id]      (default: norman-b)
 """
 
 import json
@@ -66,19 +66,31 @@ HARDWARE = {
 }
 
 CLIP_META = {
-    "ryan-a": ("ryan", "The quick brown fox jumps over the lazy dog."),
-    "ryan-b": ("ryan", "CQ CQ CQ this is a test of the AMBE voice codec."),
-    "ryan-c": ("ryan", "She sells sea shells by the sea shore."),
-    "ryan-d": ("ryan", "We were away a year ago."),
-    "hfc-a": ("hfc", "The quick brown fox jumps over the lazy dog."),
-    "hfc-b": ("hfc", "CQ CQ CQ this is a test of the AMBE voice codec."),
-    "hfc-c": ("hfc", "She sells sea shells by the sea shore."),
-    "hfc-d": ("hfc", "We were away a year ago."),
+    "norman-a": ("norman", "The quick brown fox jumps over the lazy dog."),
+    "norman-b": ("norman", "CQ CQ CQ this is a test of the AMBE voice codec."),
+    "norman-c": ("norman", "She sells sea shells by the sea shore."),
+    "norman-d": ("norman", "We were away a year ago."),
+    "lj-a": ("lj", "The quick brown fox jumps over the lazy dog."),
+    "lj-b": ("lj", "CQ CQ CQ this is a test of the AMBE voice codec."),
+    "lj-c": ("lj", "She sells sea shells by the sea shore."),
+    "lj-d": ("lj", "We were away a year ago."),
 }
 
 VOICES = {
-    "ryan": {"id": "ryan", "sex": "male", "model": "Piper en_US-ryan-high"},
-    "hfc": {"id": "hfc", "sex": "female", "model": "Piper en_US-hfc_female-medium"},
+    "norman": {
+        "id": "norman",
+        "sex": "male",
+        "model": "Piper en_US-norman-medium",
+        "dataset": "LibriVox recordings (https://librivox.org)",
+        "dataset_license": "public domain",
+    },
+    "lj": {
+        "id": "lj",
+        "sex": "female",
+        "model": "Piper en_US-ljspeech-high",
+        "dataset": "LJ Speech (https://keithito.com/LJ-Speech-Dataset/)",
+        "dataset_license": "public domain",
+    },
 }
 
 
@@ -522,7 +534,7 @@ def write_json(relpath, doc):
 
 
 def main():
-    featured = sys.argv[1] if len(sys.argv) > 1 else "ryan-b"
+    featured = sys.argv[1] if len(sys.argv) > 1 else "norman-b"
     os.makedirs(DATA, exist_ok=True)
     print("Featured clip: %s" % featured)
     clip_block = None

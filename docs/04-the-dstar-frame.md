@@ -19,8 +19,7 @@ back to sound.
 
 <figure class="anim-figure anim-figure--wide">
   <div class="anim-figure__head">
-    <h4 class="anim-figure__title">One frame, end to end</h4>
-    <span class="badge measured">measured</span>
+    <p class="anim-figure__title">One frame, end to end</p>
   </div>
 
   <!-- The render is build output: .github/workflows/animations.yml renders
@@ -38,11 +37,11 @@ back to sound.
   </video>
 
   <figcaption class="anim-figure__caption">
-    Sixty-eight seconds for a fifth of a second of speech. Frame 45 of the
+    Sixty-eight seconds for a fifth of a second of speech. Frame 48 of the
     male CQ capture: the window, its spectrum, the pitch, eight band
-    decisions, twenty harmonic amplitudes, the nine bytes the chip actually
-    emitted (<code>637ff954cfb6a93a9b</code>), and the decoded audio at the
-    far end. The 7 + 8 + 57 bar it draws is the patent's example allocation,
+    decisions, twenty-three harmonic amplitudes, the nine bytes the chip
+    actually emitted (<code>1e987ff4dc6d784858</code>), and the decoded audio
+    at the far end. The 7 + 8 + 57 bar it draws is the patent's example allocation,
     not D-STAR's, which is unpublished.
     <span class="anim-figure__source">Measured values from
     <code>assets/data/norman-b/</code>, captured from a DVSI AMBE-3000; pitch
@@ -258,7 +257,7 @@ coding.[^405]
 
 The exact assignment of D-STAR's 72 voice bits to codewords, and the exact
 interleaving pattern within the frame, are not published in the JARL
-specification or in any expired patent. What is public is the architecture
+specification or in any patent. What is public is the architecture
 above, which the specification invokes by name when it says "AMBE (w/FEC)".
 
 ## The data channel riding alongside
@@ -372,7 +371,7 @@ thing fails.
     arithmetic supports.
 
 [^405]: **US 5,870,405** — *Digital transmission of acoustic signals over a
-    noisy communication channel* (expired). Source for: priority bit
+    noisy communication channel*. Source for: priority bit
     vectors u₀–u₇ and their ordering by perceptual damage; the assignment
     of (23,12) Golay codes to the first four vectors, (15,11) Hamming codes
     to the next three, and no protection to the last; the 56-of-144-bit
@@ -384,7 +383,7 @@ thing fails.
     bit. <https://patents.google.com/patent/US5870405A/en>
 
 [^011]: **US 5,630,011** — *Quantization of harmonic amplitudes representing
-    speech* (expired). Source for the contents of the highest-priority
+    speech*. Source for the contents of the highest-priority
     Golay-protected vector: the six most significant bits of the
     fundamental frequency and the three most significant bits of the PRBA
     vector mean, combined with three parity check bits.

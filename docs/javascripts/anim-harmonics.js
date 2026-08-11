@@ -120,8 +120,7 @@ function phaseFor(k) {
 
 const FIGURE_HTML = `
 <div class="anim-figure__head">
-  <h4 class="anim-figure__title">One fundamental, and everything that follows from it</h4>
-  <span class="badge patent">expired patents</span>
+  <p class="anim-figure__title">One fundamental, and everything that follows from it</p>
 </div>
 
 <div class="anim-figure__frame" data-state="ready" style="--anim-aspect: 16 / 10">

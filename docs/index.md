@@ -7,7 +7,7 @@ them back into a person talking.
 {: .lede }
 
 Every claim here names its source in the sentence that makes it. The sources
-are expired US patents, the published Multi-Band Excitation literature, the
+are US patents, the published Multi-Band Excitation literature, the
 JARL D-STAR system specification, public DVSI product documentation, and
 measurements this project made against a vocoder chip bought at retail.
 Nothing comes from anybody's codec source code.
@@ -41,14 +41,13 @@ Three kinds of thing appear on these pages, and they are labelled so you can
 tell them apart:
 
 - **Public teaching.** The model, the analysis, the quantization structure and
-  the synthesis rules, taken from patents that have expired and from the 1988
+  the synthesis rules, taken from the patents and from the 1988
   papers. Cited by number.
 - **Specification.** The over-the-air format, taken from the JARL D-STAR
   system specification. Cited by section.
 - **Measurement.** Waveforms, spectra, pitch tracks, band voicing and captured
-  channel frames from a DVSI AMBE-3000 operated as a black box. Marked
-  `measured`{: .badge .measured } wherever it appears, including inside the
-  figures.
+  channel frames from a DVSI AMBE-3000 operated as a black box, including the
+  data behind the figures.
 
 ## What this site is not
 
@@ -62,9 +61,9 @@ run. There are no quantizer codebooks and no bit-packing routines. The
 interactive figures draw precomputed JSON captured from hardware; they perform
 no pitch estimation, no voicing decision, no quantization and no synthesis.
 
-Implementation-level detail stops at full-rate AMBE and IMBE, which the
-expired patents cover. AMBE+2 and the half-rate codec are discussed as
-landscape only, because two patents there remain in force. See
+The subject here is full-rate AMBE and IMBE, the codec D-STAR uses. AMBE+2
+and the half-rate codec are covered at the level of history and patent status
+rather than mechanism, because they are a different codec. See
 [the patent landscape](08-patents.md).
 
 This project is independent of Digital Voice Systems, Inc. AMBE, AMBE+ and

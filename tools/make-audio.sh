@@ -7,6 +7,18 @@
 # normalises them so that the original/decoded A/B pairs on the "Listen"
 # page can be compared fairly.
 #
+# VOICE LICENSING: both voices are deliberately chosen for a public-domain
+# training corpus and a from-scratch (not fine-tuned) training run, so the
+# synthesised clips can be redistributed under this repository's CC BY 4.0
+# grant without inheriting a non-commercial or share-alike condition.
+#   en_US-norman-medium  LibriVox recordings, public domain, trained from
+#                        scratch  (rhasspy/piper-voices .../norman/medium)
+#   en_US-ljspeech-high  LJ Speech corpus, public domain, trained from
+#                        scratch  (rhasspy/piper-voices .../ljspeech/high)
+# Do NOT substitute a voice whose MODEL_CARD names a CC BY-NC-SA or
+# research-only dataset; that would make docs/assets/audio/ unredistributable
+# under the licence stated in README.md.
+#
 # Output: docs/assets/audio/<voice>-<sentence>-original.wav
 #
 # These are the *inputs* to the hardware capture. tools/capture-hardware.sh
@@ -16,7 +28,7 @@
 # Requirements:
 #   piper   (default: ~/.local/bin/piper; override with PIPER)
 #   sox     (brew install sox)
-#   Piper voice models en_US-ryan-high and en_US-hfc_female-medium
+#   Piper voice models en_US-norman-medium and en_US-ljspeech-high
 #           (override the directory with VOICES_DIR)
 #
 # The script is deliberately loud on failure: every stage is checked, and
@@ -33,7 +45,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 out_dir="$repo_root/docs/assets/audio"
 
 PIPER="${PIPER:-$HOME/.local/bin/piper}"
-VOICES_DIR="${VOICES_DIR:-$HOME/dev/ambe/voices}"
+VOICES_DIR="${VOICES_DIR:-$HOME/.local/share/piper/voices}"
 
 # --- level normalisation targets (see docs/assets/data/SCHEMA.md) ----------
 # Every clip is scaled by a single constant gain so its RMS lands on
@@ -57,9 +69,9 @@ command -v soxi >/dev/null || die "soxi not on PATH (brew install sox)"
 [ -d "$VOICES_DIR" ] || die "voice directory not found: $VOICES_DIR (set VOICES_DIR=...)"
 
 # voice id -> model file
-VOICE_IDS=(ryan hfc)
-VOICE_MODELS=(en_US-ryan-high.onnx en_US-hfc_female-medium.onnx)
-VOICE_LABELS=("male (en_US-ryan-high)" "female (en_US-hfc_female-medium)")
+VOICE_IDS=(norman lj)
+VOICE_MODELS=(en_US-norman-medium.onnx en_US-ljspeech-high.onnx)
+VOICE_LABELS=("male (en_US-norman-medium)" "female (en_US-ljspeech-high)")
 
 for m in "${VOICE_MODELS[@]}"; do
   [ -f "$VOICES_DIR/$m" ] || die "missing voice model $VOICES_DIR/$m"

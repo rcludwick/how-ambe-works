@@ -69,8 +69,7 @@ const TOP_HZ = 3900;
 
 const TEMPLATE = `
   <div class="anim-figure__head">
-    <h4 class="anim-figure__title">Harmonic amplitudes, and what precision costs</h4>
-    <span class="badge measured">measured audio</span>
+    <p class="anim-figure__title">Harmonic amplitudes, and what precision costs</p>
   </div>
 
   <div class="anim-figure__scroll">

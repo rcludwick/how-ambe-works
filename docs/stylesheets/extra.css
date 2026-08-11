@@ -1022,23 +1022,6 @@ body {
   margin-top: 0;
 }
 
-/* Small pill for labelling a source class: patent, spec, measurement. */
-.md-typeset .badge {
-  background-color: var(--ambe-surface-2);
-  border: 1px solid var(--ambe-border);
-  border-radius: var(--ambe-radius-pill);
-  color: var(--ambe-text-3);
-  font-size: 0.72em;
-  font-weight: 550;
-  letter-spacing: 0.01em;
-  padding: 0.08em 0.6em;
-  white-space: nowrap;
-}
-
-.md-typeset .badge.patent { border-color: var(--ambe-accent); color: var(--ambe-accent); }
-.md-typeset .badge.spec { border-color: var(--ambe-accent-cool); color: var(--ambe-accent-cool); }
-.md-typeset .badge.measured { border-color: var(--ambe-accent-warm); color: var(--ambe-accent-warm); }
-
 /* Section kicker above a heading. */
 .md-typeset .kicker {
   color: var(--ambe-accent);

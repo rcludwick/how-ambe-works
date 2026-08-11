@@ -132,10 +132,11 @@ FRAMES = _load("frames.json")
 WAVEFORM = _load("waveform.json")
 SPECTRA = _load("spectra.json")
 
-# The frame the scene follows the whole way through. Chosen because it is the
-# most confidently voiced frame of the featured clip (derived confidence 0.966),
-# so the pitch and harmonic pictures are legible.
-HERO = 45
+# The frame the scene follows the whole way through. Chosen as the most
+# confidently voiced frame of the featured clip that also has most of its bands
+# reading periodic (derived confidence 0.953, five of eight bands), so the pitch
+# and harmonic pictures are legible.
+HERO = 48
 HERO_FRAME = FRAMES["frames"][HERO]
 HERO_HEX = HERO_FRAME["hex"]  # MEASURED: the 9 bytes the AMBE-3000 emitted
 HERO_F0 = HERO_FRAME["derived"]["decoded_f0_hz"]  # DERIVED from the audio

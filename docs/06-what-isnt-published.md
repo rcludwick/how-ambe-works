@@ -154,6 +154,17 @@ And it establishes **negative results**, which is where most of the value
 is. A hypothesis that fits one probe and fails the cross-path test is
 refuted, cheaply. Several of ours were.
 
+!!! note "Where the other side of that cross-connect lives"
+
+    The "independent implementation" in this section is a separate,
+    unpublished project of the author's. It is not this repository. **No
+    part of it — no code, no table, no tuning constant, no offset derived
+    from it — appears anywhere on this site**, and nothing on the
+    [Listen](07-listen.md) page was produced by or compared against it;
+    those files are a hardware round trip and nothing else. This section
+    describes the *shape* of an experiment so that someone else can design
+    their own. It does not report that project's results.
+
 ## What it cannot establish
 
 Measurement observes behaviour and therefore can never distinguish
