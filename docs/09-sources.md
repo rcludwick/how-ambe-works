@@ -57,8 +57,8 @@ us.
 
 ## Bibliography
 
-Every URL below was checked with `curl -sI` on **2026-08-10**. Notes flag
-the ones that need a browser.
+Notes flag the links that need a browser rather than a command-line
+fetch.
 
 ### US patents, the primary technical sources
 
