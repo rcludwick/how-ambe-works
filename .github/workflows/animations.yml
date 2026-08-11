@@ -47,9 +47,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Pinned, not 3.x: on 3.13 pip finds no PyAV wheel and falls back to a
+      # source build that needs the whole FFmpeg dev toolchain.
       - uses: actions/setup-python@v6
         with:
-          python-version: 3.x
+          python-version: "3.12"
           cache: pip
 
       # Restore a previous render keyed on the scene sources. An exact hit
@@ -81,7 +83,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
-            ffmpeg libcairo2-dev libpango1.0-dev pkg-config
+            ffmpeg libcairo2-dev libpango1.0-dev pkg-config \
+            libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev \
+            libavfilter-dev libswscale-dev libswresample-dev
 
       - name: Install manim
         if: steps.video-cache.outputs.cache-hit != 'true'
@@ -117,7 +121,7 @@ jobs:
               # --write_all renders every Scene in the file. (It is spelled
               # --write_all / -a in manim CE; there is no --all.)
               manim render \
-                --quality h \
+                --quality m \
                 --format "$fmt" \
                 --media_dir media \
                 --write_all \
