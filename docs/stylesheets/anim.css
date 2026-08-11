@@ -544,10 +544,14 @@
    ------------------------------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
+  /* `.md-typeset` prefix required: the base rule that hides the hint is
+     `.md-typeset .anim-figure__hint`, so an unprefixed override loses. */
+  .md-typeset .anim-figure__hint,
   .anim-figure__hint {
     display: block;
   }
 
+  .md-typeset .anim-btn--play,
   .anim-btn--play {
     display: none;
   }
@@ -559,10 +563,12 @@
 }
 
 /* JS can force the same presentation with .is-static on the figure. */
+.md-typeset .anim-figure.is-static .anim-btn--play,
 .anim-figure.is-static .anim-btn--play {
   display: none;
 }
 
+.md-typeset .anim-figure.is-static .anim-figure__hint,
 .anim-figure.is-static .anim-figure__hint {
   display: block;
 }

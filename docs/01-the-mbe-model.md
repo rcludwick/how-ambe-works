@@ -117,6 +117,7 @@ That is where the name comes from, and it is the entire difference between
 MBE and everything that came before it.
 
 <!-- ANIM: harmonics -->
+<div data-anim="harmonics"></div>
 
 The excitation spectrum is then assembled band by band: segments of a
 **periodic spectrum** `|P_w(ω)|` in the bands declared voiced, segments of a
@@ -156,6 +157,7 @@ voice." A vowel with a breathy top end, a voiced fricative, a word spoken
 over engine noise — all of these are representable rather than approximated.
 
 <!-- ANIM: voicing -->
+<div data-anim="voicing"></div>
 
 ## The parameters, and what they cost
 
