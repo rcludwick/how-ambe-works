@@ -10,7 +10,7 @@ has never heard you builds a new voice from the numbers.
 
 Understanding AMBE means understanding which numbers, why those, and how
 they are measured. This page covers the model — what the numbers *mean*.
-The [next page](02-analysis.md) covers how they are measured.
+The [next page](08-analysis.md) covers how they are measured.
 
 ## The problem: the bit budget is absurd
 
@@ -241,7 +241,7 @@ spent a large share of its 160 bits per frame doing so
 <span class="cite">Griffin &amp; Lim 1988, §II and §V-A</span>.
 Every production descendant dropped it, and the decoder regenerates phase
 instead. That is a synthesis-side story, told on the
-[synthesis page](05-synthesis.md).
+[synthesis page](11-synthesis.md).
 
 ## Did it work?
 
@@ -302,14 +302,14 @@ of speech data — 48 bits per 20 ms frame — plus 1200 bit/s of FEC, packed
 into the same 72-bit, 20 ms frame on the air
 <span class="cite">JARL D-STAR spec §1.1(3), §2.1.2(2)</span>.
 How those 48 parameter bits are divided is not published anywhere;
-[quantization](03-quantization.md) explains the structure they must have,
-and [what is not in the public record](06-what-isnt-published.md) records
+[quantization](09-quantization.md) explains the structure they must have,
+and [what is not in the public record](13-what-is-not-established.md) records
 the gap.
 
 **AMBE+2** — the later half-rate generation, used by DMR, YSF and NXDN. It
 is a real system and it exists. US 8,359,197, "Half-rate vocoder"
 (Hardwick, DVSI, issued 2013), is listed as active with an anticipated
-expiry of 20 May 2028; see the [patents page](08-patents.md). This site
+expiry of 20 May 2028; see the [patents page](16-patents.md). This site
 sticks to full-rate AMBE and IMBE, the codec D-STAR uses, because that is
 its subject.
 
@@ -324,14 +324,17 @@ spectrum close to the original one.
 
 Which raises the question the whole design turns on: close by what measure,
 and how do you find the parameters that get you there? That is
-[analysis](02-analysis.md).
+[analysis](08-analysis.md).
 
 ---
 
-**Next: [Analysis: pitch, voicing, amplitudes](02-analysis.md).** How 20 ms of
+**Next: [Analysis: pitch, voicing, amplitudes](08-analysis.md).** How 20 ms of
 microphone audio becomes one pitch, eight flags and a list of amplitudes, and
 why the estimating is harder than the modelling.
 Back to [the start](index.md). If you would rather hear the thing before
-reading about it, [Listen](07-listen.md) has eight sentences before and after
+reading about it, [Listen](12-listen.md) has eight sentences before and after
 a real codec chip.
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

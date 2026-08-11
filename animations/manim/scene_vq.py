@@ -1,7 +1,7 @@
 """How AMBE Works — scene "vq".
 
 Slug
-    vq   (for docs/03-quantization.md, at `<!-- VIDEO: vq -->`)
+    vq   (for docs/09-quantization.md, at `<!-- VIDEO: vq -->`)
 
 What it is
     A ~41 s geometric explanation of vector quantization. A cloud of parameter
@@ -15,7 +15,7 @@ What it is
     and the centroids are synthetic — drawn from a seeded random generator in
     this file, and the closing card says so. AMBE's real tables appear in no
     patent and in no published specification, which is the whole reason this
-    scene has to be abstract; docs/06-what-isnt-published.md covers that.
+    scene has to be abstract; docs/13-what-is-not-established.md covers that.
 
 Data it reads
     None. There is no AMBE data in this scene by design. (The sibling scene,

@@ -2,7 +2,7 @@
 
 <!-- Owner: frame-agent -->
 
-[Turning measurements into bits](03-quantization.md) ended with a pile of
+[Turning measurements into bits](09-quantization.md) ended with a pile of
 quantizer indices and a strict sense of
 which ones matter most. This chapter is about what happens to them next:
 how they are wrapped in error correction, interleaved with a data channel,
@@ -104,7 +104,7 @@ That is nine bytes. It is worth pausing on how little that is — nine bytes
 per fifth of a second of a human being.
 
 The framing figure in
-[analysis](02-analysis.md#framing-and-windowing) shows those nine bytes
+[analysis](08-analysis.md#framing-and-windowing) shows those nine bytes
 sitting against the 20 ms of waveform they were made from. Here they are on
 their own, bit by bit, from the same capture. Step through the
 clip and watch which positions change from frame to frame. Then look for a
@@ -397,12 +397,15 @@ thresholds at which a D-STAR decoder repeats or mutes a frame. US 5,870,405
 gives the architecture and the 7.2 kbps IMBE instance of it — the 3.6 kbps
 AMBE instance that D-STAR uses is referred to by the JARL specification but
 not defined by it. See
-[what is not in the public record](06-what-isnt-published.md).
+[what is not in the public record](13-what-is-not-established.md).
 
 ---
 
-**Next: [Synthesis: rebuilding the voice](05-synthesis.md).** The far end of
+**Next: [Synthesis: rebuilding the voice](11-synthesis.md).** The far end of
 the link, where a decoder that was never told a single phase has to
 manufacture a waveform anyway.
-Previously: [Turning measurements into bits](03-quantization.md).
+Previously: [Turning measurements into bits](09-quantization.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

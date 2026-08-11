@@ -20,7 +20,7 @@
  *               readout is L, the number of harmonics inside the coded
  *               bandwidth — L = ⌊α·π/ω₀⌋ with α = 0.925, i.e. ⌊3700 Hz / f0⌋
  *               (US 5,701,390; US 5,754,974, as summarised in
- *               docs/02-analysis.md). The pitch-search bracket 22 ≤ P < 115
+ *               docs/08-analysis.md). The pitch-search bracket 22 ≤ P < 115
  *               samples at 8 kHz is from US 5,216,747.
  *
  * NOT A CODEC   There is no AMBE analysis or synthesis here, and no codec

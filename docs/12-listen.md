@@ -374,8 +374,11 @@ discussion.
 
 ---
 
-**Next: [The patent landscape](08-patents.md).** Which patents cover what,
+**Next: [The patent landscape](16-patents.md).** Which patents cover what,
 which two are still in force, and what that constrains for someone building
 an open implementation.
-Previously: [What is not in the public record](06-what-isnt-published.md).
+Previously: [What is not in the public record](13-what-is-not-established.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

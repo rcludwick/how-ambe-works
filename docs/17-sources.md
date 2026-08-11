@@ -63,7 +63,7 @@ fetch.
 ### US patents, the primary technical sources
 
 All assigned to Digital Voice Systems, Inc. Expiry dates and legal-status
-detail are on [The patent landscape](08-patents.md).
+detail are on [The patent landscape](16-patents.md).
 
 | Patent | Title | Used for |
 | --- | --- | --- |
@@ -154,7 +154,7 @@ Development Center technical report, DTIC
   Freely readable, and a legitimate source for anyone working on that
   codec. This site draws little from it for the simple reason that its
   subject is full-rate AMBE as used by D-STAR. See
-  [The patent landscape](08-patents.md) for the half-rate patent
+  [The patent landscape](16-patents.md) for the half-rate patent
   position.
 
 ### Vendor documentation
@@ -198,7 +198,7 @@ disagrees with a patent or a specification, the primary document governs.
 - [Bruce Perens K6BP, "AMBE Exposed," ARRL/TAPR DCC 2014](https://www.qsl.net/kb9mwr/projects/dv/codec/AMBE_Exposed.pdf)
   — the talk through which most amateurs first encounter this subject, and
   the origin of the invalidity theory recorded and set aside on
-  [The patent landscape](08-patents.md). Background and provenance only;
+  [The patent landscape](16-patents.md). Background and provenance only;
   its patent analysis is superseded there by the USPTO record.
 
 ### Verification tools
@@ -243,7 +243,10 @@ by, or approved by them.
 ---
 
 That is the end of the site. Back to [the start](index.md), or to
-[what AMBE actually is](01-the-mbe-model.md) if you arrived here first and
+[what AMBE actually is](07-multi-band-excitation.md) if you arrived here first and
 want the argument in order.
-Previously: [The patent landscape](08-patents.md).
+Previously: [The patent landscape](16-patents.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

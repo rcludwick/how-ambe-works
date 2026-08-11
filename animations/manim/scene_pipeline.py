@@ -2,7 +2,7 @@
 
 Slug
     pipeline   (for the pages carrying `<!-- VIDEO: pipeline -->`:
-                docs/01-the-mbe-model.md and docs/04-the-dstar-frame.md)
+                docs/07-multi-band-excitation.md and docs/10-the-dstar-frame.md)
 
 What it is
     One continuous ~68 s camera move along a single horizontal strip, from
@@ -35,7 +35,7 @@ Sources cited on screen
     JARL D-STAR system specification (72-bit voice frame, 24-bit data frame,
     4800 bps); US 5,754,974 (the 7 + 8 + 57 budget example, and the harmonic
     count following from the pitch); Griffin & Lim 1988 and US 5,701,390
-    (synthesis). All expired; see docs/08-patents.md.
+    (synthesis). All expired; see docs/16-patents.md.
 
 Controls
     None — this is a linear video. The interactive, draggable versions of the

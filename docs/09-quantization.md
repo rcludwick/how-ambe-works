@@ -26,7 +26,7 @@ quantize the spectral magnitudes for each frame."*[^974]
 Hold on to that shape — 7 + 8 + 57 = 72 — but not to those exact numbers.
 That allocation is the patent's example for a system in which all 72 bits
 carry parameters; the D-STAR variant spends part of the same 3600 bps on
-forward error correction ([the D-STAR frame on the air](04-the-dstar-frame.md)),
+forward error correction ([the D-STAR frame on the air](10-the-dstar-frame.md)),
 leaving a parameter budget roughly
 two-thirds this size. What survives is the structure: **a small field for
 pitch, a smaller one for voicing, and everything left over for the spectral
@@ -137,7 +137,7 @@ JARL specification, and not in the DVSI patents, which give the
 *mechanism* and the vector *sizes* without listing entries. They exist,
 they are searched by nearest-neighbour distance, they are the reason the
 codec sounds the way it does, and their contents are not public.
-[What is not in the public record](06-what-isnt-published.md) has more.
+[What is not in the public record](13-what-is-not-established.md) has more.
 
 ## The envelope, coded as a residual
 
@@ -307,7 +307,7 @@ rather than to a fixed absolute range, so a 4-bit field covers the same
 
 None of that structure is visible from outside. The nine bytes a real chip
 emits for one frame are in the figure on
-[the D-STAR frame on the air](04-the-dstar-frame.md#the-96-bit-frame), and
+[the D-STAR frame on the air](10-the-dstar-frame.md#the-96-bit-frame), and
 the honest thing to say about them is that no public document maps any of
 those 72 positions onto any of the fields described above.
 
@@ -321,7 +321,7 @@ detail is left over. Prediction from the previous frame recovers what the
 redundancy of speech allows, and a decay factor below one stops that
 borrowing from turning one bad frame into a long bad noise.
 
-[The D-STAR frame on the air](04-the-dstar-frame.md) picks the same ordering
+[The D-STAR frame on the air](10-the-dstar-frame.md) picks the same ordering
 up from the other side: the channel coding uses it too.
 
 ---
@@ -368,13 +368,16 @@ the exact range of fundamental frequencies the D-STAR variant actually
 codes is **not** stated in any public source available to this project.
 Neither are the codebook contents, the number of blocks used by the D-STAR
 variant, or the exact widths of its parameter fields. See
-[what is not in the public record](06-what-isnt-published.md).
+[what is not in the public record](13-what-is-not-established.md).
 
 ---
 
-**Next: [The D-STAR frame on the air](04-the-dstar-frame.md).** What happens
+**Next: [The D-STAR frame on the air](10-the-dstar-frame.md).** What happens
 to those indices on the way out of the radio: unequal error protection, a
 descrambling key chained to the most important field, and 24 bits of data
 riding alongside every voice frame.
-Previously: [Analysis: pitch, voicing, amplitudes](02-analysis.md).
+Previously: [Analysis: pitch, voicing, amplitudes](08-analysis.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

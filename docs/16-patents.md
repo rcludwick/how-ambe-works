@@ -306,7 +306,10 @@ know what is actually available to them and when.
 
 ---
 
-**Next: [Sources and method](09-sources.md).** Every source behind this site,
+**Next: [Sources and method](17-sources.md).** Every source behind this site,
 what was deliberately excluded, and how to check any of it.
-Previously: [Listen: real hardware examples](07-listen.md).
+Previously: [Listen: real hardware examples](12-listen.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

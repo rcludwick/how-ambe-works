@@ -2,7 +2,7 @@
 
 <!-- Owner: analysis-agent -->
 
-The [model](01-the-mbe-model.md) says a frame of speech is a fundamental
+The [model](07-multi-band-excitation.md) says a frame of speech is a fundamental
 frequency, a set of per-band voiced/unvoiced flags, and a set of harmonic
 amplitudes. Analysis is the job of looking at 20 ms of microphone audio and
 producing those numbers.
@@ -360,7 +360,7 @@ end. The bit that goes on the air is binary. The analyser that produces it
 is not.
 
 That continuous measure is exactly what the band-voicing figure in
-[what AMBE actually is](01-the-mbe-model.md#the-multi-band-idea) plots: each
+[what AMBE actually is](07-multi-band-excitation.md#the-multi-band-idea) plots: each
 band carries a strength between 0 and 1, and the colour flips where it
 crosses the threshold. Read it again now, with this section in mind, and the
 chips showing 0.5-something are the frames this machinery exists to get
@@ -385,7 +385,7 @@ according to the band's voicing:
 <span class="cite">Both: Griffin &amp; Lim 1988, §III-A</span>
 
 What those measured amplitudes look like, one frame at a time, is the
-figure in [turning measurements into bits](03-quantization.md#the-envelope-coded-as-a-residual):
+figure in [turning measurements into bits](09-quantization.md#the-envelope-coded-as-a-residual):
 dots on a curve, read off a real capture. It is placed there rather than
 here because the interesting question about an amplitude is not how it was
 measured but how coarsely it can be rounded before you hear it.
@@ -423,17 +423,20 @@ At the end of analysis, for each 20 ms of speech, the encoder holds:
 That is the complete description of a syllable. It is also, at this stage,
 still a set of real numbers, and there are only 48 or 72 bits to put them
 in. Getting from one to the other is
-[quantization](03-quantization.md).
+[quantization](09-quantization.md).
 
 The other direction is worth a look before you go there. A list of harmonic
 amplitudes with no phases is not obviously a voice, and the clip on
-[synthesis](05-synthesis.md#the-oscillator-bank) adds those amplitudes up as
+[synthesis](11-synthesis.md#the-oscillator-bank) adds those amplitudes up as
 cosines until a glottal pulse appears out of them.
 
 ---
 
-**Next: [Turning measurements into bits](03-quantization.md).** How a pitch,
+**Next: [Turning measurements into bits](09-quantization.md).** How a pitch,
 eight flags and a few dozen real numbers get forced into fixed-width fields,
 and which errors that choice hands to the listener.
-Previously: [What AMBE actually is](01-the-mbe-model.md).
+Previously: [What AMBE actually is](07-multi-band-excitation.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

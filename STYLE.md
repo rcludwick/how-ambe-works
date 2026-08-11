@@ -138,7 +138,7 @@ where a claim came from can check it, challenge it, or improve it.
 The site is expected to change as people establish things that are
 currently open.
 
-- Every gap in `docs/06-what-is-not-established.md` carries a status of
+- Every gap in `docs/13-what-is-not-established.md` carries a status of
   `Open`, `Partially characterised`, or `Established`, plus an estimate
   of the work required to close it.
 - When a gap is closed, the finding moves into the relevant chapter with

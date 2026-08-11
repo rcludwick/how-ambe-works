@@ -23,7 +23,7 @@ count in the readout fall from sixty-odd to nine.
 
 That count is the number of amplitudes the coder has to describe, and the bit
 budget does not grow to meet it. Almost every design decision in AMBE is a
-consequence of that one squeeze. [What AMBE actually is](01-the-mbe-model.md)
+consequence of that one squeeze. [What AMBE actually is](07-multi-band-excitation.md)
 picks the argument up from there.
 
 ## What this site is
@@ -64,7 +64,7 @@ no pitch estimation, no voicing decision, no quantization and no synthesis.
 The subject here is full-rate AMBE and IMBE, the codec D-STAR uses. AMBE+2
 and the half-rate codec are covered at the level of history and patent status
 rather than mechanism, because they are a different codec. See
-[the patent landscape](08-patents.md).
+[the patent landscape](16-patents.md).
 
 This project is independent of Digital Voice Systems, Inc. AMBE, AMBE+ and
 AMBE+2 are trademarks of DVSI, used here only to identify the technology under
@@ -77,37 +77,37 @@ or approved by them, and nothing on the patent page is legal advice.
 The nine chapters are written to be read in order. Each one ends by handing
 the next one a problem it has to solve.
 
-1. **[What AMBE actually is](01-the-mbe-model.md)** sets up the bit budget,
+1. **[What AMBE actually is](07-multi-band-excitation.md)** sets up the bit budget,
    shows why a single voiced/unvoiced decision per frame produces buzz, and
    introduces the multi-band model that fixes it. Start here.
-2. **[Analysis: pitch, voicing, amplitudes](02-analysis.md)** is how a
+2. **[Analysis: pitch, voicing, amplitudes](08-analysis.md)** is how a
    20 ms window becomes one pitch, eight flags and a list of amplitudes.
    Analysis by synthesis, and why pitch is a search rather than a
    measurement.
-3. **[Turning measurements into bits](03-quantization.md)** spends the
+3. **[Turning measurements into bits](09-quantization.md)** spends the
    budget: log-domain amplitudes, prediction from the previous frame,
    codebooks, and a bit allocation that has to change with the pitch.
-4. **[The D-STAR frame on the air](04-the-dstar-frame.md)** wraps the result
+4. **[The D-STAR frame on the air](10-the-dstar-frame.md)** wraps the result
    in error correction and clocks it onto a carrier. Unequal protection, a
    descrambling key chained to the most important field, and the data channel
    riding alongside your voice.
-5. **[Synthesis: rebuilding the voice](05-synthesis.md)** is the far end:
+5. **[Synthesis: rebuilding the voice](11-synthesis.md)** is the far end:
    an oscillator bank, shaped noise, and the phase that was never transmitted
    and has to be invented fifty times a second.
-6. **[What is not in the public record](06-what-isnt-published.md)** draws
+6. **[What is not in the public record](13-what-is-not-established.md)** draws
    the boundary. What the documents give you, what a black box on a bench can
    settle, and the five questions that are still open.
-7. **[Listen: real hardware examples](07-listen.md)** is eight sentences in
+7. **[Listen: real hardware examples](12-listen.md)** is eight sentences in
    two voices, before and after a real AMBE-3000, with something specific to
    listen for in each pair.
-8. **[The patent landscape](08-patents.md)** is the dates: which patents
+8. **[The patent landscape](16-patents.md)** is the dates: which patents
    taught what, which expired when, and which two are still live.
-9. **[Sources and method](09-sources.md)** lists every source, states what
+9. **[Sources and method](17-sources.md)** lists every source, states what
    was deliberately excluded and why, and tells you how to check any of it.
 
-In a hurry? Read chapter 1, then [listen](07-listen.md) to a clip pair, then
+In a hurry? Read chapter 1, then [listen](12-listen.md) to a clip pair, then
 come back for the rest. If you arrived for the legal question, chapters
-[8](08-patents.md) and [9](09-sources.md) stand on their own.
+[8](16-patents.md) and [9](17-sources.md) stand on their own.
 
 ## Corrections
 
@@ -120,5 +120,5 @@ page and the primary document that contradicts it.
 Prose and figures are licensed CC BY 4.0; the tooling is MIT. Reuse either,
 with attribution.
 
-Last reviewed 2026-08-10.
+Last reviewed: 2026-08-10.
 {: .source-note }

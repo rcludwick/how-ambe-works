@@ -449,7 +449,7 @@ frequently are not, and the synthesizer is where that gets managed.
 The decoder can tell the difference between a frame it repaired and a
 frame it could not, because the channel layer is built to make that
 distinction cheap: the mechanism is
-[the self-checking trick](04-the-dstar-frame.md#the-self-checking-trick) in
+[the self-checking trick](10-the-dstar-frame.md#the-self-checking-trick) in
 the previous chapter. What matters here is the outcome it hands the
 synthesizer. The decoder "can identify severely corrupted frames through
 error pattern analysis and either repeat previous parameters or mute output
@@ -488,7 +488,7 @@ squawk. Frame repeat and mute exist to keep that out of anyone's ears.
 ## Sources for this page
 
 All of these are US patents or published literature; every one is
-listed with a link on [Sources and method](09-sources.md).
+listed with a link on [Sources and method](17-sources.md).
 
 | Claim on this page | Source |
 | --- | --- |
@@ -507,9 +507,12 @@ claim made by any of the sources above.
 
 ---
 
-**Next: [What is not in the public record](06-what-isnt-published.md).** Where
+**Next: [What is not in the public record](13-what-is-not-established.md).** Where
 the documents stop and the shipping product begins, and what a black box on a
 bench can and cannot settle.
-Previously: [The D-STAR frame on the air](04-the-dstar-frame.md). Or go and
-[listen](07-listen.md) to what all of this sounds like.
+Previously: [The D-STAR frame on the air](10-the-dstar-frame.md). Or go and
+[listen](12-listen.md) to what all of this sounds like.
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }

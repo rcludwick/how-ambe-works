@@ -118,7 +118,7 @@ codebooks, those tables exist in no publication. A codebook is not an
 algorithm; there is nothing to enable and nothing to disclose.
 
 Those gaps are visible in one picture. The frame-bit figure on
-[the D-STAR frame on the air](04-the-dstar-frame.md#the-96-bit-frame) shows
+[the D-STAR frame on the air](10-the-dstar-frame.md#the-96-bit-frame) shows
 72 real captured bits per frame and colours them by how often each position
 changes, because that is a measurement. It does not colour them by field,
 because the field map is the thing that is missing. The part of that figure
@@ -160,7 +160,7 @@ refuted, cheaply. Several of ours were.
     unpublished project of the author's. It is not this repository. **No
     part of it — no code, no table, no tuning constant, no offset derived
     from it — appears anywhere on this site**, and nothing on the
-    [Listen](07-listen.md) page was produced by or compared against it;
+    [Listen](12-listen.md) page was produced by or compared against it;
     those files are a hardware round trip and nothing else. This section
     describes the *shape* of an experiment so that someone else can design
     their own. It does not report that project's results.
@@ -216,7 +216,10 @@ stick and patience. The map is what takes time.
 
 ---
 
-**Next: [Listen: real hardware examples](07-listen.md).** Eight sentences
+**Next: [Listen: real hardware examples](12-listen.md).** Eight sentences
 through a real AMBE-3000, with something specific to listen for in each.
-Previously: [Synthesis: rebuilding the voice](05-synthesis.md).
+Previously: [Synthesis: rebuilding the voice](11-synthesis.md).
 {: .chapter-nav }
+
+Last reviewed: 2026-08-10.
+{: .source-note }
