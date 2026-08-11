@@ -68,6 +68,12 @@ per fifth of a second of a human being.
 
 <!-- ANIM: frames -->
 
+<!-- ANIM: bits — the frame-bit dissector (docs/javascripts/anim-bits.js).
+     Colours are measurements of the captured bits, never a guessed field
+     map: the assignment of these 72 positions to codec fields is not
+     published, and the figure says so. -->
+<div data-anim="bits"></div>
+
 ## Unequal error protection
 
 Twenty-four bits of FEC cannot protect forty-eight bits of payload

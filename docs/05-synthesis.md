@@ -327,26 +327,10 @@ The net effect: sustained vowels get genuinely continuous low harmonics,
 transitions get smooth energy handovers, and nothing in the output
 announces where one frame stopped and the next began.
 
-<figure class="anim-figure" data-anim="synth">
-  <!-- ANIM: synth -->
-  <!-- Interactive figure. Suggested content: two adjacent frames of
-       real parameters from hardware capture, drawn as a harmonic stack
-       with voiced harmonics in the teal data colour and unvoiced in the
-       muted one. Scrubbing advances through the 160 samples of the
-       boundary frame; each harmonic is annotated with which of the five
-       rules above it is following, and the summed output waveform runs
-       underneath. Draws precomputed JSON only — anim-core.js contains
-       no synthesis. -->
-  <canvas height="380" aria-label="Frame-boundary synthesis rules across two frames"></canvas>
-  <div class="anim-controls">
-    <button type="button">Play</button>
-    <input type="range" aria-label="Scrub through the frame" />
-    <span class="anim-controls__readout">0.00s</span>
-  </div>
-  <figcaption class="anim-figure__caption">
-    One frame boundary, harmonic by harmonic.
-  </figcaption>
-</figure>
+<!-- ANIM: synth — the two-generator figure (docs/javascripts/anim-synth.js).
+     Builds its own figure chrome, controls and caption; it draws precomputed
+     measurements only and synthesizes no speech. -->
+<div data-anim="synth"></div>
 
 ## The synthesis loop, in outline
 
