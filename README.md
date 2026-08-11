@@ -8,6 +8,8 @@ on the air, and how a decoder rebuilds a voice from it.
 
 Read it at <https://rcludwick.github.io/how-ambe-works/>.
 
+Written by Rob Ludwick, AJ7HR. Prose is CC BY 4.0; tooling is MIT.
+
 ## This repository contains no working codec
 
 **There is no AMBE encoder or decoder here, in any language.** This is

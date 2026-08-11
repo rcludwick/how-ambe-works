@@ -182,6 +182,8 @@ disagrees with a patent or a specification, the primary document governs.
 
 ## Licensing
 
+Written by Rob Ludwick, AJ7HR.
+
 The prose, diagrams and page content are licensed
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The tooling,
 build scripts, stylesheets, animation runtime, CI workflows is MIT.

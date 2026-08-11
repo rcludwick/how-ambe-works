@@ -2,22 +2,17 @@
 site_url = "https://rcludwick.github.io/how-ambe-works/"
 site_name = "How AMBE Works"
 site_description = "An illustrated, source-cited explanation of the AMBE voice codec"
+copyright = "Rob Ludwick, AJ7HR"
 
 repo_url = "https://github.com/rcludwick/how-ambe-works"
 repo_name = "rcludwick/how-ambe-works"
 
+# Chapters 01-06, 14 and 15 are written but not yet drafted, so they are
+# deliberately absent from this nav: an empty page in the sidebar is worse
+# than no page. Add each one back here as it is written. The files stay in
+# docs/ so the work in progress is visible in the repo.
 nav = [
   { "How AMBE Works" = "index.md" },
-  { "Part I: The mathematics you need" = [
-    { "Why sinusoids" = "01-why-sinusoids.md" },
-    { "The Fourier transform and the DFT" = "02-fourier-and-the-dft.md" },
-    { "Windows, frames, and the tradeoff" = "03-windows-and-frames.md" },
-    { "Phase" = "04-phase.md" },
-  ] },
-  { "Part II: The voice" = [
-    { "Source, filter, and formants" = "05-source-and-filter.md" },
-    { "Reading a spectrogram" = "06-reading-a-spectrogram.md" },
-  ] },
   { "Part III: The model" = [
     { "Multi-band excitation" = "07-multi-band-excitation.md" },
     { "Analysis: pitch, voicing, amplitudes" = "08-analysis.md" },
@@ -30,8 +25,6 @@ nav = [
   ] },
   { "Part V: The open problem" = [
     { "What is not established" = "13-what-is-not-established.md" },
-    { "How to measure" = "14-how-to-measure.md" },
-    { "Exact reproduction" = "15-exact-reproduction.md" },
   ] },
   { "Part VI: Reference" = [
     { "The patent landscape" = "16-patents.md" },
