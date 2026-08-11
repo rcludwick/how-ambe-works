@@ -1,72 +1,610 @@
-/* Animation figure chrome — shared by every canvas/video figure on the site.
-   Purely presentational; the drawing itself lives in docs/javascripts/. */
+/* ===========================================================================
+   How AMBE Works — animation figure chrome
+   ---------------------------------------------------------------------------
+   Presentation only. Nothing here knows anything about AMBE; it is the frame
+   around a canvas, a video, or an image, plus the controls that drive it.
+   Every colour comes from a token defined in extra.css.
 
+   Markup contract (animation authors: copy this shape)
+   ---------------------------------------------------------------------------
+   <figure class="anim-figure" data-anim="pitch-track">
+     <div class="anim-figure__head">
+       <h4 class="anim-figure__title">Pitch track over one utterance</h4>
+       <span class="badge measured">measured</span>
+     </div>
+
+     <div class="anim-figure__scroll">          <!-- optional: wide plots -->
+       <div class="anim-figure__frame" style="--anim-aspect: 16 / 9">
+         <canvas class="anim-figure__canvas"></canvas>
+       </div>
+     </div>
+
+     <ul class="anim-legend">
+       <li class="anim-legend__item"><i class="anim-legend__swatch is-data-1"></i>voiced</li>
+       <li class="anim-legend__item"><i class="anim-legend__swatch is-data-2"></i>unvoiced</li>
+     </ul>
+
+     <div class="anim-controls">
+       <button class="anim-btn anim-btn--play" type="button" aria-pressed="false">Play</button>
+       <label class="anim-field">
+         <span class="anim-field__label">Frame</span>
+         <input class="anim-range" type="range" min="0" max="0" step="1" value="0">
+       </label>
+       <output class="anim-readout">0.00 s</output>
+     </div>
+
+     <p class="anim-figure__hint">Animation held on a static frame because your
+        system asks for reduced motion. Use the slider to step through it.</p>
+
+     <figcaption class="anim-figure__caption">
+       What the reader is looking at.
+       <span class="anim-figure__source">Source: ...</span>
+     </figcaption>
+   </figure>
+
+   For a manim clip, swap the frame contents for:
+     <video class="anim-video" controls playsinline preload="none"
+            poster="../assets/video/foo.jpg">
+       <source src="../assets/video/foo.mp4" type="video/mp4">
+     </video>
+
+   MIT licensed (see LICENSE-MIT).
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Figure surface
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-figure,
 .anim-figure {
-  margin: 2.5rem 0;
-  padding: 1rem;
-  background: var(--ambe-surface-1, #141417);
-  border: 1px solid var(--ambe-hairline, #2b2b32);
-  border-radius: 14px;
-}
-
-.anim-figure canvas,
-.anim-figure video {
+  background-color: var(--ambe-surface-1);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-lg);
+  box-shadow: var(--ambe-shadow-1);
+  color: var(--ambe-text-2);
+  contain: layout paint;
   display: block;
+  /* zensical's `.md-typeset figure` is `width: fit-content; margin: auto;
+     text-align: center` — none of which suits a full-width instrument. */
+  margin: 2.2rem 0;
+  max-width: var(--ambe-measure-wide);
+  padding: 0.9rem;
+  text-align: left;
   width: 100%;
-  height: auto;
-  border-radius: 8px;
-  background: var(--ambe-surface-0, #0b0b0d);
 }
 
-.anim-figure__caption {
-  margin-top: 0.9rem;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: var(--md-default-fg-color--lighter, #75757f);
+/* Opt-in full-bleed within the content column, for wide spectrograms.
+   Note the `.md-typeset` prefix throughout this file: base rules have to
+   match zensical's own specificity, so modifiers must match it too. */
+.md-typeset .anim-figure--wide,
+.anim-figure--wide {
+  max-width: 100%;
 }
 
-/* Transport row: play/pause plus scrub. */
-.anim-controls {
+.anim-figure__head {
+  align-items: baseline;
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+
+.md-typeset .anim-figure__title,
+.anim-figure__title {
+  color: var(--ambe-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  line-height: 1.3;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.md-typeset .anim-figure__subtitle,
+.anim-figure__subtitle {
+  color: var(--ambe-text-4);
+  font-size: 0.62rem;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Plot area
+   The canvas is sized entirely by CSS; anim-core.js matches the backing store
+   to the CSS box at devicePixelRatio. Authors set --anim-aspect (default 16/9)
+   and, for plots that must not squash, --anim-min-width to trigger internal
+   horizontal scrolling instead of page-level scrolling.
+   ------------------------------------------------------------------------ */
+
+.anim-figure__scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ambe-border) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anim-figure__frame {
+  aspect-ratio: var(--anim-aspect, 16 / 9);
+  background-color: var(--ambe-plot-bg);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  min-width: var(--anim-min-width, 0);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.anim-figure__canvas,
+.anim-figure__frame > canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+/* An overlay layer for HTML labels pinned over the canvas (crisper text than
+   canvas fillText for anything the reader must select or a screen reader must
+   see). Position children absolutely inside it. */
+.anim-figure__overlay {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.anim-figure__overlay > * {
+  pointer-events: auto;
+}
+
+/* Loading / empty state while precomputed JSON is in flight. */
+.anim-figure__frame[data-state="loading"]::after {
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.9rem;
+  color: var(--ambe-text-4);
+  content: "Loading data…";
+  display: flex;
+  font-size: 0.62rem;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
 }
 
-.anim-controls button {
-  appearance: none;
-  border: 1px solid var(--ambe-hairline, #2b2b32);
-  background: var(--ambe-surface-2, #1c1c21);
-  color: var(--md-default-fg-color, #ececf1);
+.anim-figure__frame[data-state="error"]::after {
+  align-items: center;
+  color: var(--ambe-accent-warm);
+  content: "This figure's data failed to load.";
+  display: flex;
+  font-size: 0.62rem;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+/* ---------------------------------------------------------------------------
+   Video figures (manim clips)
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-video,
+.anim-video {
+  background-color: var(--ambe-sunken);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  display: block;
+  height: auto;
+  margin: 0;
+  max-width: 100%;
+  width: 100%;
+  aspect-ratio: var(--anim-aspect, 16 / 9);
+  object-fit: contain;
+}
+
+/* A bare <video> dropped straight into prose still behaves. */
+.md-typeset video:not(.anim-video) {
+  border-radius: var(--ambe-radius-md);
+  max-width: 100%;
+  height: auto;
+}
+
+.anim-video:focus-visible {
+  outline: none;
+  box-shadow: var(--ambe-focus-ring);
+}
+
+/* ---------------------------------------------------------------------------
+   Legend
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-legend,
+.anim-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  list-style: none;
+  margin: 0.7rem 0 0;
+  padding: 0;
+}
+
+.md-typeset .anim-legend__item,
+.anim-legend__item {
+  align-items: center;
+  color: var(--ambe-text-3);
+  display: flex;
+  font-size: 0.62rem;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.anim-legend__swatch {
+  background-color: var(--ambe-data-4);
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.anim-legend__swatch.is-data-1 { background-color: var(--ambe-data-1); }
+.anim-legend__swatch.is-data-2 { background-color: var(--ambe-data-2); }
+.anim-legend__swatch.is-data-3 { background-color: var(--ambe-data-3); }
+.anim-legend__swatch.is-data-4 { background-color: var(--ambe-data-4); }
+
+/* Line-style swatches, for series drawn as strokes rather than fills. */
+.anim-legend__swatch--line {
   border-radius: 999px;
-  padding: 0.3rem 0.95rem;
-  font: inherit;
-  font-size: 0.78rem;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch--dashed {
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor 0 4px,
+    transparent 4px 7px
+  );
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Controls: transport, sliders, toggles
+   ------------------------------------------------------------------------ */
+
+.anim-controls {
+  align-items: center;
+  border-top: 1px solid var(--ambe-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+}
+
+.anim-controls__group {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* -- Buttons ----------------------------------------------------------- */
+
+.md-typeset .anim-btn,
+.anim-btn {
+  appearance: none;
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  border-radius: var(--ambe-radius-pill);
+  color: var(--ambe-text-2);
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease;
+  flex: none;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 550;
+  letter-spacing: -0.004em;
+  line-height: 1;
+  padding: 0.4rem 0.8rem;
+  transition:
+    background-color var(--ambe-dur-fast) var(--ambe-ease),
+    border-color var(--ambe-dur-fast) var(--ambe-ease),
+    color var(--ambe-dur-fast) var(--ambe-ease);
+  user-select: none;
 }
 
-.anim-controls button:hover {
-  background: var(--ambe-surface-1, #141417);
-  border-color: var(--ambe-accent, #6e8bff);
+.anim-btn:hover {
+  background-color: var(--ambe-surface-3);
+  border-color: var(--ambe-border-strong);
+  color: var(--ambe-text);
 }
 
-.anim-controls input[type="range"] {
-  flex: 1;
-  accent-color: var(--ambe-accent, #6e8bff);
+.anim-btn:active {
+  transform: translateY(0.5px);
 }
 
-.anim-controls__readout {
+.anim-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ambe-focus-ring);
+}
+
+.anim-btn[disabled],
+.anim-btn[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Primary transport button (play/pause). anim-core.js flips aria-pressed. */
+.md-typeset .anim-btn--play,
+.anim-btn--play {
+  background-color: var(--ambe-accent-soft);
+  border-color: color-mix(in srgb, var(--ambe-accent) 45%, transparent);
+  color: var(--ambe-accent);
+  min-width: 4.4rem;
+}
+
+.md-typeset .anim-btn--play:hover,
+.anim-btn--play:hover {
+  background-color: color-mix(in srgb, var(--ambe-accent) 22%, transparent);
+  border-color: var(--ambe-accent);
+  color: var(--ambe-accent-hover);
+}
+
+/* Segmented toggles: a row of .anim-btn with aria-pressed. */
+.md-typeset .anim-btn[aria-pressed="true"],
+.anim-btn[aria-pressed="true"] {
+  background-color: var(--ambe-accent-soft);
+  border-color: var(--ambe-accent);
+  color: var(--ambe-accent);
+}
+
+.anim-toggle-group {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-pill);
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.md-typeset .anim-toggle-group .anim-btn,
+.anim-toggle-group .anim-btn {
+  background-color: transparent;
+  border-color: transparent;
+  padding: 0.3rem 0.7rem;
+}
+
+.md-typeset .anim-toggle-group .anim-btn[aria-pressed="true"],
+.anim-toggle-group .anim-btn[aria-pressed="true"] {
+  background-color: var(--ambe-surface-3);
+  border-color: transparent;
+  color: var(--ambe-text);
+}
+
+/* -- Fields and sliders ------------------------------------------------ */
+
+.md-typeset .anim-field,
+.anim-field {
+  align-items: center;
+  display: flex;
+  flex: 1 1 12rem;
+  gap: 0.5rem;
+  margin: 0;
+  min-width: 8rem;
+}
+
+.anim-field__label {
+  color: var(--ambe-text-4);
+  flex: none;
+  font-size: 0.6rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.md-typeset .anim-range,
+.anim-range {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  flex: 1 1 auto;
+  height: 1rem;
+  margin: 0;
+  min-width: 5rem;
+  padding: 0;
+  width: 100%;
+}
+
+.anim-range:focus-visible {
+  outline: none;
+}
+
+.anim-range::-webkit-slider-runnable-track {
+  background-color: var(--ambe-surface-3);
+  border-radius: 999px;
+  height: 3px;
+}
+
+.anim-range::-moz-range-track {
+  background-color: var(--ambe-surface-3);
+  border-radius: 999px;
+  height: 3px;
+}
+
+.anim-range::-moz-range-progress {
+  background-color: var(--ambe-accent);
+  border-radius: 999px;
+  height: 3px;
+}
+
+.anim-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--ambe-text);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  height: 0.62rem;
+  margin-top: calc((0.62rem - 3px) / -2);
+  transition: transform var(--ambe-dur-fast) var(--ambe-ease);
+  width: 0.62rem;
+}
+
+.anim-range::-moz-range-thumb {
+  background-color: var(--ambe-text);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  height: 0.62rem;
+  width: 0.62rem;
+}
+
+.anim-range:hover::-webkit-slider-thumb,
+.anim-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.anim-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--ambe-focus-ring);
+}
+
+.anim-range:focus-visible::-moz-range-thumb {
+  box-shadow: var(--ambe-focus-ring);
+}
+
+/* Checkbox/radio options inside a control row. */
+.anim-check {
+  accent-color: var(--ambe-accent);
+  margin: 0 0.3rem 0 0;
+}
+
+/* -- Readout ----------------------------------------------------------- */
+
+.md-typeset .anim-readout,
+.anim-readout {
+  color: var(--ambe-text-3);
+  flex: none;
+  font-family: var(--ambe-font-mono);
+  font-size: 0.6rem;
   font-variant-numeric: tabular-nums;
-  font-size: 0.75rem;
-  color: var(--md-default-fg-color--lighter, #75757f);
-  min-width: 6ch;
+  min-width: 5.5ch;
   text-align: right;
 }
 
-/* Respect reduced-motion: figures hold on their first frame. */
+.md-typeset .anim-readout--wide,
+.anim-readout--wide {
+  min-width: 12ch;
+}
+
+.anim-readout em {
+  color: var(--ambe-text);
+  font-style: normal;
+}
+
+/* ---------------------------------------------------------------------------
+   Caption, source line, reduced-motion hint
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-figure__caption,
+.anim-figure__caption {
+  color: var(--ambe-text-3);
+  font-size: 0.64rem;
+  font-style: normal;
+  line-height: 1.6;
+  margin: 0.8rem 0 0;
+  max-width: var(--ambe-measure);
+  text-align: left;
+}
+
+.anim-figure__caption > :last-child {
+  margin-bottom: 0;
+}
+
+/* Every figure names where its data came from. */
+.md-typeset .anim-figure__source,
+.anim-figure__source {
+  color: var(--ambe-text-4);
+  display: block;
+  font-size: 0.92em;
+  margin-top: 0.3em;
+}
+
+/* Shown only when the reader asks for reduced motion. */
+.md-typeset .anim-figure__hint,
+.anim-figure__hint {
+  color: var(--ambe-text-4);
+  display: none;
+  font-size: 0.6rem;
+  line-height: 1.5;
+  margin: 0.6rem 0 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion
+   Figures hold on a representative static frame (anim-core.js does not start
+   the rAF loop); the hint appears and the transport stays usable so the
+   reader can step through by hand.
+   ------------------------------------------------------------------------ */
+
 @media (prefers-reduced-motion: reduce) {
-  .anim-figure video {
+  .anim-figure__hint {
+    display: block;
+  }
+
+  .anim-btn--play {
+    display: none;
+  }
+
+  .anim-video {
+    /* Any autoplay attribute is also stripped by anim-core.js. */
     animation: none;
+  }
+}
+
+/* JS can force the same presentation with .is-static on the figure. */
+.anim-figure.is-static .anim-btn--play {
+  display: none;
+}
+
+.anim-figure.is-static .anim-figure__hint {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------------------ */
+
+@media screen and (max-width: 44.9375em) {
+  .anim-figure {
+    border-left: 0;
+    border-radius: var(--ambe-radius-md);
+    border-right: 0;
+    margin-inline: -0.4rem;
+    padding: 0.7rem;
+  }
+
+  .anim-controls {
+    gap: 0.45rem;
+  }
+
+  .anim-field {
+    flex-basis: 100%;
+  }
+
+  .anim-readout {
+    text-align: left;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print: keep the static frame and the caption, drop the transport.
+   ------------------------------------------------------------------------ */
+
+@media print {
+  .anim-controls,
+  .anim-figure__hint {
+    display: none;
+  }
+
+  .anim-figure {
+    box-shadow: none;
+    break-inside: avoid;
   }
 }

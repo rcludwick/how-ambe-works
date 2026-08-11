@@ -1,98 +1,1108 @@
-/* How AMBE Works — site theme.
-   Dark, Apple-inspired: layered near-black surfaces (never pure black),
-   tight typographic hierarchy, generous whitespace, and a small set of
-   saturated accents used sparingly as pops of colour. */
+/* ===========================================================================
+   How AMBE Works — site theme
+   ---------------------------------------------------------------------------
+   A dark, Apple-inspired layer over zensical's "slate" scheme (modern
+   variant). Layered near-black surfaces rather than pure black, a tight
+   typographic hierarchy, generous whitespace, a ~68ch measure for running
+   text, and exactly three saturated accents used sparingly as pops.
+
+   Structure
+     1. Design tokens (light defaults)
+     2. Design tokens (dark — the designed default, applied by scheme "slate")
+     3. Token bridge: --ambe-* -> the --md-* variables zensical consumes
+     4. Typography and measure
+     5. Chrome: header, navigation, table of contents, footer, search
+     6. Content: links, code, tables, admonitions, footnotes, misc
+     7. Content utility classes for page authors
+     8. Responsiveness and reduced motion
+
+   Notes for other agents
+     - Every colour used anywhere on this site comes from a token below.
+       Do not hard-code hex values in page CSS or in canvas drawing code;
+       read the tokens (anim-core.js `getTheme()` does this for canvases).
+     - zensical sets `data-md-color-scheme` on <body>, not on <html>. Token
+       lookups from JavaScript must therefore read from document.body.
+     - 1rem = 20px here: zensical's modern variant sets html{font-size:125%}.
+
+   MIT licensed (see LICENSE-MIT).
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. Design tokens — light
+   These sit on :root so the light scheme, and any element outside <body>'s
+   scheme attribute, always has a complete, non-broken palette. Dark overrides
+   follow and win because they are attribute-scoped on <body>.
+   ------------------------------------------------------------------------ */
 
 :root {
-  /* Accents. Three, and no more. */
-  --ambe-accent: #6e8bff;      /* indigo — links, primary emphasis */
-  --ambe-accent-warm: #ffb454; /* amber — callouts, highlighted values */
-  --ambe-accent-cool: #35d0ba; /* teal  — voiced/unvoiced + data marks */
+  /* -- Type ------------------------------------------------------------- */
+  --ambe-font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    Inter, Helvetica, Arial, sans-serif;
+  --ambe-font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, "Cascadia Mono",
+    "Roboto Mono", "Liberation Mono", monospace;
+
+  /* Reading measure for running text. Figures and tables may exceed it. */
+  --ambe-measure: 68ch;
+  --ambe-measure-wide: 88ch;
+
+  /* -- Geometry --------------------------------------------------------- */
+  --ambe-radius-sm: 0.3rem;
+  --ambe-radius-md: 0.5rem;
+  --ambe-radius-lg: 0.75rem;
+  --ambe-radius-pill: 999px;
+
+  --ambe-space-1: 0.2rem;
+  --ambe-space-2: 0.4rem;
+  --ambe-space-3: 0.6rem;
+  --ambe-space-4: 0.9rem;
+  --ambe-space-5: 1.4rem;
+  --ambe-space-6: 2.2rem;
+
+  /* -- Motion ----------------------------------------------------------- */
+  --ambe-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ambe-dur-fast: 120ms;
+  --ambe-dur-med: 240ms;
+  --ambe-dur-slow: 420ms;
+
+  /* -- Surfaces (light: layered off-whites) ----------------------------- */
+  --ambe-bg: #fbfbfd;
+  --ambe-surface-1: #ffffff;
+  --ambe-surface-2: #f2f2f5;
+  --ambe-surface-3: #e8e8ed;
+  --ambe-sunken: #f6f6f8;
+
+  /* Translucent versions of the page ground, for blurred bars. */
+  --ambe-bg-veil: rgba(251, 251, 253, 0.72);
+  --ambe-bg-scrim: rgba(251, 251, 253, 0.32);
+
+  /* -- Text tiers ------------------------------------------------------- */
+  --ambe-text: #16161a;        /* headings, emphasised UI text */
+  --ambe-text-2: #3d3d46;      /* body copy */
+  --ambe-text-3: #6b6b76;      /* captions, metadata, muted UI */
+  --ambe-text-4: #9a9aa4;      /* hints, disabled, faint rules */
+
+  /* -- Borders ---------------------------------------------------------- */
+  --ambe-hairline: rgba(0, 0, 0, 0.1);   /* separators */
+  --ambe-border: rgba(0, 0, 0, 0.16);    /* interactive chrome */
+  --ambe-border-strong: rgba(0, 0, 0, 0.28);
+
+  /* -- Accents. Three, and no more. ------------------------------------- */
+  --ambe-accent: #4b5bd7;            /* indigo — links, primary emphasis */
+  --ambe-accent-hover: #3a48b8;
+  --ambe-accent-soft: rgba(75, 91, 215, 0.1);
+  --ambe-accent-warm: #a45d00;       /* amber — attention, key values */
+  --ambe-accent-warm-soft: rgba(203, 122, 12, 0.12);
+  --ambe-accent-cool: #067a68;       /* teal — data, voiced/unvoiced marks */
+  --ambe-accent-cool-soft: rgba(6, 122, 104, 0.12);
+
+  /* -- Canvas / plot tokens (read by anim-core.js `getTheme()`) --------- */
+  --ambe-plot-bg: #ffffff;
+  --ambe-plot-grid: rgba(0, 0, 0, 0.08);
+  --ambe-plot-axis: rgba(0, 0, 0, 0.32);
+  --ambe-plot-ink: #16161a;
+  --ambe-plot-muted: #8a8a94;
+  --ambe-data-1: #4b5bd7;
+  --ambe-data-2: #067a68;
+  --ambe-data-3: #b8730a;
+  --ambe-data-4: #8a8a94;
+
+  /* -- Elevation -------------------------------------------------------- */
+  --ambe-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --ambe-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+
+  --ambe-focus-ring: 0 0 0 2px var(--ambe-bg), 0 0 0 4px var(--ambe-accent);
 }
+
+/* ---------------------------------------------------------------------------
+   2. Design tokens — dark (the designed default)
+   Scoped to <body data-md-color-scheme="slate">, which is what zensical emits
+   for this site. Layered near-blacks; nothing is #000.
+   ------------------------------------------------------------------------ */
 
 [data-md-color-scheme="slate"] {
-  /* Layered surfaces: page < content < raised. */
-  --ambe-surface-0: #0b0b0d;
-  --ambe-surface-1: #141417;
-  --ambe-surface-2: #1c1c21;
-  --ambe-hairline: #2b2b32;
+  --md-hue: 232;
 
-  --md-default-bg-color: var(--ambe-surface-0);
-  --md-default-fg-color: #ececf1;
-  --md-default-fg-color--light: #b7b7c2;
-  --md-default-fg-color--lighter: #75757f;
-  --md-default-fg-color--lightest: #3a3a42;
+  --ambe-bg: #0c0d10;          /* page ground — near-black, faintly blue */
+  --ambe-surface-1: #131419;   /* cards, figures, table bodies */
+  --ambe-surface-2: #1a1c22;   /* raised: controls, table heads, code */
+  --ambe-surface-3: #23262e;   /* highest: hover, popovers, kbd */
+  --ambe-sunken: #08090c;      /* recessed: plot interiors, insets */
 
-  --md-primary-fg-color: var(--ambe-surface-1);
-  --md-primary-bg-color: #ececf1;
+  --ambe-bg-veil: rgba(12, 13, 16, 0.72);
+  --ambe-bg-scrim: rgba(8, 9, 12, 0.6);
 
-  --md-accent-fg-color: var(--ambe-accent);
-  --md-typeset-a-color: var(--ambe-accent);
+  --ambe-text: #f2f2f7;
+  --ambe-text-2: #c3c4cd;
+  --ambe-text-3: #8d8f9b;
+  --ambe-text-4: #5c5e6a;
 
-  --md-code-bg-color: var(--ambe-surface-2);
-  --md-code-fg-color: #d8d8e0;
+  --ambe-hairline: rgba(255, 255, 255, 0.08);
+  --ambe-border: rgba(255, 255, 255, 0.14);
+  --ambe-border-strong: rgba(255, 255, 255, 0.24);
+
+  --ambe-accent: #7d8cff;            /* indigo */
+  --ambe-accent-hover: #98a4ff;
+  --ambe-accent-soft: rgba(125, 140, 255, 0.14);
+  --ambe-accent-warm: #ffb454;       /* amber */
+  --ambe-accent-warm-soft: rgba(255, 180, 84, 0.14);
+  --ambe-accent-cool: #3ddbc0;       /* teal */
+  --ambe-accent-cool-soft: rgba(61, 219, 192, 0.14);
+
+  --ambe-plot-bg: #0f1015;
+  --ambe-plot-grid: rgba(255, 255, 255, 0.07);
+  --ambe-plot-axis: rgba(255, 255, 255, 0.28);
+  --ambe-plot-ink: #e9e9f0;
+  --ambe-plot-muted: #7c7e8a;
+  --ambe-data-1: #7d8cff;
+  --ambe-data-2: #3ddbc0;
+  --ambe-data-3: #ffb454;
+  --ambe-data-4: #7c7e8a;
+
+  --ambe-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --ambe-shadow-2: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  --ambe-focus-ring: 0 0 0 2px var(--ambe-bg), 0 0 0 4px var(--ambe-accent);
+
+  color-scheme: dark;
 }
 
-/* Typography: tight hierarchy, roomy measure. */
+/* ---------------------------------------------------------------------------
+   3. Token bridge — hand our tokens to the variables zensical already uses.
+   Applied to both schemes so a palette toggle, if one is ever added to
+   zensical.toml, works without further work.
+   ------------------------------------------------------------------------ */
+
+:root,
+[data-md-color-scheme="default"],
+[data-md-color-scheme="slate"] {
+  --md-text-font-family: var(--ambe-font-sans);
+  --md-code-font-family: var(--ambe-font-mono);
+
+  --md-default-bg-color: var(--ambe-bg);
+  --md-default-bg-color--light: var(--ambe-bg-veil);
+  --md-default-bg-color--lighter: var(--ambe-bg-scrim);
+  --md-default-bg-color--lightest: var(--ambe-hairline);
+
+  --md-default-fg-color: var(--ambe-text);
+  --md-default-fg-color--light: var(--ambe-text-2);
+  --md-default-fg-color--lighter: var(--ambe-text-3);
+  --md-default-fg-color--lightest: var(--ambe-text-4);
+
+  --md-primary-fg-color: var(--ambe-accent);
+  --md-primary-fg-color--light: var(--ambe-accent-hover);
+  --md-primary-fg-color--dark: var(--ambe-accent-hover);
+  --md-primary-bg-color: var(--ambe-text);
+  --md-primary-bg-color--light: var(--ambe-text-2);
+
+  --md-accent-fg-color: var(--ambe-accent-hover);
+  --md-accent-fg-color--transparent: var(--ambe-accent-soft);
+  --md-accent-bg-color: var(--ambe-bg);
+  --md-accent-bg-color--light: var(--ambe-text-2);
+
+  --md-typeset-color: var(--ambe-text-2);
+  --md-typeset-a-color: var(--ambe-accent);
+  --md-typeset-mark-color: var(--ambe-accent-warm-soft);
+  --md-typeset-table-color: var(--ambe-hairline);
+  --md-typeset-table-color--light: var(--ambe-hairline);
+  --md-typeset-kbd-color: var(--ambe-surface-3);
+  --md-typeset-kbd-accent-color: var(--ambe-surface-2);
+  --md-typeset-kbd-border-color: var(--ambe-border);
+
+  --md-code-bg-color: var(--ambe-surface-2);
+  --md-code-fg-color: var(--ambe-text-2);
+
+  --md-admonition-bg-color: var(--ambe-surface-1);
+  --md-admonition-fg-color: var(--ambe-text-2);
+
+  --md-footer-bg-color: var(--ambe-bg);
+  --md-footer-bg-color--dark: var(--ambe-bg);
+
+  --md-shadow-z1: var(--ambe-shadow-1);
+  --md-shadow-z2: var(--ambe-shadow-1);
+  --md-shadow-z3: var(--ambe-shadow-2);
+}
+
+/* Syntax highlighting, tuned so code reads as quiet text with three pops. */
+[data-md-color-scheme="slate"] {
+  --md-code-hl-color: var(--ambe-accent);
+  --md-code-hl-color--light: var(--ambe-accent-soft);
+  --md-code-hl-keyword-color: #a6b0ff;
+  --md-code-hl-function-color: #7d8cff;
+  --md-code-hl-constant-color: #c2a1ff;
+  --md-code-hl-string-color: #4fd6b8;
+  --md-code-hl-number-color: #ffb454;
+  --md-code-hl-special-color: #ff9ec4;
+  --md-code-hl-name-color: var(--ambe-text-2);
+  --md-code-hl-comment-color: var(--ambe-text-4);
+  --md-code-hl-operator-color: var(--ambe-text-3);
+  --md-code-hl-punctuation-color: var(--ambe-text-3);
+  --md-code-hl-variable-color: var(--ambe-text-2);
+  --md-code-hl-generic-color: var(--ambe-text-3);
+}
+
+/* ---------------------------------------------------------------------------
+   4. Typography and measure
+   ------------------------------------------------------------------------ */
+
+body {
+  background-color: var(--ambe-bg);
+  color: var(--ambe-text-2);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .md-typeset {
+  color: var(--ambe-text-2);
+  font-size: 0.76rem;
+  line-height: 1.75;
+  letter-spacing: -0.003em;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  line-height: 1.72;
+}
+
+/* Headings: tight tracking, tight leading, real hierarchy. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  color: var(--ambe-text);
+  font-weight: 600;
+  text-wrap: balance;
 }
 
 .md-typeset h1 {
-  font-weight: 600;
-  letter-spacing: -0.022em;
-  color: var(--md-default-fg-color);
-  margin-bottom: 1.4rem;
+  font-size: 2.1em;
+  line-height: 1.12;
+  letter-spacing: -0.028em;
+  margin: 0 0 0.6em;
+  font-weight: 650;
 }
 
 .md-typeset h2 {
-  font-weight: 600;
-  letter-spacing: -0.016em;
-  margin-top: 3rem;
+  font-size: 1.45em;
+  line-height: 1.2;
+  letter-spacing: -0.021em;
+  margin: 2.2em 0 0.7em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--ambe-hairline);
+}
+
+.md-typeset h2:first-of-type {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .md-typeset h3 {
+  font-size: 1.12em;
+  line-height: 1.3;
+  letter-spacing: -0.014em;
+  margin: 1.9em 0 0.5em;
+}
+
+.md-typeset h4 {
+  font-size: 1em;
+  letter-spacing: -0.008em;
+  margin: 1.6em 0 0.4em;
+  color: var(--ambe-text);
+}
+
+.md-typeset h5,
+.md-typeset h6 {
+  font-size: 0.82em;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ambe-text-3);
+  margin: 1.6em 0 0.4em;
+}
+
+/* Measure. Running text is capped at ~68ch; figures, tables, code and
+   admonitions are free to be wider so the page keeps a deliberate rhythm. */
+.md-typeset > p,
+.md-typeset > ul,
+.md-typeset > ol,
+.md-typeset > dl,
+.md-typeset > blockquote,
+.md-typeset > h1,
+.md-typeset > h2,
+.md-typeset > h3,
+.md-typeset > h4,
+.md-typeset > h5,
+.md-typeset > h6,
+.md-typeset > .footnote {
+  max-width: var(--ambe-measure);
+}
+
+.md-typeset > .admonition,
+.md-typeset > details,
+.md-typeset > .tabbed-set {
+  max-width: var(--ambe-measure-wide);
+}
+
+/* h2 rules span the wider column so sections read as bands. */
+.md-typeset > h2 {
+  max-width: var(--ambe-measure-wide);
+}
+
+.md-typeset p {
+  margin: 0 0 1.1em;
+}
+
+.md-typeset strong,
+.md-typeset b {
+  color: var(--ambe-text);
   font-weight: 600;
-  letter-spacing: -0.01em;
 }
 
-.md-typeset p,
-.md-typeset li {
-  color: var(--md-default-fg-color--light);
+.md-typeset ul li,
+.md-typeset ol li {
+  margin-bottom: 0.4em;
 }
 
-/* Generous whitespace in the content column. */
-.md-content__inner {
-  padding-block: 2.4rem 4rem;
+.md-typeset ul li::marker {
+  color: var(--ambe-text-4);
 }
 
-/* Hairline rules instead of heavy borders. */
+.md-typeset ol li::marker {
+  color: var(--ambe-text-4);
+  font-variant-numeric: tabular-nums;
+}
+
 .md-typeset hr {
   border-bottom: 1px solid var(--ambe-hairline);
+  margin: 2.2em 0;
+}
+
+/* Blockquotes read as quiet asides, never as alerts. */
+.md-typeset blockquote {
+  border-left: 2px solid var(--ambe-border);
+  color: var(--ambe-text-3);
+  padding-left: 1.1em;
+  margin-left: 0;
+}
+
+/* Content column: generous vertical air. */
+.md-content__inner {
+  padding-block: 1.6rem 3rem;
+}
+
+.md-content__inner::before {
+  display: none; /* zensical's spacer; the padding above replaces it */
+}
+
+/* ---------------------------------------------------------------------------
+   5. Chrome — header, navigation, table of contents, footer, search
+   ------------------------------------------------------------------------ */
+
+.md-header {
+  background-color: var(--ambe-bg-veil);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+  color: var(--ambe-text);
+  transition: border-color var(--ambe-dur-med) var(--ambe-ease);
+}
+
+.md-header--shadow {
+  border-bottom-color: var(--ambe-hairline);
+  box-shadow: none;
+}
+
+.md-header__title {
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.md-header__button,
+.md-nav__button {
+  color: var(--ambe-text-3);
+  transition: color var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-header__button:hover,
+.md-nav__button:hover {
+  color: var(--ambe-text);
+  opacity: 1;
+}
+
+.md-source {
+  color: var(--ambe-text-3);
+  font-size: 0.62rem;
+}
+
+.md-source:hover {
+  color: var(--ambe-text);
+  opacity: 1;
+}
+
+/* Sidebar navigation: quiet by default, one clear active state. */
+.md-nav {
+  font-size: 0.66rem;
+}
+
+.md-nav__title {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.md-nav__link {
+  border-radius: var(--ambe-radius-md);
+  color: var(--ambe-text-3);
+  transition:
+    color var(--ambe-dur-fast) var(--ambe-ease),
+    background-color var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-nav__link:hover,
+.md-nav__link:focus-visible {
+  background-color: var(--ambe-surface-2);
+  color: var(--ambe-text);
+}
+
+.md-nav__link--active,
+.md-nav__link--active:hover,
+.md-nav__item--active > .md-nav__link {
+  color: var(--ambe-text);
+  font-weight: 550;
+}
+
+.md-nav--primary .md-nav__link--active {
+  background-color: var(--ambe-accent-soft);
+  color: var(--ambe-accent);
+}
+
+.md-nav__item--section > .md-nav__link {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.md-nav__item--section > .md-nav__link:hover {
+  background: transparent;
+  color: var(--ambe-text-4);
+}
+
+/* Secondary nav (table of contents) is deliberately even quieter. */
+.md-nav--secondary .md-nav__link {
+  color: var(--ambe-text-4);
+}
+
+.md-nav--secondary .md-nav__link--active {
+  color: var(--ambe-accent);
+  font-weight: 550;
+}
+
+/* Mobile drawer surface. */
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary,
+  .md-nav--primary .md-nav {
+    background-color: var(--ambe-surface-1);
+  }
+
+  .md-nav--primary .md-nav__title {
+    background-color: var(--ambe-surface-1);
+    border-bottom: 1px solid var(--ambe-hairline);
+    box-shadow: none;
+    color: var(--ambe-text);
+  }
+}
+
+/* Breadcrumb path. */
+.md-path {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+}
+
+.md-path__link {
+  color: var(--ambe-text-4);
+}
+
+.md-path__link:hover {
+  color: var(--ambe-accent);
+}
+
+/* Search. */
+.md-search__form,
+.md-search__inner .md-search__input {
+  background-color: var(--ambe-surface-2);
+  border-radius: var(--ambe-radius-md);
+  color: var(--ambe-text);
+}
+
+.md-search__input::placeholder {
+  color: var(--ambe-text-4);
+}
+
+.md-search__output,
+.md-search-result__meta {
+  background-color: var(--ambe-surface-1);
+  color: var(--ambe-text-3);
+}
+
+.md-search-result__link:hover,
+.md-search-result__link:focus,
+.md-search-result__more summary:hover {
+  background-color: var(--ambe-accent-soft);
+}
+
+/* Footer and prev/next. */
+.md-footer {
+  background-color: var(--ambe-bg);
+  border-top: 1px solid var(--ambe-hairline);
+}
+
+.md-footer__link {
+  border-radius: var(--ambe-radius-lg);
+  opacity: 1;
+  transition: background-color var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-footer__link:hover {
+  background-color: var(--ambe-surface-1);
+}
+
+.md-footer__direction {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.md-footer__title {
+  color: var(--ambe-text);
+  font-weight: 550;
+}
+
+.md-footer-meta {
+  background-color: var(--ambe-bg);
+}
+
+.md-footer-meta__inner {
+  border-top: 1px solid var(--ambe-hairline);
+}
+
+.md-copyright,
+.md-copyright__highlight {
+  color: var(--ambe-text-4);
+  font-size: 0.58rem;
+}
+
+/* "Back to top" pill. */
+.md-top {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  box-shadow: var(--ambe-shadow-1);
+  color: var(--ambe-text-2);
+}
+
+.md-top:hover {
+  background-color: var(--ambe-surface-3);
+  color: var(--ambe-text);
+}
+
+/* Focus visibility everywhere, on our terms. */
+.md-typeset a:focus-visible,
+.md-nav__link:focus-visible,
+.md-header__button:focus-visible,
+.md-footer__link:focus-visible {
+  border-radius: var(--ambe-radius-sm);
+  outline: none;
+  box-shadow: var(--ambe-focus-ring);
+}
+
+/* ---------------------------------------------------------------------------
+   6. Content — links, code, tables, admonitions, footnotes
+   ------------------------------------------------------------------------ */
+
+.md-typeset a {
+  color: var(--ambe-accent);
+  text-decoration-color: color-mix(in srgb, var(--ambe-accent) 40%, transparent);
+  text-underline-offset: 0.18em;
+  transition: color var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-typeset a:hover {
+  color: var(--ambe-accent-hover);
+  text-decoration-color: currentColor;
+}
+
+/* Heading anchors stay invisible until you want them. */
+.md-typeset .headerlink {
+  color: var(--ambe-text-4);
+  opacity: 0;
+  transition: opacity var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-typeset h1:hover .headerlink,
+.md-typeset h2:hover .headerlink,
+.md-typeset h3:hover .headerlink,
+.md-typeset h4:hover .headerlink,
+.md-typeset .headerlink:focus-visible {
+  opacity: 1;
+}
+
+/* Inline code: a tinted chip, not a shout. */
+.md-typeset code {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-sm);
+  color: var(--ambe-text);
+  font-size: 0.86em;
+  padding: 0.1em 0.35em;
+}
+
+.md-typeset a code {
+  color: inherit;
+}
+
+/* Code blocks: a recessed slab with a hairline, scrolling internally. */
+.md-typeset pre > code {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-lg);
+  color: var(--ambe-text-2);
+  font-size: 0.72em;
+  line-height: 1.65;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.md-typeset .highlight {
+  max-width: 100%;
+}
+
+.md-typeset .highlight [data-linenos]::before {
+  background-color: transparent;
+  color: var(--ambe-text-4);
+  box-shadow: none;
+}
+
+.md-typeset .highlight .filename {
+  background-color: var(--ambe-surface-3);
+  border: 1px solid var(--ambe-hairline);
+  border-bottom: 0;
+  border-radius: var(--ambe-radius-lg) var(--ambe-radius-lg) 0 0;
+  color: var(--ambe-text-3);
+  font-size: 0.62rem;
+  font-weight: 550;
+}
+
+.md-clipboard {
+  color: var(--ambe-text-4);
+}
+
+.md-clipboard:hover,
+.md-clipboard:focus {
+  color: var(--ambe-accent);
+}
+
+/* Pseudocode listings are flagged so nobody mistakes them for a codec. */
+.md-typeset .pseudocode > pre > code,
+.md-typeset .highlight.pseudocode pre > code {
+  border-style: dashed;
+  border-color: var(--ambe-border);
+}
+
+/* Tables: quiet grid, sticky-feeling header, internal horizontal scroll. */
+.md-typeset .md-typeset__scrollwrap {
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ambe-border) transparent;
 }
 
 .md-typeset table:not([class]) {
-  background: var(--ambe-surface-1);
+  background-color: var(--ambe-surface-1);
   border: 1px solid var(--ambe-hairline);
-  border-radius: 10px;
+  border-radius: var(--ambe-radius-lg);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.66rem;
   overflow: hidden;
 }
 
 .md-typeset table:not([class]) th {
-  background: var(--ambe-surface-2);
+  background-color: var(--ambe-surface-2);
+  border-bottom: 1px solid var(--ambe-hairline);
+  color: var(--ambe-text);
   font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 0.6em 0.9em;
 }
 
-/* Blockquotes read as quiet asides, not alerts. */
-.md-typeset blockquote {
-  border-left: 2px solid var(--ambe-accent);
-  color: var(--md-default-fg-color--light);
+.md-typeset table:not([class]) td {
+  border-top: 1px solid var(--ambe-hairline);
+  padding: 0.6em 0.9em;
+  vertical-align: top;
 }
 
-/* Inline source citations: every technical claim names its source. */
+.md-typeset table:not([class]) tbody tr:first-child td {
+  border-top: 0;
+}
+
+.md-typeset table:not([class]) tbody tr:hover {
+  background-color: var(--ambe-surface-2);
+}
+
+/* Numeric columns line up. Author opt-in: {: .num } on the cell/column. */
+.md-typeset table:not([class]) td.num,
+.md-typeset table:not([class]) th.num {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--ambe-font-mono);
+  text-align: right;
+}
+
+/* Admonitions and <details>: a raised card with a coloured spine, not a
+   pastel block. zensical's icons keep their colours; the surface calms down. */
+.md-typeset .admonition,
+.md-typeset details {
+  background-color: var(--ambe-surface-1);
+  border: 1px solid var(--ambe-hairline);
+  border-left: 2px solid var(--ambe-border-strong);
+  border-radius: var(--ambe-radius-lg);
+  box-shadow: none;
+  color: var(--ambe-text-2);
+  font-size: 0.68rem;
+  padding: 0 0.9rem;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background-color: transparent;
+  color: var(--ambe-text);
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  margin-bottom: 0.8em;
+}
+
+.md-typeset .admonition-title::before,
+.md-typeset summary::before {
+  background-color: var(--ambe-text-3);
+}
+
+.md-typeset .admonition.note,
+.md-typeset details.note,
+.md-typeset .admonition.info,
+.md-typeset details.info,
+.md-typeset .admonition.abstract,
+.md-typeset details.abstract {
+  background-color: var(--ambe-surface-1);
+  border-left-color: var(--ambe-accent);
+}
+
+.md-typeset .note > .admonition-title::before,
+.md-typeset .info > .admonition-title::before,
+.md-typeset .abstract > .admonition-title::before,
+.md-typeset .note > summary::before,
+.md-typeset .info > summary::before,
+.md-typeset .abstract > summary::before {
+  background-color: var(--ambe-accent);
+}
+
+.md-typeset .admonition.warning,
+.md-typeset details.warning,
+.md-typeset .admonition.danger,
+.md-typeset details.danger,
+.md-typeset .admonition.failure,
+.md-typeset details.failure {
+  background-color: var(--ambe-surface-1);
+  border-left-color: var(--ambe-accent-warm);
+}
+
+.md-typeset .warning > .admonition-title::before,
+.md-typeset .danger > .admonition-title::before,
+.md-typeset .failure > .admonition-title::before,
+.md-typeset .warning > summary::before,
+.md-typeset .danger > summary::before,
+.md-typeset .failure > summary::before {
+  background-color: var(--ambe-accent-warm);
+}
+
+.md-typeset .admonition.tip,
+.md-typeset details.tip,
+.md-typeset .admonition.success,
+.md-typeset details.success,
+.md-typeset .admonition.example,
+.md-typeset details.example,
+.md-typeset .admonition.quote,
+.md-typeset details.quote {
+  background-color: var(--ambe-surface-1);
+  border-left-color: var(--ambe-accent-cool);
+}
+
+.md-typeset .tip > .admonition-title::before,
+.md-typeset .success > .admonition-title::before,
+.md-typeset .example > .admonition-title::before,
+.md-typeset .quote > .admonition-title::before,
+.md-typeset .tip > summary::before,
+.md-typeset .success > summary::before,
+.md-typeset .example > summary::before,
+.md-typeset .quote > summary::before {
+  background-color: var(--ambe-accent-cool);
+}
+
+.md-typeset details > summary:hover {
+  background-color: var(--ambe-surface-2);
+}
+
+/* Tabbed content. */
+.md-typeset .tabbed-labels > label {
+  color: var(--ambe-text-3);
+  font-size: 0.64rem;
+  font-weight: 550;
+}
+
+.md-typeset .tabbed-labels > label:hover {
+  color: var(--ambe-text);
+}
+
+.md-typeset .tabbed-set > input:checked + label {
+  color: var(--ambe-accent);
+}
+
+/* Footnotes: the citation apparatus of this site, so it gets real care. */
+.md-typeset .footnote {
+  border-top: 1px solid var(--ambe-hairline);
+  color: var(--ambe-text-3);
+  font-size: 0.64rem;
+  margin-top: 3rem;
+  padding-top: 1rem;
+}
+
+.md-typeset .footnote > ol > li {
+  margin-bottom: 0.6em;
+  scroll-margin-top: 4rem;
+}
+
+.md-typeset .footnote > ol > li:target {
+  background-color: var(--ambe-accent-soft);
+  border-radius: var(--ambe-radius-sm);
+}
+
+.md-typeset .footnote-ref {
+  color: var(--ambe-accent);
+  font-feature-settings: "kern" 1;
+  font-size: 0.72em;
+  font-weight: 600;
+  padding: 0 0.1em;
+}
+
+.md-typeset .footnote-backref {
+  color: var(--ambe-text-4);
+  transition: color var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-typeset .footnote-backref:hover {
+  color: var(--ambe-accent);
+}
+
+/* Footnote tooltips (content.footnote.tooltips). */
+.md-tooltip,
+.md-tooltip2__inner {
+  background-color: var(--ambe-surface-3);
+  border: 1px solid var(--ambe-border);
+  border-radius: var(--ambe-radius-md);
+  box-shadow: var(--ambe-shadow-2);
+  color: var(--ambe-text-2);
+}
+
+/* Keyboard keys, marks, task lists. */
+.md-typeset kbd {
+  background-color: var(--ambe-surface-3);
+  border-radius: var(--ambe-radius-sm);
+  box-shadow: 0 0 0 1px var(--ambe-border);
+  color: var(--ambe-text);
+  font-size: 0.72em;
+}
+
+.md-typeset mark {
+  background-color: var(--ambe-accent-warm-soft);
+  color: inherit;
+  border-radius: 0.15em;
+  padding: 0 0.15em;
+}
+
+.md-typeset .task-list-control .task-list-indicator::before {
+  background-color: var(--ambe-text-4);
+}
+
+.md-typeset [type="checkbox"]:checked + .task-list-indicator::before {
+  background-color: var(--ambe-accent-cool);
+}
+
+/* Images and diagrams sit on the same card surface as figures. */
+.md-typeset img,
+.md-typeset svg,
+.md-typeset .mermaid {
+  max-width: 100%;
+  height: auto;
+}
+
+.md-typeset .mermaid {
+  background-color: var(--ambe-surface-1);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-lg);
+  padding: 0.8rem;
+  overflow-x: auto;
+}
+
+/* Math (arithmatex) should never force the page sideways. */
+.md-typeset .arithmatex {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* ---------------------------------------------------------------------------
+   7. Utility classes for page authors
+   Use with attr_list, e.g.  Some sentence.{: .cite }
+   ------------------------------------------------------------------------ */
+
+/* Standfirst paragraph under an h1. */
+.md-typeset .lede {
+  color: var(--ambe-text);
+  font-size: 1.12em;
+  line-height: 1.55;
+  letter-spacing: -0.012em;
+  margin-bottom: 1.6em;
+}
+
+/* Inline source citation: "— Griffin & Lim 1988, §3". Never wraps mid-cite. */
 .md-typeset .cite {
-  font-size: 0.78em;
-  color: var(--md-default-fg-color--lighter);
+  color: var(--ambe-text-4);
+  font-size: 0.84em;
   white-space: nowrap;
+}
+
+/* A block-level source line, e.g. under a figure or a claim. */
+.md-typeset .source-note {
+  border-left: 2px solid var(--ambe-accent-cool);
+  color: var(--ambe-text-3);
+  font-size: 0.8em;
+  line-height: 1.6;
+  margin: 1.2em 0;
+  padding-left: 0.8em;
+}
+
+/* Small pill for labelling a source class: patent, spec, measurement. */
+.md-typeset .badge {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  border-radius: var(--ambe-radius-pill);
+  color: var(--ambe-text-3);
+  font-size: 0.72em;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  padding: 0.08em 0.6em;
+  white-space: nowrap;
+}
+
+.md-typeset .badge.patent { border-color: var(--ambe-accent); color: var(--ambe-accent); }
+.md-typeset .badge.spec { border-color: var(--ambe-accent-cool); color: var(--ambe-accent-cool); }
+.md-typeset .badge.measured { border-color: var(--ambe-accent-warm); color: var(--ambe-accent-warm); }
+
+/* Section kicker above a heading. */
+.md-typeset .kicker {
+  color: var(--ambe-accent);
+  font-size: 0.66em;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  margin-bottom: 0.4em;
+  text-transform: uppercase;
+}
+
+/* Tabular numerals anywhere. */
+.md-typeset .num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Card grid for the index page: <div class="cards" markdown> ... </div> */
+.md-typeset .cards {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  margin: 1.6em 0;
+  max-width: var(--ambe-measure-wide);
+}
+
+.md-typeset .cards > * {
+  background-color: var(--ambe-surface-1);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-lg);
+  padding: 0.9rem 1rem;
+  transition:
+    border-color var(--ambe-dur-fast) var(--ambe-ease),
+    background-color var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-typeset .cards > *:hover {
+  background-color: var(--ambe-surface-2);
+  border-color: var(--ambe-border);
+}
+
+.md-typeset .cards > * > :first-child { margin-top: 0; }
+.md-typeset .cards > * > :last-child { margin-bottom: 0; }
+
+/* ---------------------------------------------------------------------------
+   8. Responsiveness and reduced motion
+   Nothing may make the page scroll sideways; wide things scroll inside
+   their own box.
+   ------------------------------------------------------------------------ */
+
+/* `clip`, not `hidden`: `hidden` would turn <body> into a scroll container
+   and break the sticky header. */
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.md-typeset > * {
+  max-inline-size: 100%;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset {
+    font-size: 0.78rem;
+  }
+
+  .md-typeset h1 { font-size: 1.75em; }
+  .md-typeset h2 { font-size: 1.3em; }
+
+  .md-content__inner {
+    padding-block: 1.2rem 2.4rem;
+  }
+}
+
+/* Wide screens: keep the measure honest, do not let the column sprawl. */
+@media screen and (min-width: 76.25em) {
+  .md-content__inner {
+    padding-inline: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print: white ground, no chrome. */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
 }

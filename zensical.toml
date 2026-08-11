@@ -24,7 +24,12 @@ extra_css = ["stylesheets/extra.css", "stylesheets/anim.css"]
 # Animation modules. anim-core.js is the shared runtime (canvas plumbing,
 # playback transport, precomputed-JSON loader). Per-page animation modules
 # are appended to this list as they land.
-extra_javascript = ["javascripts/anim-core.js"]
+#
+# These are ES modules and MUST be declared with type = "module" — a bare
+# string entry emits a classic <script>, and anim-core.js then fails to parse.
+extra_javascript = [
+  { path = "javascripts/anim-core.js", type = "module" },
+]
 
 [project.theme]
 language = "en"
