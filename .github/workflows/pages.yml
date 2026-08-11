@@ -20,7 +20,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # docs/assets/video/ is gitignored build output, so the checkout below has
+  # no video in it. Render it here and hand it to the deploy job. The render
+  # is cached on the hash of the scene sources, so an ordinary docs commit
+  # restores from cache in seconds rather than re-rendering.
+  videos:
+    uses: ./.github/workflows/animations.yml
+
   deploy:
+    needs: videos
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -31,8 +39,35 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
+
+      # Must land before `zensical build`, which copies docs/ into site/.
+      - name: Fetch rendered animations
+        uses: actions/download-artifact@v4
+        with:
+          name: animations
+          path: docs/assets/video
+
+      - name: Verify the video arrived
+        run: |
+          set -euo pipefail
+          for slug in decomposition harmonic-sum pipeline vq; do
+            [ -s "docs/assets/video/$slug.mp4" ] \
+              || { echo "::error::docs/assets/video/$slug.mp4 missing before build"; exit 1; }
+          done
+          ls -lh docs/assets/video
+
       - run: pip install zensical
       - run: zensical build --clean
+
+      # The whole point of the two jobs above: prove the deployed tree has
+      # the video in it, not just the repo.
+      - name: Verify the built site carries the video
+        run: |
+          set -euo pipefail
+          for slug in decomposition harmonic-sum pipeline vq; do
+            [ -s "site/assets/video/$slug.mp4" ] \
+              || { echo "::error::site/assets/video/$slug.mp4 missing after build"; exit 1; }
+          done
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site

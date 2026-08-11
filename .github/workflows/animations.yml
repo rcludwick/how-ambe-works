@@ -24,12 +24,20 @@ on:
       - "animations/**"
       - ".github/workflows/animations.yml"
   workflow_dispatch:
+  # pages.yml calls this so the deploy actually contains the rendered video
+  # rather than an artifact nobody downloads. Artifacts uploaded by a called
+  # workflow are visible to other jobs in the same run, which is what makes
+  # the hand-off work.
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: animations-${{ github.ref }}
+  # github.workflow is included so a render called by pages.yml and a
+  # standalone render do not share a group. Without it, cancel-in-progress
+  # would let a docs push cancel the render its own deploy is waiting on.
+  group: animations-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -129,10 +137,27 @@ jobs:
           )
           ls -lh docs/assets/video
 
+      # Fail loudly if a slug the pages reference has no file. Without this
+      # the deploy succeeds and the reader gets a dead <video> element, which
+      # is exactly how all four went missing before.
+      - name: Verify every referenced slug rendered
+        run: |
+          set -euo pipefail
+          missing=0
+          for slug in decomposition harmonic-sum pipeline vq; do
+            if [ ! -s "docs/assets/video/$slug.mp4" ]; then
+              echo "::error::docs/assets/video/$slug.mp4 is missing or empty"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
+
       - name: Upload rendered animations
         uses: actions/upload-artifact@v4
         with:
           name: animations
           path: docs/assets/video/
-          if-no-files-found: warn
+          # error, not warn: pages.yml consumes this artifact, and a silent
+          # empty upload deploys a site whose four video figures 404.
+          if-no-files-found: error
           retention-days: 30
