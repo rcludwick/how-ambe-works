@@ -80,8 +80,8 @@
   /* -- Text tiers ------------------------------------------------------- */
   --ambe-text: #16161a;        /* headings, emphasised UI text */
   --ambe-text-2: #3d3d46;      /* body copy */
-  --ambe-text-3: #6b6b76;      /* captions, metadata, muted UI */
-  --ambe-text-4: #9a9aa4;      /* hints, disabled, faint rules */
+  --ambe-text-3: #575760;      /* captions, metadata, muted UI */
+  --ambe-text-4: #67676e;      /* faint text: still WCAG AA on every surface */
 
   /* -- Borders ---------------------------------------------------------- */
   --ambe-hairline: rgba(0, 0, 0, 0.1);   /* separators */
@@ -135,8 +135,8 @@
 
   --ambe-text: #f2f2f7;
   --ambe-text-2: #c3c4cd;
-  --ambe-text-3: #8d8f9b;
-  --ambe-text-4: #5c5e6a;
+  --ambe-text-3: #9ea0ae;
+  --ambe-text-4: #898c9e;
 
   --ambe-hairline: rgba(255, 255, 255, 0.08);
   --ambe-border: rgba(255, 255, 255, 0.14);
