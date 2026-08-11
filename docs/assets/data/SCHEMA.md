@@ -296,6 +296,9 @@ exactly 8 buckets per 20 ms frame, so `frame = bucket >> 3` and
 | `original.max` | array[int] | sample units | most positive sample in each bucket of the original |
 | `decoded.min` | array[int] | sample units | same for the decoded audio, delay-compensated |
 | `decoded.max` | array[int] | sample units | same |
+| `closeup_samples` | number | samples | 480, the length of each closeup below |
+| `closeup_note` | string | — | prose saying why the closeups exist |
+| `closeups` | object | — | two windows of raw samples; see below |
 
 Values are integers in [−32768, 32767]. Divide by `sample_full_scale` for
 −1…+1. All four arrays are exactly `bucket_count` long; a bucket past the end
@@ -305,6 +308,34 @@ Bucket *k* covers original-audio time `[k × 0.0025, (k+1) × 0.0025)` seconds i
 both tracks — the decoded track was shifted earlier by
 `clip.decoded_delay_samples` before bucketing, so a scrub cursor lands on the
 same phoneme in both. Derived by FFT-free min/max reduction of the WAV files.
+
+### `closeups` — raw samples, for showing periodicity
+
+The buckets above are 2.5 ms, about a third of a pitch period. They can draw
+a whole sentence and they cannot show that voiced speech repeats. These two
+windows are the actual 8 kHz samples of the **original** audio, so that a
+figure can show the pulse train itself.
+
+| Key | Meaning |
+| --- | --- |
+| `voiced` | the loudest 60 ms window the pitch tracker is confident about: a vowel |
+| `unvoiced` | the loudest window it is not confident about: a fricative |
+
+Each is an object:
+
+| Field | Type | Units | Provenance | Meaning |
+| --- | --- | --- | --- | --- |
+| `frame` | number | — | — | index of the 20 ms frame the window is centred on |
+| `start_s` | number | s | — | window start, from the start of the original audio |
+| `f0_hz` | number or `null` | Hz | derived | tracked pitch, or `null` when the tracker is below `VOICED_CONF` and reports none. Never `0` |
+| `f0_confidence` | number | 0–1 | derived | normalised autocorrelation at that period |
+| `rms_dbfs` | number | dBFS | derived | level of **this 480-sample window**, not of the 20 ms frame that selected it |
+| `samples` | array[int] | sample units | measured from the WAV | exactly `closeup_samples` values |
+
+Both windows are chosen by `closeups()` in `tools/make-data.py` from the
+per-frame measurements, not by hand, so they follow the audio if a clip is
+ever recaptured. A sentence with no loud fricative still gets an `unvoiced`
+window; it will simply be quiet. `lr-d` is the example, at −62 dBFS.
 
 ---
 

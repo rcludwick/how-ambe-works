@@ -390,6 +390,7 @@
 .anim-controls__group {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
 }
 
@@ -769,12 +770,20 @@
   padding: 0;
 }
 
-/* The label column costs more than it earns on a phone: stack instead. */
+/* The label column costs more than it earns on a phone: stack instead.
+ *
+ * `.md-typeset` has to be carried into this block. A media query adds no
+ * specificity, so a bare `.anim-forms__row` here loses to the
+ * `.md-typeset .anim-forms__row` rule above and the columns never collapse.
+ * That left the readouts on a phone as a 190px label beside a 70px value,
+ * breaking every reading onto one word per line. */
 @media screen and (max-width: 30em) {
+  .md-typeset .anim-forms__row,
   .anim-forms__row {
     grid-template-columns: 1fr;
   }
 
+  .md-typeset .anim-forms__tag,
   .anim-forms__tag {
     text-align: left;
   }

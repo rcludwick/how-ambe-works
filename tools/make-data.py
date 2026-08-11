@@ -53,6 +53,9 @@ F0_MIN, F0_MAX = 50.0, 400.0
 VOICED_CONF = 0.35  # normalised-autocorrelation threshold (chosen by eye)
 BANDS = 8  # voicing-analysis bands across 0-4 kHz, 500 Hz each
 BAND_VOICED_THRESH = 0.55  # band-limited autocorrelation above this reads as voiced
+CLOSEUP_SAMPLES = 480  # 60 ms of raw samples — about seven male pitch periods
+CLOSEUP_VOICED_CONF = 0.6  # confidently periodic, for the "vowel" closeup
+CLOSEUP_UNVOICED_CONF = 0.3  # confidently aperiodic, for the "fricative" one
 
 # Hardware identification, as reported by `thumbdv-rig probe` on the device
 # that produced these captures. Update if you recapture on another stick.
@@ -341,6 +344,67 @@ def frame_rms_db(x, i, offset=0):
     return round(db(float(math.sqrt(float((seg * seg).mean())))), 2)
 
 
+def closeups(x, rows):
+    """
+    Two short windows of RAW samples, for figures that need to show the
+    waveform itself rather than its envelope.
+
+    waveform.json's min/max buckets are 2.5 ms wide, which is about a third of
+    a male pitch period: enough to draw the shape of a whole sentence, nowhere
+    near enough to show that voiced speech is a train of pulses. These windows
+    are the actual 8 kHz samples, so that periodicity is visible.
+
+    Both are chosen by the per-frame measurements already in `rows` rather than
+    by hand, so they follow the audio if a clip is ever recaptured:
+
+      voiced    loudest confidently-periodic frame — a vowel, and a pulse train
+      unvoiced  loudest confidently-aperiodic frame — a fricative, and noise
+
+    Level is measured over the window that is actually returned, not over the
+    20 ms frame that selected it. The window is three frames wide, so a frame
+    can be quiet while the window around it is not; reporting the frame's RMS
+    beside a wider block of samples would describe audio that is not there.
+    """
+    half = CLOSEUP_SAMPLES // 2
+
+    def window(i):
+        centre = i * FRAME_SAMPLES + FRAME_SAMPLES // 2
+        start = max(0, min(centre - half, len(x) - CLOSEUP_SAMPLES))
+        return start, x[start:start + CLOSEUP_SAMPLES]
+
+    def window_rms_db(i):
+        _, seg = window(i)
+        if len(seg) == 0:
+            return SPEC_FLOOR_DB
+        return db(float(math.sqrt(float((seg * seg).mean()))))
+
+    d = [r["derived"] for r in rows]
+    idx = range(len(rows))
+    picks = {
+        "voiced": [i for i in idx if d[i]["orig_f0_confidence"] >= CLOSEUP_VOICED_CONF],
+        "unvoiced": [i for i in idx if d[i]["orig_f0_confidence"] < CLOSEUP_UNVOICED_CONF],
+    }
+
+    out = {}
+    for name, candidates in picks.items():
+        if not candidates:
+            continue
+        i = max(candidates, key=window_rms_db)
+        start, seg = window(i)
+        conf = d[i]["orig_f0_confidence"]
+        out[name] = {
+            "frame": i,
+            "start_s": round(start / SR, 4),
+            # null rather than 0.0: the tracker reports no pitch here, and a
+            # zero would read as a measurement of one.
+            "f0_hz": d[i]["orig_f0_hz"] if conf >= VOICED_CONF else None,
+            "f0_confidence": conf,
+            "rms_dbfs": round(window_rms_db(i), 2),
+            "samples": [int(v) for v in seg],
+        }
+    return out
+
+
 def build(clip_id):
     if clip_id not in CLIP_META:
         die("unknown clip id %r (known: %s)" % (clip_id, ", ".join(sorted(CLIP_META))))
@@ -457,6 +521,12 @@ def build(clip_id):
         ),
         "original": {"min": o_lo, "max": o_hi},
         "decoded": {"min": d_lo, "max": d_hi},
+        "closeup_samples": CLOSEUP_SAMPLES,
+        "closeup_note": (
+            "raw 8 kHz samples, not buckets: the min/max arrays above are too "
+            "coarse to show that voiced speech is periodic"
+        ),
+        "closeups": closeups(orig, frame_rows),
     }
 
     # ---------------- spectra.json ----------------

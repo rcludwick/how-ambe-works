@@ -32,3 +32,7 @@ import "./anim-envelope.js"; //  data-anim="envelope"   — 03
 import "./anim-bits.js"; //      data-anim="bits"       — 04
 import "./anim-synth.js"; //     data-anim="synth"      — 05
 import "./anim-complex.js"; //   data-anim="complex"     — 02
+import "./anim-utterance.js"; // data-anim="utterance"   — 01
+import "./anim-filter.js"; //    data-anim="filter"      — 01
+import "./anim-three-numbers.js"; // data-anim="three-numbers"      — 01
+import "./anim-utterance-spectra.js"; // data-anim="utterance-spectra" — 01
