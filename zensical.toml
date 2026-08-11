@@ -15,6 +15,7 @@ nav = [
   { "How AMBE Works" = "index.md" },
   { "Part I: The mathematics you need" = [
     { "Why sinusoids" = "01-why-sinusoids.md" },
+    { "The Fourier transform and the DFT" = "02-fourier-and-the-dft.md" },
   ] },
   { "Part III: The model" = [
     { "Multi-band excitation" = "07-multi-band-excitation.md" },
