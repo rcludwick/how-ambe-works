@@ -65,6 +65,42 @@ These read as machine-generated. Do not use them:
 - Sentences that summarise what the previous paragraph just said
 - Closing paragraphs that restate the section with no new information
 
+**Scaffolding, which is the subtler tell**
+
+The constructions above are easy to grep for. These are harder, and they
+are what the owner cut by hand from the patent and sources chapters on
+2026-08-11. Learn from the pattern:
+
+- Announcing significance instead of showing it: "What matters most is
+  the breadth", "The key insight here", "This is the important part".
+  Delete the announcement and keep the content. If the content is
+  important, the reader will see it.
+- Telling the reader what they already think: "This is the one people
+  mean when they say...", "You may be wondering...". Cut.
+- Rhetorical flourishes at the end of a sentence that add nothing:
+  "...has been published, certainly not here."
+- Self-assessment of the page's own worth: "the site's credibility
+  anchor", "the value of this page is that it can be checked". A page
+  does not review itself.
+- Defensive lists of things that were not done, where no one has accused
+  you of doing them. If a paragraph exists to establish innocence rather
+  than to inform, delete the paragraph.
+- Restating a caution that is already in the warning box a few
+  paragraphs above.
+
+**Length**
+
+Short beats complete. When a sentence and a paragraph say the same
+thing, keep the sentence. A three-line warning that a reader actually
+reads beats a three-paragraph warning they skip.
+
+**Person**
+
+The site has one author, who is not an attorney and not a professional
+researcher, and it says so plainly where that matters. Write "the
+author" rather than "the authors" or "we". Do not adopt an institutional
+voice the project does not have.
+
 **Metaphor**
 
 Metaphors are allowed and encouraged when they carry real explanatory
