@@ -29,6 +29,10 @@ extra_css = ["stylesheets/extra.css", "stylesheets/anim.css"]
 # string entry emits a classic <script>, and anim-core.js then fails to parse.
 extra_javascript = [
   { path = "javascripts/anim-core.js", type = "module" },
+  { path = "javascripts/anim-bits.js", type = "module" },
+  { path = "javascripts/anim-synth.js", type = "module" },
+  { path = "javascripts/anim-envelope.js", type = "module" },
+  { path = "javascripts/anim-frames.js", type = "module" },
   { path = "javascripts/anim-harmonics.js", type = "module" },
   { path = "javascripts/anim-voicing.js", type = "module" },
 ]

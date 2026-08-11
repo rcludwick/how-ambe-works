@@ -114,6 +114,7 @@ The largest field in the budget is the spectral envelope, so it gets the
 most structure. Three ideas stack on top of each other.
 
 <!-- ANIM: envelope -->
+<div data-anim="envelope"></div>
 
 ### 1. Predict this frame from the last one
 

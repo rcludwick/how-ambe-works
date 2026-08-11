@@ -38,6 +38,7 @@ continuously moving signal, which is what makes the frame-to-frame
 continuity constraints below meaningful rather than arbitrary.
 
 <!-- ANIM: frames -->
+<div data-anim="frames"></div>
 
 ## Analysis by synthesis
 
