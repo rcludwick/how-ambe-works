@@ -301,3 +301,10 @@ patent system is for, and the disclosures those patents required are the
 reason a page like this can be written at all. The purpose here is
 accuracy about dates and scope, so that people building open software
 know what is actually available to them and when.
+
+---
+
+**Next: [Sources and method](09-sources.md).** Every source behind this site,
+what was deliberately excluded, and how to check any of it.
+Previously: [Listen: real hardware examples](07-listen.md).
+{: .chapter-nav }

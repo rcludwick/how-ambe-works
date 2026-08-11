@@ -65,4 +65,14 @@ zensical serve
 
 The animation videos under `docs/assets/video/` are build output and are not
 committed; render them with the `animations` workflow, or locally with manim
-against the scenes in `animations/manim/`.
+against the scenes in `animations/manim/`. That workflow renames each render
+to the slug the pages ask for (`decomposition`, `harmonic-sum`, `pipeline`,
+`vq`). Until it has run, every `<video>` shows its poster instead. The posters
+are committed, live in `docs/assets/posters/`, and are regenerated with
+`python3 tools/make-posters.py`.
+
+The interactive figures are ES modules under `docs/javascripts/`. A single
+entry point, `javascripts/anim.js`, imports the shared runtime and every
+figure module, and it is the only script `zensical.toml` loads. A new figure
+is registered by adding one import there and one
+`<div data-anim="slug"></div>` to the page that needs it.

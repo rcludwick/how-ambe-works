@@ -33,7 +33,45 @@ word.
 So every low-rate speech coder is a bet on a model. The interesting question
 is which bet.
 
-<!-- VIDEO: decomposition -->
+Before any of the argument, here is the answer in one clip: what a coder
+actually takes away from a fifth of a second of somebody talking.
+
+<figure class="anim-figure anim-figure--wide">
+  <div class="anim-figure__head">
+    <h4 class="anim-figure__title">Taking one frame apart</h4>
+    <span class="badge measured">measured</span>
+  </div>
+
+  <!-- The render is build output: .github/workflows/animations.yml renders
+       animations/manim/scene_decomposition.py and writes
+       docs/assets/video/decomposition.{webm,mp4}. Those files are not
+       committed (see .gitignore), so this element shows its poster until the
+       workflow has run.
+
+       The builder rewrites relative `src` attributes for the page's output
+       directory but leaves `poster` alone, so the poster path is written
+       page-relative (../) and the source paths are not. -->
+  <video class="anim-video" controls playsinline preload="none"
+         poster="../assets/posters/decomposition.png">
+    <source src="assets/video/decomposition.webm" type="video/webm">
+    <source src="assets/video/decomposition.mp4" type="video/mp4">
+    <p>This clip walks one 20 ms frame of a recorded utterance from waveform
+    to spectrum to harmonics to eight band voicing decisions.</p>
+  </video>
+
+  <figcaption class="anim-figure__caption">
+    One 20 ms frame, taken apart: the waveform, the window the coder looks
+    through, the spectrum inside it, the harmonic comb that spectrum gets
+    fitted with, and the eight band decisions that fall out. Frame 141 of the
+    male CQ capture, at 2.82 s, where six bands read periodic and the top two
+    read noise.
+    <span class="anim-figure__source">Drawn from
+    <code>assets/data/ryan-b/</code>, captured from a DVSI AMBE-3000. The
+    per-band voicing strengths are an autocorrelation measurement of the
+    decoded audio, not a field the device reports. Model: Griffin &amp; Lim
+    1988, §II.</span>
+  </figcaption>
+</figure>
 
 ## Two ways to model a voice
 
@@ -116,7 +154,11 @@ per harmonic of the fundamental
 That is where the name comes from, and it is the entire difference between
 MBE and everything that came before it.
 
-<!-- ANIM: harmonics -->
+Before going on, spend a moment with the comb. Drag the fundamental from a
+deep voice to a high one and watch how many teeth stay inside the coded
+band: that count is the number of amplitudes the coder has to pay for, and
+it changes by a factor of five across ordinary human voices.
+
 <div data-anim="harmonics"></div>
 
 The excitation spectrum is then assembled band by band: segments of a
@@ -156,7 +198,11 @@ this 20 ms of speech is breath, and the slice below it, simultaneously, is
 voice." A vowel with a breathy top end, a voiced fricative, a word spoken
 over engine noise — all of these are representable rather than approximated.
 
-<!-- ANIM: voicing -->
+The figure below is that claim, measured. Play a clip and watch the eight
+bands change colour independently: find a frame where the bottom bands are
+periodic and the top ones are not, and you are looking at the case a
+single-decision vocoder cannot represent.
+
 <div data-anim="voicing"></div>
 
 ## The parameters, and what they cost
@@ -226,8 +272,6 @@ Twelve bits. That is the entire cost of the idea.
 
 ## Where AMBE sits in the family
 
-<!-- VIDEO: pipeline -->
-
 The lineage is one model, re-quantized downward three times, with the
 analysis and synthesis machinery hardened at each step.
 
@@ -250,10 +294,16 @@ per 20 ms frame, allocated as 7 bits for the fundamental frequency, 8 bits
 for the V/UV decisions over eight bands of approximately 500 Hz spanning
 0–4 kHz, and the remaining 57 bits for the spectral magnitudes
 <span class="cite">US 5,754,974, describing the 3.6 kbps system</span>.
-D-STAR uses a lower-rate member of the same family: 2400 bit/s of speech
-data — 48 bits per 20 ms frame — plus 1200 bit/s of FEC, packed into the
-same 72-bit, 20 ms frame on the air
+Take the 7 + 8 + 57 split as the patent's worked example rather than as
+D-STAR's frame, because it is a system in which all 72 bits carry
+parameters. D-STAR uses a lower-rate member of the same family: 2400 bit/s
+of speech data — 48 bits per 20 ms frame — plus 1200 bit/s of FEC, packed
+into the same 72-bit, 20 ms frame on the air
 <span class="cite">JARL D-STAR spec §1.1(3), §2.1.2(2)</span>.
+How those 48 parameter bits are divided is not published anywhere;
+[quantization](03-quantization.md) explains the structure they must have,
+and [what is not in the public record](06-what-isnt-published.md) records
+the gap.
 
 **AMBE+2** — the later half-rate generation, used by DMR, YSF and NXDN. It
 is a real system and it exists, but it is not expired: US 8,359,197,
@@ -275,3 +325,13 @@ spectrum close to the original one.
 Which raises the question the whole design turns on: close by what measure,
 and how do you find the parameters that get you there? That is
 [analysis](02-analysis.md).
+
+---
+
+**Next: [Analysis: pitch, voicing, amplitudes](02-analysis.md).** How 20 ms of
+microphone audio becomes one pitch, eight flags and a list of amplitudes, and
+why the estimating is harder than the modelling.
+Back to [the start](index.md). If you would rather hear the thing before
+reading about it, [Listen](07-listen.md) has eight sentences before and after
+a real codec chip.
+{: .chapter-nav }

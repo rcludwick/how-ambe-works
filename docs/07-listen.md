@@ -309,3 +309,11 @@ discussion.
   width: 100%;
 }
 </style>
+
+---
+
+**Next: [The patent landscape](08-patents.md).** Which patents cover what,
+which two are still in force, and what that constrains for someone building
+an open implementation.
+Previously: [What is not in the public record](06-what-isnt-published.md).
+{: .chapter-nav }

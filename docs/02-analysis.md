@@ -37,7 +37,11 @@ Frames are not independent snapshots but overlapping views of a
 continuously moving signal, which is what makes the frame-to-frame
 continuity constraints below meaningful rather than arbitrary.
 
-<!-- ANIM: frames -->
+Drag along the waveform below and watch the window walk. The three-frame
+inset is drawn from the actual 8 kHz samples, so you can see how little
+changes between one 20 ms slice and the next, and the panel shows the nine
+bytes the chip emitted for the slice you are looking at.
+
 <div data-anim="frames"></div>
 
 ## Analysis by synthesis
@@ -355,7 +359,12 @@ Note what that is: a *continuous* degree of voicing, thresholded only at the
 end. The bit that goes on the air is binary. The analyser that produces it
 is not.
 
-<!-- ANIM: voicing -->
+That continuous measure is exactly what the band-voicing figure in
+[what AMBE actually is](01-the-mbe-model.md#the-multi-band-idea) plots: each
+band carries a strength between 0 and 1, and the colour flips where it
+crosses the threshold. Read it again now, with this section in mind, and the
+chips showing 0.5-something are the frames this machinery exists to get
+right.
 
 ## Amplitudes: measuring the envelope
 
@@ -375,7 +384,11 @@ according to the band's voicing:
 
 <span class="cite">Both: Griffin &amp; Lim 1988, §III-A</span>
 
-<!-- ANIM: envelope -->
+What those measured amplitudes look like, one frame at a time, is the
+figure in [turning measurements into bits](03-quantization.md#the-envelope-coded-as-a-residual):
+dots on a curve, read off a real capture. It is placed there rather than
+here because the interesting question about an amplitude is not how it was
+measured but how coarsely it can be rounded before you hear it.
 
 Later systems changed this in a way that matters more than it looks. Using
 different formulas for voiced and unvoiced amplitudes means that when a
@@ -396,8 +409,6 @@ The count of amplitudes, again, follows from the pitch: `L = ⌊α·π/ω₀⌋`
 `α = 0.925` in the 3.6 kbit/s 8 kHz system for a coded bandwidth of 3700 Hz
 <span class="cite">US 5,701,390; US 5,754,974</span>.
 
-<!-- VIDEO: harmonic-sum -->
-
 ## What comes out
 
 At the end of analysis, for each 20 ms of speech, the encoder holds:
@@ -413,3 +424,16 @@ That is the complete description of a syllable. It is also, at this stage,
 still a set of real numbers, and there are only 48 or 72 bits to put them
 in. Getting from one to the other is
 [quantization](03-quantization.md).
+
+The other direction is worth a look before you go there. A list of harmonic
+amplitudes with no phases is not obviously a voice, and the clip on
+[synthesis](05-synthesis.md#the-oscillator-bank) adds those amplitudes up as
+cosines until a glottal pulse appears out of them.
+
+---
+
+**Next: [Turning measurements into bits](03-quantization.md).** How a pitch,
+eight flags and a few dozen real numbers get forced into fixed-width fields,
+and which errors that choice hands to the listener.
+Previously: [What AMBE actually is](01-the-mbe-model.md).
+{: .chapter-nav }

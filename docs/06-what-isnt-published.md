@@ -117,12 +117,12 @@ patents' scalar DCT-residual quantizers with trained vector-quantizer
 codebooks, those tables exist in no publication. A codebook is not an
 algorithm; there is nothing to enable and nothing to disclose.
 
-<!-- ANIM: bits — the 96-bit D-STAR frame from the JARL spec: 72-bit
-     voice frame + 24-bit data segment, with the voice frame's FEC and
-     parameter split shown at the rate level only (2400 + 1200 bps) and
-     the parameter interior deliberately rendered as an unlabelled,
-     dimmed block captioned "not publicly specified". The point of the
-     figure is the dimmed region. Do not label parameter fields. -->
+Those gaps are visible in one picture. The frame-bit figure on
+[the D-STAR frame on the air](04-the-dstar-frame.md#the-96-bit-frame) shows
+72 real captured bits per frame and colours them by how often each position
+changes, because that is a measurement. It does not colour them by field,
+because the field map is the thing that is missing. The part of that figure
+worth looking at is the part that stays deliberately unlabelled.
 
 ## What black-box measurement can establish
 
@@ -202,3 +202,10 @@ the interesting part. Knowing that the gain convention is ambiguous, and
 building an interoperable codec than a constant that happens to work on
 one device. The constants are findable by anyone with a hundred-dollar
 stick and patience. The map is what takes time.
+
+---
+
+**Next: [Listen: real hardware examples](07-listen.md).** Eight sentences
+through a real AMBE-3000, with something specific to listen for in each.
+Previously: [Synthesis: rebuilding the voice](05-synthesis.md).
+{: .chapter-nav }

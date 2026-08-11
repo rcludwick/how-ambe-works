@@ -71,19 +71,39 @@ envelope. Their sum is periodic-ish, and their *relative* phases are what
 decide whether that sum looks like a sharp glottal pulse or a smeared
 mush of the same spectrum.
 
-<figure class="anim-figure">
-  <!-- VIDEO: harmonic-sum -->
-  <!-- Rendered animation. Suggested content: start with the fundamental
-       alone as a bare sine, then add harmonics one at a time with their
-       real measured amplitudes, showing the waveform sharpening into a
-       pulse train as the count rises, and the spectrum filling in
-       alongside. The point the video has to make is that identical
-       amplitudes plus different phases give completely different
-       waveforms with the same sound. Data: precomputed JSON from
-       hardware capture; no synthesis code in the page. -->
-  <video src="assets/video/harmonic-sum.mp4" muted loop playsinline controls></video>
+<figure class="anim-figure anim-figure--wide">
+  <div class="anim-figure__head">
+    <h4 class="anim-figure__title">Building a voice out of cosines</h4>
+    <span class="badge measured">measured</span>
+  </div>
+
+  <!-- The render is build output: .github/workflows/animations.yml renders
+       animations/manim/scene_harmonic_sum.py and writes
+       docs/assets/video/harmonic-sum.{webm,mp4}. Those files are not
+       committed (see .gitignore), so this element shows its poster until the
+       workflow has run. The builder rewrites relative `src` but not
+       `poster`, hence the page-relative poster path. -->
+  <video class="anim-video" controls playsinline preload="none"
+         poster="../assets/posters/harmonic-sum.png">
+    <source src="assets/video/harmonic-sum.webm" type="video/webm">
+    <source src="assets/video/harmonic-sum.mp4" type="video/mp4">
+    <p>This clip adds harmonics one at a time at their measured amplitudes
+    until the sum takes on the shape of a glottal pulse.</p>
+  </video>
+
   <figcaption class="anim-figure__caption">
-    Harmonics accumulating into a voiced waveform.
+    Twenty-two harmonics of one frame, added in one at a time at the
+    amplitudes measured off the recording. The waveform sharpens from a bare
+    sine into a pulse as the count rises, and the pulse is a consequence of
+    the phases, not of the amplitudes. Change the phases and the picture
+    changes completely while the spectrum, and very nearly the sound, does
+    not. That is the freedom the decoder is left with.
+    <span class="anim-figure__source">Frame 121 of
+    <code>assets/data/ryan-b/</code> (all eight bands measured periodic),
+    captured from a DVSI AMBE-3000. Amplitudes are read off the measured
+    spectrum at multiples of the measured pitch; the sum is drawn at zero
+    phase, which is why the pulse is symmetric. The frame carries no phase at
+    all: US 5,701,390.</span>
   </figcaption>
 </figure>
 
@@ -327,9 +347,15 @@ The net effect: sustained vowels get genuinely continuous low harmonics,
 transitions get smooth energy handovers, and nothing in the output
 announces where one frame stopped and the next began.
 
-<!-- ANIM: synth — the two-generator figure (docs/javascripts/anim-synth.js).
-     Builds its own figure chrome, controls and caption; it draws precomputed
-     measurements only and synthesizes no speech. -->
+The figure below holds the two halves apart so you can see the division of
+labour. Slide the mix to either end: one end is the oscillator bank alone,
+the other is the shaped noise alone, and the centre is the split the
+measurement actually found for that frame. Pick a sibilant frame and the
+noise generator is doing nearly all the work.
+
+<!-- The two-generator figure (docs/javascripts/anim-synth.js). It builds its
+     own chrome, controls and caption, draws precomputed measurements only,
+     and synthesizes no speech. -->
 <div data-anim="synth"></div>
 
 ## The synthesis loop, in outline
@@ -421,14 +447,14 @@ does not change loudness.
 Everything above assumes the parameters are correct. Over the air they
 frequently are not, and the synthesizer is where that gets managed.
 
-The channel patent describes a decoder that can tell the difference
-between a frame it repaired and a frame it could not. Beyond the error
-correction itself, a pseudo-random modulation keyed from the
-strongest-protected bits means a frame whose key bits were corrupted
-descrambles into statistical nonsense — detectable without spending any
-extra bits on a checksum. The decoder "can identify severely corrupted
-frames through error pattern analysis and either repeat previous
-parameters or mute output rather than synthesize degraded speech."
+The decoder can tell the difference between a frame it repaired and a
+frame it could not, because the channel layer is built to make that
+distinction cheap: the mechanism is
+[the self-checking trick](04-the-dstar-frame.md#the-self-checking-trick) in
+the previous chapter. What matters here is the outcome it hands the
+synthesizer. The decoder "can identify severely corrupted frames through
+error pattern analysis and either repeat previous parameters or mute output
+rather than synthesize degraded speech."
 <span class="cite">US 5,870,405</span>
 
 The escalation is three-stage:
@@ -479,3 +505,12 @@ transients, non-speech signals, tandem coding, and the uselessness of
 waveform metrics — is this site's own reasoning from the model, not a
 claim made by any of the sources above.
 {: .source-note }
+
+---
+
+**Next: [What is not in the public record](06-what-isnt-published.md).** Where
+the documents stop and the shipping product begins, and what a black box on a
+bench can and cannot settle.
+Previously: [The D-STAR frame on the air](04-the-dstar-frame.md). Or go and
+[listen](07-listen.md) to what all of this sounds like.
+{: .chapter-nav }

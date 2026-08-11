@@ -26,7 +26,8 @@ quantize the spectral magnitudes for each frame."*[^974]
 Hold on to that shape — 7 + 8 + 57 = 72 — but not to those exact numbers.
 That allocation is the patent's example for a system in which all 72 bits
 carry parameters; the D-STAR variant spends part of the same 3600 bps on
-forward error correction (Chapter 4), leaving a parameter budget roughly
+forward error correction ([the D-STAR frame on the air](04-the-dstar-frame.md)),
+leaving a parameter budget roughly
 two-thirds this size. What survives is the structure: **a small field for
 pitch, a smaller one for voicing, and everything left over for the spectral
 envelope.** The envelope is where the bits go, because the envelope is what
@@ -84,7 +85,38 @@ each one a complete little chunk of spectrum shape. The encoder searches
 the codebook for the entry closest to the measured vector and sends only
 that entry's index. The decoder looks the index up.
 
-<!-- VIDEO: vq -->
+<figure class="anim-figure anim-figure--wide">
+  <div class="anim-figure__head">
+    <h4 class="anim-figure__title">One index for a whole shape</h4>
+    <span class="badge patent">illustration</span>
+  </div>
+
+  <!-- The render is build output: .github/workflows/animations.yml renders
+       animations/manim/scene_vq.py and writes
+       docs/assets/video/vq.{webm,mp4}. Those files are not committed (see
+       .gitignore), so this element shows its poster until the workflow has
+       run. The builder rewrites relative `src` but not `poster`, hence the
+       page-relative poster path. -->
+  <video class="anim-video" controls playsinline preload="none"
+         poster="../assets/posters/vq.png">
+    <source src="assets/video/vq.webm" type="video/webm">
+    <source src="assets/video/vq.mp4" type="video/mp4">
+    <p>This clip shows a cloud of two-dimensional points being clustered, and
+    each cluster centre standing in for every point near it.</p>
+  </video>
+
+  <figcaption class="anim-figure__caption">
+    Scalar quantization puts a grid over the whole plane and pays for
+    positions no real vector ever visits. A codebook puts its entries where
+    the data actually is, and the transmitted number is the index of the
+    nearest one. Watch what happens to the error when the cloud is elongated:
+    that elongation is correlation, and it is free to the codebook.
+    <span class="anim-figure__source">Synthetic data from a seeded generator
+    in <code>animations/manim/scene_vq.py</code>, clustered by ordinary Lloyd
+    iteration. It is a picture of the idea. AMBE's own codebooks appear in
+    neither the JARL specification nor the expired patents.</span>
+  </figcaption>
+</figure>
 
 Three things follow, and they explain why every serious low-rate vocoder
 does this:
@@ -105,15 +137,20 @@ tables used by D-STAR's AMBE variant have never been published — not in the
 JARL specification, and not in the expired DVSI patents, which give the
 *mechanism* and the vector *sizes* without listing entries. They exist,
 they are searched by nearest-neighbour distance, they are the reason the
-codec sounds the way it does, and their contents are not public. Chapter 6
-has more.
+codec sounds the way it does, and their contents are not public.
+[What is not in the public record](06-what-isnt-published.md) has more.
 
 ## The envelope, coded as a residual
 
 The largest field in the budget is the spectral envelope, so it gets the
 most structure. Three ideas stack on top of each other.
 
-<!-- ANIM: envelope -->
+Start with the raw material. The dots below are the harmonic amplitudes of
+one frame of a real capture, and the slider rounds them to a coarser and
+coarser step. Push it to 6 dB and then to 12 dB, and listen to the number in
+the header rather than the picture: that is the error you are choosing to
+inject, in decibels, before a single bit has been allocated.
+
 <div data-anim="envelope"></div>
 
 ### 1. Predict this frame from the last one
@@ -269,7 +306,11 @@ quantizers are normalized to the expected statistics of each coefficient
 rather than to a fixed absolute range, so a 4-bit field covers the same
 *fraction of the likely spread* wherever in the spectrum it sits.
 
-<!-- ANIM: bits -->
+None of that structure is visible from outside. The nine bytes a real chip
+emits for one frame are in the figure on
+[the D-STAR frame on the air](04-the-dstar-frame.md#the-96-bit-frame), and
+the honest thing to say about them is that no public document maps any of
+those 72 positions onto any of the fields described above.
 
 ## What you should take away
 
@@ -281,8 +322,8 @@ detail is left over. Prediction from the previous frame recovers what the
 redundancy of speech allows, and a decay factor below one stops that
 borrowing from turning one bad frame into a long bad noise.
 
-Chapter 4 picks the same ordering up from the other side: the channel
-coding uses it too.
+[The D-STAR frame on the air](04-the-dstar-frame.md) picks the same ordering
+up from the other side: the channel coding uses it too.
 
 ---
 
@@ -327,4 +368,14 @@ harmonic counts for 70 Hz and 400 Hz voices follow from the same formula;
 the exact range of fundamental frequencies the D-STAR variant actually
 codes is **not** stated in any public source available to this project.
 Neither are the codebook contents, the number of blocks used by the D-STAR
-variant, or the exact widths of its parameter fields. See Chapter 6.
+variant, or the exact widths of its parameter fields. See
+[what is not in the public record](06-what-isnt-published.md).
+
+---
+
+**Next: [The D-STAR frame on the air](04-the-dstar-frame.md).** What happens
+to those indices on the way out of the radio: unequal error protection, a
+descrambling key chained to the most important field, and 24 bits of data
+riding alongside every voice frame.
+Previously: [Analysis: pitch, voicing, amplitudes](02-analysis.md).
+{: .chapter-nav }

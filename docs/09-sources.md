@@ -291,3 +291,11 @@ AMBE, AMBE+, and AMBE+2 are trademarks of Digital Voice Systems, Inc.,
 used here only to identify the technology under discussion. This project
 is independent of DVSI and is not affiliated with, sponsored by, endorsed
 by, or approved by them.
+
+---
+
+That is the end of the site. Back to [the start](index.md), or to
+[what AMBE actually is](01-the-mbe-model.md) if you arrived here first and
+want the argument in order.
+Previously: [The patent landscape](08-patents.md).
+{: .chapter-nav }

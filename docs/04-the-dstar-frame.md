@@ -2,7 +2,8 @@
 
 <!-- Owner: frame-agent -->
 
-Chapter 3 ended with a pile of quantizer indices and a strict sense of
+[Turning measurements into bits](03-quantization.md) ended with a pile of
+quantizer indices and a strict sense of
 which ones matter most. This chapter is about what happens to them next:
 how they are wrapped in error correction, interleaved with a data channel,
 and clocked onto a 4800 bps GMSK carrier that has to survive a mobile radio
@@ -12,7 +13,44 @@ The primary source here is the JARL D-STAR system specification — the
 document that actually defines the on-air format — with US 5,870,405 for
 the error-protection scheme it refers to but does not spell out.
 
-<!-- VIDEO: pipeline -->
+If you want the whole chain in one piece before the details, this is it:
+one frame of a real capture followed from the microphone to nine bytes and
+back to sound.
+
+<figure class="anim-figure anim-figure--wide">
+  <div class="anim-figure__head">
+    <h4 class="anim-figure__title">One frame, end to end</h4>
+    <span class="badge measured">measured</span>
+  </div>
+
+  <!-- The render is build output: .github/workflows/animations.yml renders
+       animations/manim/scene_pipeline.py and writes
+       docs/assets/video/pipeline.{webm,mp4}. Those files are not committed
+       (see .gitignore), so this element shows its poster until the workflow
+       has run. The builder rewrites relative `src` but not `poster`, hence
+       the page-relative poster path. -->
+  <video class="anim-video" controls playsinline preload="none"
+         poster="../assets/posters/pipeline.png">
+    <source src="assets/video/pipeline.webm" type="video/webm">
+    <source src="assets/video/pipeline.mp4" type="video/mp4">
+    <p>This clip follows one 20 ms frame of speech from the waveform through
+    analysis, quantization and the channel to resynthesis.</p>
+  </video>
+
+  <figcaption class="anim-figure__caption">
+    Sixty-eight seconds for a fifth of a second of speech. Frame 45 of the
+    male CQ capture: the window, its spectrum, the pitch, eight band
+    decisions, twenty harmonic amplitudes, the nine bytes the chip actually
+    emitted (<code>637ff954cfb6a93a9b</code>), and the decoded audio at the
+    far end. The 7 + 8 + 57 bar it draws is the patent's example allocation,
+    not D-STAR's, which is unpublished.
+    <span class="anim-figure__source">Measured values from
+    <code>assets/data/ryan-b/</code>, captured from a DVSI AMBE-3000; pitch
+    and band voicing are DSP over the recordings, not device state.
+    L = ⌊α·π/ω₀⌋: US 5,754,974. Rates: JARL D-STAR spec §1.1(3),
+    §2.1.2(2).</span>
+  </figcaption>
+</figure>
 
 ## The rates, from the top
 
@@ -66,19 +104,26 @@ of error correction, every 20 milliseconds. One frame of voice is 72 bits.
 That is nine bytes. It is worth pausing on how little that is — nine bytes
 per fifth of a second of a human being.
 
-<!-- ANIM: frames -->
+The framing figure in
+[analysis](02-analysis.md#framing-and-windowing) shows those nine bytes
+sitting against the 20 ms of waveform they were made from. Here they are on
+their own, bit by bit, from the same capture. Step through the
+clip and watch which positions change from frame to frame. Then look for a
+region that stays still, or one that only changes during silence, and notice
+that you cannot find one: nothing in the public record tells you which of
+these 72 positions carries the pitch.
 
-<!-- ANIM: bits — the frame-bit dissector (docs/javascripts/anim-bits.js).
-     Colours are measurements of the captured bits, never a guessed field
-     map: the assignment of these 72 positions to codec fields is not
-     published, and the figure says so. -->
+<!-- The frame-bit dissector (docs/javascripts/anim-bits.js). Its colours are
+     measurements of the captured bits, never a guessed field map: the
+     assignment of these 72 positions to codec fields is not published, and
+     the figure says so on screen. -->
 <div data-anim="bits"></div>
 
 ## Unequal error protection
 
 Twenty-four bits of FEC cannot protect forty-eight bits of payload
 equally. Attempting it would be a waste in any case, because the payload
-bits are not equally important — Chapter 3 showed that the fields form a
+bits are not equally important — chapter 3 showed that the fields form a
 clean priority hierarchy, from the pitch index (whose corruption changes
 the meaning of every other field) down to the finest spectral detail
 (whose corruption is barely audible).
@@ -122,7 +167,7 @@ Which bits land in u₀? US 5,630,011 names them:
 > code. Thus, all of the six most significant bits are protected against
 > bit errors."*[^011]
 
-Exactly what Chapter 3 predicted. The coarse pitch — the field the decoder
+Exactly what chapter 3 predicted. The coarse pitch — the field the decoder
 needs before it can compute L and therefore before it can find any other
 field boundary — and the coarse overall level. Everything else in the
 frame is conditioned on those.
@@ -350,4 +395,13 @@ exact constants of the pseudo-random generator; and the specific error
 thresholds at which a D-STAR decoder repeats or mutes a frame. US 5,870,405
 gives the architecture and the 7.2 kbps IMBE instance of it — the 3.6 kbps
 AMBE instance that D-STAR uses is referred to by the JARL specification but
-not defined by it. See Chapter 6.
+not defined by it. See
+[what is not in the public record](06-what-isnt-published.md).
+
+---
+
+**Next: [Synthesis: rebuilding the voice](05-synthesis.md).** The far end of
+the link, where a decoder that was never told a single phase has to
+manufacture a waveform anyway.
+Previously: [Turning measurements into bits](03-quantization.md).
+{: .chapter-nav }
