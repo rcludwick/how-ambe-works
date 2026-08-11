@@ -10,8 +10,7 @@ us.
 
 ## Method
 
-**Everything technical on this site was written from four kinds of source,
-and nothing else:**
+The technical material here comes from four kinds of source:
 
 1. **US patents.** Ten of them, all assigned to Digital Voice Systems,
    Inc., granted between 1992 and 1999. A patent must enable the
@@ -25,18 +24,14 @@ and nothing else:**
    specification, which defines the over-the-air frame structure, plus
    publicly available DVSI product documentation for device-level
    behaviour.
-4. **Our own measurements of commercial hardware.** A commercially
-   purchased DVSI AMBE-3000 device, operated as a black box — audio and
-   frames in one side, recorded output from the other. Nothing was
-   disassembled, decapped, decompiled, dumped, or read out of the chip.
+4. **Our own measurements of commercial hardware.** A DVSI AMBE-3000
+   device operated as a black box: audio and frames in one side, recorded
+   output from the other.
 
-Every technical claim on every page names its source inline, in the form
+Claims name their source inline, in the form
 <span class="cite">US 5,701,390</span> or
-<span class="cite">Griffin &amp; Lim 1988</span>. Where a page states
-something that *isn't* from a source — an inference, an opinion, or a
-piece of ordinary engineering reasoning — it says so, in a marked source
-note, rather than letting it borrow authority from the citations around
-it.
+<span class="cite">Griffin &amp; Lim 1988</span>, so you can go and read
+the original. Inferences and engineering judgement are marked as such.
 
 ### How the hardware measurements were made
 
