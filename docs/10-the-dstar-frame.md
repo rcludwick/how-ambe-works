@@ -30,7 +30,6 @@ back to sound.
        the page-relative poster path. -->
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/pipeline.png">
-    <source src="assets/video/pipeline.webm" type="video/webm">
     <source src="assets/video/pipeline.mp4" type="video/mp4">
     <p>This clip follows one 20 ms frame of speech from the waveform through
     analysis, quantization and the channel to resynthesis.</p>

@@ -84,7 +84,6 @@ mush of the same spectrum.
        `poster`, hence the page-relative poster path. -->
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/harmonic-sum.png">
-    <source src="assets/video/harmonic-sum.webm" type="video/webm">
     <source src="assets/video/harmonic-sum.mp4" type="video/mp4">
     <p>This clip adds harmonics one at a time at their measured amplitudes
     until the sum takes on the shape of a glottal pulse.</p>

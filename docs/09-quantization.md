@@ -98,7 +98,6 @@ that entry's index. The decoder looks the index up.
        page-relative poster path. -->
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/vq.png">
-    <source src="assets/video/vq.webm" type="video/webm">
     <source src="assets/video/vq.mp4" type="video/mp4">
     <p>This clip shows a cloud of two-dimensional points being clustered, and
     each cluster centre standing in for every point near it.</p>

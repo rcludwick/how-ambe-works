@@ -52,7 +52,6 @@ actually takes away from a fifth of a second of somebody talking.
        page-relative (../) and the source paths are not. -->
   <video class="anim-video" controls playsinline preload="none"
          poster="../assets/posters/decomposition.png">
-    <source src="assets/video/decomposition.webm" type="video/webm">
     <source src="assets/video/decomposition.mp4" type="video/mp4">
     <p>This clip walks one 20 ms frame of a recorded utterance from waveform
     to spectrum to harmonics to eight band voicing decisions.</p>
