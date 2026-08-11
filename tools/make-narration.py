@@ -14,29 +14,28 @@ reproducible from what is in the repository.
     tools/make-narration.py --check         # verify without regenerating
     VOICE=en_US-aj7hr-medium tools/make-narration.py    # a different voice
 
-VOICE, AND AN UNRESOLVED PROBLEM WITH IT
-    The default is en_US-libritts_r-medium, the same voice tools/make-audio.sh
-    uses for the male speech samples. Its corpus is LibriTTS-R (OpenSLR 141),
-    CC BY 4.0, which this site can redistribute.
+VOICE, AND WHY IT IS THIS ONE
+    The default is en_US-norman-medium: LibriVox, public domain, and its
+    MODEL_CARD records "Trained from scratch on medium quality settings for
+    1200 epochs" rather than fine-tuned from anything. Both the corpus and the
+    weights are therefore clean, which is what this site's CC BY 4.0 grant
+    needs, since that grant hands every reader commercial rights.
 
-    The corpus is not the whole story. That voice's MODEL_CARD also says
-    "Fine-tuned from English lessac medium", and the Blizzard 2013 Lessac
-    corpus behind lessac is licensed for research purposes only, explicitly
-    excluding commercial use. So the DATASET is clean and the MODEL LINEAGE
-    may not be. Most Piper voices descend from lessac and inherit this.
-
-    That is unresolved, and it applies to the lr-* clips already on the listen
-    page as much as to this narration. Voices published by Bryce Beattie
-    (kristin, cori, ljspeech, john) are trained from scratch on public-domain
-    corpora and carry no lessac ancestry, and are the obvious replacements if
-    the lineage is judged to matter.
-
-    Do NOT substitute a voice without reading its MODEL_CARD, and read the
-    Training line as well as the Dataset line.
+    It is deliberately NOT en_US-libritts_r-medium, the voice used for the male
+    speech samples. That corpus is CC BY 4.0, but its MODEL_CARD also says
+    "fine-tuned from English lessac medium", and the Blizzard 2013 Lessac terms
+    are research-only and name "licencing" among the commercial purposes they
+    exclude. Whether corpus terms reach a synthesised waveform three models
+    downstream is unsettled, and narration is not worth resting on an unsettled
+    reading when a clean voice costs nothing.
 
     Swapping in a voice trained on your own recordings needs no code change:
     export it to <name>.onnx alongside its .onnx.json in VOICES_DIR and set
     VOICE. Everything downstream is voice-agnostic.
+
+    Do NOT substitute a voice without reading its MODEL_CARD, and read the
+    Training line as well as the Dataset line. The Dataset line alone will not
+    tell you what the weights started from.
 
 REPRODUCIBILITY
     Piper is not sample-deterministic between runs, so regenerating replaces
@@ -65,11 +64,11 @@ AUDIO_DIR = SCRIPT_DIR / "audio"
 
 PIPER = Path(os.environ.get("PIPER", Path.home() / ".local/bin/piper"))
 VOICES_DIR = Path(os.environ.get("VOICES_DIR", Path.home() / ".local/share/piper/voices"))
-VOICE = os.environ.get("VOICE", "en_US-libritts_r-medium")
+VOICE = os.environ.get("VOICE", "en_US-norman-medium")
 
-#: LibriTTS-R is multi-speaker. 690 is the speaker make-audio.sh settled on for
-#: the male samples, so the narration matches the voice already on the site.
-SPEAKER = os.environ.get("SPEAKER", "690")
+#: norman is single-speaker, so no speaker index is passed. Set SPEAKER for a
+#: multi-speaker model.
+SPEAKER = os.environ.get("SPEAKER", "")
 
 #: manim mixes at 44.1 kHz. Handing it anything else means a resample inside
 #: the render, which is both slower and lossier than doing it once here.

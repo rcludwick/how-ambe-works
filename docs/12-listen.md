@@ -308,7 +308,7 @@ except the timbre.
 
 | Item | Source |
 | --- | --- |
-| Source speech, male | Piper TTS `en_US-norman-medium`. Training corpus: LibriVox recordings, <https://librivox.org> — **public domain**. Trained from scratch, not fine-tuned from another voice, per the voice's upstream model card. |
+| Source speech, male | Piper TTS `en_US-libritts_r-medium`, speaker 690. Training corpus: LibriTTS-R, <http://www.openslr.org/141/> — **CC BY 4.0**, attribution required. Its model card also records the weights as fine-tuned from `lessac` medium, whose Blizzard 2013 corpus is research-only; `docs/assets/audio/MANIFEST.md` states that lineage and makes no claim about how far it reaches into a synthesised waveform. |
 | Source speech, female | Piper TTS `en_US-ljspeech-high`. Training corpus: the LJ Speech Dataset, <https://keithito.com/LJ-Speech-Dataset/> — **public domain**. Trained from scratch, per the voice's upstream model card. |
 | Encoder and decoder | DVSI AMBE-3000 chip in a NW Digital Radio ThumbDV, `PRODID` `AMBE3000F` |
 | Firmware | `V121.E100.XXXX.C110.G514.R014.A0030608.C0020208` |
