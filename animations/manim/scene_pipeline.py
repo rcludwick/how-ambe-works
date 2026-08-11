@@ -1072,9 +1072,10 @@ class Pipeline(MovingCameraScene):
             WAVEFORM["decoded"]["min"], WAVEFORM["decoded"]["max"], 12.0, 1.28, COOL
         ).move_to(board)
 
+        clip = FRAMES["clip"]
         note = cite(
-            "the same clip after a round trip through a real DVSI AMBE-3000 — "
-            "envelope correlation 0.98, end-to-end delay 33 ms",
+            "the same clip after a round trip through a real DVSI AMBE-3000 — envelope correlation "
+            f"{clip['decoded_delay_correlation']:.2f}, end-to-end delay {clip['decoded_delay_ms']:.0f} ms",
             INK3,
         )
         note.move_to(np.array([0.0, -1.55, 0.0]))
