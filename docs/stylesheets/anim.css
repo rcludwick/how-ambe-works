@@ -264,6 +264,115 @@
   width: 0.9rem;
 }
 
+/* The ghosted comparison series: vertical dashes, matching the faint dashed
+   stems the canvas draws for the voice the reader did not select. */
+.anim-legend__swatch--ghost {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ambe-plot-muted) 0 1px,
+    transparent 1px 4px
+  );
+  border-radius: 0;
+  height: 0.5rem;
+  opacity: 0.7;
+  width: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Two-voice comparison strip
+
+   Shown under the harmonics figure once a voice is selected. The canvas makes
+   the difference visible; this makes it readable — and gives a screen reader
+   something better than a picture of two combs.
+   ------------------------------------------------------------------------ */
+
+.anim-compare {
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  margin-top: 0.7rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.anim-compare[hidden] {
+  display: none;
+}
+
+.anim-compare__row {
+  align-items: center;
+  color: var(--ambe-text-3);
+  display: grid;
+  font-size: 0.62rem;
+  gap: 0 0.6rem;
+  grid-template-columns: 4.2rem 3.6rem 4rem 1fr;
+}
+
+.anim-compare__row + .anim-compare__row {
+  margin-top: 0.3rem;
+}
+
+/* The selected voice is the one the solid comb belongs to. */
+.anim-compare__row.is-current {
+  color: var(--ambe-text);
+  font-weight: 600;
+}
+
+.anim-compare__f0,
+.anim-compare__l {
+  font-family: var(--ambe-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.anim-compare__bar {
+  background: var(--ambe-sunken);
+  border-radius: var(--ambe-radius-pill);
+  display: block;
+  height: 0.35rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.anim-compare__bar > i {
+  background: var(--ambe-data-4);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width var(--ambe-dur-med) var(--ambe-ease);
+  width: 0;
+}
+
+.anim-compare__row.is-current .anim-compare__bar > i {
+  background: var(--ambe-data-1);
+}
+
+.md-typeset .anim-compare__delta,
+.anim-compare__delta {
+  border-top: 1px solid var(--ambe-hairline);
+  color: var(--ambe-text-2);
+  font-size: 0.62rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 0;
+  padding-top: 0.45rem;
+}
+
+/* On a phone the three number columns already consume the row: the bar column
+   collapses to a few pixels and reads as a rendering artefact rather than a
+   comparison. Drop it and keep the numbers, which carry the point anyway. */
+@media screen and (max-width: 30em) {
+  .anim-compare__row {
+    grid-template-columns: 1fr auto auto;
+  }
+
+  .anim-compare__bar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-compare__bar > i {
+    transition: none;
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Controls: transport, sliders, toggles
    ------------------------------------------------------------------------ */

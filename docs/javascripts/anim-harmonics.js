@@ -6,13 +6,24 @@
  * DATA READ     assets/data/lr-b/frames.json   (male recording, on demand)
  *               assets/data/lj-b/frames.json    (female recording, on demand)
  *               — only `frames[].derived.orig_f0_hz` / `orig_f0_confidence`
- *                 and `frames[].i` / `t` are used, to snap the pitch slider to
- *                 pitches measured in the real ThumbDV captures.
+ *                 are used, to snap the pitch slider to a pitch measured in
+ *                 the real ThumbDV captures.
+ *
+ *               Each voice is reduced to ONE number: the median f0 over its
+ *               confidently-voiced frames. Stepping frame by frame was tried
+ *               and removed. The autocorrelation pitch track has octave
+ *               errors at both ends (male reaches 381 Hz, female drops to
+ *               79 Hz), so a per-frame walk regularly showed the female voice
+ *               with MORE harmonics than the male — the exact opposite of the
+ *               point the figure exists to make. The median is stable, is
+ *               honest about being a summary, and always orders the two
+ *               voices correctly.
  *
  * CONTROLS      • pitch slider, 60–400 Hz (arrow keys step 1 Hz)
- *               • "Male recording" / "Female recording" — enter real-frame
- *                 mode and snap the slider to a measured pitch
- *               • "Next frame ›" — step to the next measured pitch
+ *               • "Male recording" / "Female recording" — snap the slider to
+ *                 that voice's median measured pitch and ghost the other one
+ *                 behind it for comparison. Dragging the slider leaves this
+ *                 mode and clears the ghost.
  *
  * WHAT IT DRAWS Two linked panels for one fundamental frequency f0:
  *               a 0–4 kHz harmonic comb (stems at f0, 2f0, 3f0 …) and the
@@ -31,6 +42,10 @@
  *               time-domain trace is an ordinary sum of sinusoids, i.e.
  *               generic display maths. The only numbers that come from
  *               outside are measured pitches from the precomputed JSON.
+ *
+ *               The ghost comb is the same illustrative envelope sampled at
+ *               the other voice's median pitch. It is a second drawing of
+ *               this file's own display maths, not a second measurement.
  *
  * MIT licensed (see LICENSE-MIT).
  * ======================================================================== */
@@ -132,6 +147,7 @@ const FIGURE_HTML = `
   <li class="anim-legend__item"><i class="anim-legend__swatch is-data-1"></i>harmonic amplitudes — the L numbers that get transmitted</li>
   <li class="anim-legend__item"><i class="anim-legend__swatch anim-legend__swatch--dashed" style="color: var(--ambe-data-3)"></i>spectral envelope (illustrative shape)</li>
   <li class="anim-legend__item"><i class="anim-legend__swatch anim-legend__swatch--line is-data-2"></i>the harmonics added together</li>
+  <li class="anim-legend__item anim-legend__item--ghost" data-role="ghost-key" hidden><i class="anim-legend__swatch anim-legend__swatch--ghost"></i><span data-role="ghost-key-text">the other voice, for comparison</span></li>
 </ul>
 
 <div class="anim-controls">
@@ -148,8 +164,23 @@ const FIGURE_HTML = `
       <button class="anim-btn" type="button" data-voice="lr" aria-pressed="false">Male recording</button>
       <button class="anim-btn" type="button" data-voice="lj" aria-pressed="false">Female recording</button>
     </div>
-    <button class="anim-btn" type="button" data-role="next" disabled>Next frame ›</button>
   </div>
+</div>
+
+<div class="anim-compare" data-role="compare" hidden aria-live="polite">
+  <div class="anim-compare__row" data-compare-row="lr">
+    <span class="anim-compare__name">Male</span>
+    <span class="anim-compare__f0" data-role="lr-f0"></span>
+    <span class="anim-compare__l" data-role="lr-l"></span>
+    <span class="anim-compare__bar"><i data-role="lr-bar"></i></span>
+  </div>
+  <div class="anim-compare__row" data-compare-row="lj">
+    <span class="anim-compare__name">Female</span>
+    <span class="anim-compare__f0" data-role="lj-f0"></span>
+    <span class="anim-compare__l" data-role="lj-l"></span>
+    <span class="anim-compare__bar"><i data-role="lj-bar"></i></span>
+  </div>
+  <p class="anim-compare__delta" data-role="delta"></p>
 </div>
 
 <p class="anim-figure__caption">
@@ -157,13 +188,18 @@ const FIGURE_HTML = `
   <strong>L</strong>, the count of harmonics inside the coded 3700 Hz band, fall with it.
   That count is how many spectral amplitudes the encoder has to squeeze into the
   same fixed budget of bits, so a deep voice and a high voice are not the same
-  problem. Then press <em>Male recording</em> or <em>Female recording</em> to snap
-  the slider to pitches actually present in the ThumbDV captures.
+  problem. Then press <em>Male recording</em> or <em>Female recording</em>: the
+  slider snaps to that voice's typical measured pitch, and the other voice stays
+  on the plot as a faint ghost comb so you can see the gap directly. The two real
+  voices differ by six amplitudes for the same nine bytes.
   <span class="anim-figure__source">L = ⌊α·π/ω₀⌋ with α = 0.925 (coded bandwidth 3700 Hz):
   US 5,701,390 and US 5,754,974. Pitch search range 22 ≤ P &lt; 115 samples at 8 kHz:
-  US 5,216,747. Snapped pitches: autocorrelation pitch measured from
-  assets/data/&lt;clip&gt;/frames.json (derived DSP on the recordings, not codec
-  state). The envelope shape is drawn for illustration and is not a measurement.</span>
+  US 5,216,747. Snapped pitches: the <em>median</em> autocorrelation pitch over the
+  confidently-voiced frames (confidence ≥ 0.5) of each recording, from
+  assets/data/&lt;clip&gt;/frames.json — derived DSP on the recordings, not codec
+  state. A median, not a single frame: the pitch track has octave errors at both
+  ends, so no one frame is representative. The envelope shape is drawn for
+  illustration and is not a measurement.</span>
 </p>
 `;
 
@@ -173,6 +209,44 @@ const VOICES = {
   lr: { clip: "lr-b", label: "male" },
   lj: { clip: "lj-b", label: "female" },
 };
+
+const VOICE_KEYS = Object.keys(VOICES);
+
+/** A frame's pitch counts only if the tracker was reasonably sure of it. */
+const MIN_CONFIDENCE = 0.5;
+
+function otherVoice(voice) {
+  return voice === "lr" ? "lj" : "lr";
+}
+
+function harmonicsFor(f0) {
+  return Math.floor(CODED_BANDWIDTH_HZ / f0);
+}
+
+/**
+ * Reduce a clip to its median confidently-voiced pitch.
+ *
+ * The median rather than the mean: the tracker's octave errors are wild
+ * outliers (a doubled or halved estimate), and a mean would drag toward them.
+ *
+ * @param {object} data parsed frames.json
+ * @returns {{clip: string, f0: number, n: number} | null}
+ */
+function summarise(data) {
+  const f0s = [];
+  for (const fr of data.frames) {
+    const d = fr.derived;
+    if (!(d.orig_f0_hz > 0)) continue;
+    if (!(d.orig_f0_confidence >= MIN_CONFIDENCE)) continue;
+    f0s.push(d.orig_f0_hz);
+  }
+  if (f0s.length === 0) return null;
+  f0s.sort((a, b) => a - b);
+  const mid = f0s.length >> 1;
+  const f0 =
+    f0s.length % 2 === 0 ? (f0s[mid - 1] + f0s[mid]) / 2 : f0s[mid];
+  return { clip: data.clip.id, f0, n: f0s.length };
+}
 
 /**
  * Mount the harmonics figure into a container.
@@ -187,18 +261,26 @@ export function mount(root) {
   const canvas = root.querySelector("canvas");
   const range = root.querySelector(".anim-range");
   const readout = root.querySelector('[data-role="readout"]');
-  const nextButton = root.querySelector('[data-role="next"]');
   const voiceButtons = Array.from(root.querySelectorAll("[data-voice]"));
+  const compare = root.querySelector('[data-role="compare"]');
+  const ghostKey = root.querySelector('[data-role="ghost-key"]');
+  const ghostKeyText = root.querySelector('[data-role="ghost-key-text"]');
+  const deltaEl = root.querySelector('[data-role="delta"]');
   const reduced = prefersReducedMotion();
 
   const state = {
     pitch: DEFAULT_PITCH_HZ, // what is drawn (eases toward target)
     target: DEFAULT_PITCH_HZ, // what the reader asked for
     voice: null, // "lr" | "lj" | null (free mode)
-    picks: { lr: null, lj: null },
-    pickIndex: 0,
-    source: null, // {clip, i, t, f0, conf} when snapped to a real frame
+    stats: { lr: null, lj: null }, // {clip, f0, n} once loaded
+    loading: false,
   };
+
+  /** The voice being compared against, if its data is in hand. */
+  function ghostStats() {
+    if (!state.voice) return null;
+    return state.stats[otherVoice(state.voice)];
+  }
 
   const handle = setupCanvas(canvas, { onResize: () => render() });
 
@@ -278,6 +360,29 @@ export function mount(root) {
       dash: [4, 4],
     });
 
+    // The other voice, ghosted underneath: same envelope, their pitch. Drawn
+    // first so the live comb sits on top of it, and kept deliberately faint —
+    // it is a reference, not a second dataset competing for attention.
+    const ghost = ghostStats();
+    if (ghost) {
+      ctx.save();
+      spec.clip(ctx);
+      const gBase = spec.y(0);
+      ctx.strokeStyle = th.muted;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      for (let k = 1; k * ghost.f0 < NYQUIST_HZ; k += 1) {
+        const hz = k * ghost.f0;
+        const x = crisp(spec.x(hz), 1);
+        ctx.beginPath();
+        ctx.moveTo(x, gBase);
+        ctx.lineTo(x, spec.y(envelopeAt(hz)));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     // The comb.
     ctx.save();
     spec.clip(ctx);
@@ -355,10 +460,20 @@ export function mount(root) {
     }
 
     // The headline number, on a panel so it stays readable over a dense comb.
+    const outOfRange = f0 < SEARCH_MIN_HZ || f0 > SEARCH_MAX_HZ;
+    const ghostL = ghost ? harmonicsFor(ghost.f0) : null;
+    const ghostDelta = ghostL === null ? 0 : coded - ghostL;
+    const subLineY = compact ? 22 : 30;
+    const ghostLineY = subLineY + (compact ? 14 : 16);
+    const warnLineY = (ghostL === null ? subLineY : ghostLineY) + (compact ? 16 : 18);
+
     const hx = spec.area.left + 10;
     const hy = spec.area.top + (compact ? 6 : 10);
     const panelW = compact ? 168 : 236;
-    const panelH = (compact ? 46 : 58) + (f0 < SEARCH_MIN_HZ || f0 > SEARCH_MAX_HZ ? 16 : 0);
+    const panelH =
+      (compact ? 46 : 58) +
+      (ghostL === null ? 0 : compact ? 14 : 16) +
+      (outOfRange ? 16 : 0);
     ctx.save();
     ctx.globalAlpha = 0.86;
     ctx.fillStyle = th.plotBg;
@@ -382,19 +497,36 @@ export function mount(root) {
       ctx,
       compact ? "amplitudes to send" : "spectral amplitudes to transmit",
       hx,
-      hy + (compact ? 22 : 30),
+      hy + subLineY,
       { align: "left", baseline: "top", size: 11, color: th.muted }
     );
 
+    // The whole point of the comparison, stated as a number rather than left
+    // for the reader to count off two combs.
+    if (ghostL !== null) {
+      const other = VOICES[otherVoice(state.voice)].label;
+      const text =
+        ghostDelta === 0
+          ? `same as the ${other} voice`
+          : `${Math.abs(ghostDelta)} ${ghostDelta > 0 ? "more" : "fewer"} than the ${other} voice`;
+      drawLabel(ctx, text, hx, hy + ghostLineY, {
+        align: "left",
+        baseline: "top",
+        size: 11,
+        weight: 600,
+        color: th.series[0],
+      });
+    }
+
     // Out-of-range warning: the coder's pitch search does not go here.
-    if (f0 < SEARCH_MIN_HZ || f0 > SEARCH_MAX_HZ) {
+    if (outOfRange) {
       drawLabel(
         ctx,
         compact
           ? "outside the coder's pitch range"
           : "outside the coder's pitch search range (P = 22…115 samples)",
         hx,
-        hy + (compact ? 38 : 48),
+        hy + warnLineY,
         {
           align: "left",
           baseline: "top",
@@ -505,14 +637,15 @@ export function mount(root) {
   }
 
   function drawSourceChip(ctx, th, geo) {
-    if (!state.source) return;
+    if (!state.voice) return;
+    const s = state.stats[state.voice];
+    if (!s) return;
     const { spec, compact } = geo;
-    const s = state.source;
     const x = spec.area.right - 8;
     const y = spec.area.top + 6;
     const line1 = compact
-      ? `${s.clip} f${s.i}`
-      : `${s.clip} · frame ${s.i} · ${s.t.toFixed(2)} s`;
+      ? `${s.clip} · median`
+      : `${s.clip} · median of ${s.n} voiced frames`;
     const line2 = `f₀ ${s.f0.toFixed(1)} Hz measured from the recording`;
     drawLabel(ctx, line1, x, y, {
       align: "right",
@@ -592,25 +725,6 @@ export function mount(root) {
 
   /* -- real measured frames ---------------------------------------------- */
 
-  function pickMeasuredFrames(data) {
-    const out = [];
-    let last = -1e9;
-    for (const fr of data.frames) {
-      const d = fr.derived;
-      if (!(d.orig_f0_hz > 0) || d.orig_f0_confidence < 0.5) continue;
-      if (Math.abs(d.orig_f0_hz - last) < 6) continue;
-      last = d.orig_f0_hz;
-      out.push({
-        clip: data.clip.id,
-        i: fr.i,
-        t: fr.t,
-        f0: d.orig_f0_hz,
-        conf: d.orig_f0_confidence,
-      });
-    }
-    return out;
-  }
-
   function syncButtons() {
     for (const b of voiceButtons) {
       b.setAttribute(
@@ -618,40 +732,96 @@ export function mount(root) {
         b.dataset.voice === state.voice ? "true" : "false"
       );
     }
-    if (nextButton) nextButton.disabled = !state.voice;
   }
 
-  function applyPick() {
-    const picks = state.picks[state.voice];
-    if (!picks || picks.length === 0) return;
-    const pick = picks[state.pickIndex % picks.length];
-    state.source = pick;
-    setPitch(pick.f0);
+  /** The comparison, restated as text for readers who are not reading pixels. */
+  function syncCompare() {
+    if (!compare) return;
+    const both = state.stats.lr && state.stats.lj;
+    const show = Boolean(state.voice && both);
+    compare.hidden = !show;
+    if (ghostKey) ghostKey.hidden = !show;
+    if (!show) return;
+
+    for (const key of VOICE_KEYS) {
+      const s = state.stats[key];
+      const L = harmonicsFor(s.f0);
+      const row = compare.querySelector(`[data-compare-row="${key}"]`);
+      if (row) row.classList.toggle("is-current", key === state.voice);
+      const f0El = compare.querySelector(`[data-role="${key}-f0"]`);
+      if (f0El) f0El.textContent = `${s.f0.toFixed(0)} Hz`;
+      const lEl = compare.querySelector(`[data-role="${key}-l"]`);
+      if (lEl) lEl.textContent = `L = ${L}`;
+      // Bar length is relative to the larger of the two, so the gap reads as
+      // a proportion rather than an absolute count of pixels.
+      const bar = compare.querySelector(`[data-role="${key}-bar"]`);
+      if (bar) {
+        const maxL = Math.max(
+          harmonicsFor(state.stats.lr.f0),
+          harmonicsFor(state.stats.lj.f0)
+        );
+        bar.style.width = `${(L / maxL) * 100}%`;
+      }
+    }
+
+    if (ghostKeyText) {
+      ghostKeyText.textContent = `${VOICES[otherVoice(state.voice)].label} voice, ghosted for comparison`;
+    }
+
+    if (deltaEl) {
+      const lrL = harmonicsFor(state.stats.lr.f0);
+      const ljL = harmonicsFor(state.stats.lj.f0);
+      const gap = Math.abs(lrL - ljL);
+      const fewer = lrL < ljL ? "male" : "female";
+      deltaEl.textContent =
+        gap === 0
+          ? "Both voices land on the same number of amplitudes."
+          : `Same nine bytes either way — but the ${fewer} voice needs ${gap} fewer amplitudes to describe.`;
+    }
+  }
+
+  function applyVoice() {
+    const s = state.stats[state.voice];
+    if (!s) return;
+    setPitch(s.f0);
+    syncCompare();
+  }
+
+  /**
+   * Both clips are loaded the first time either button is pressed, because the
+   * ghost comb needs the voice the reader did NOT pick. Two fetches of a file
+   * already on the CDN, once per page.
+   */
+  async function loadAll() {
+    if (state.loading) return;
+    state.loading = true;
+    try {
+      await Promise.all(
+        VOICE_KEYS.map(async (key) => {
+          if (state.stats[key]) return;
+          const data = await loadJSON(`assets/data/${VOICES[key].clip}/frames.json`);
+          state.stats[key] = summarise(data);
+        })
+      );
+    } finally {
+      state.loading = false;
+    }
   }
 
   async function chooseVoice(voice) {
-    if (state.voice === voice) {
-      state.pickIndex += 1;
-      applyPick();
-      return;
-    }
+    if (state.voice === voice) return; // already there; nothing to step to
     state.voice = voice;
-    state.pickIndex = 0;
     syncButtons();
-    if (!state.picks[voice]) {
-      const clip = VOICES[voice].clip;
-      const data = await loadJSON(`assets/data/${clip}/frames.json`);
-      state.picks[voice] = pickMeasuredFrames(data);
-    }
+    await loadAll();
     if (state.voice !== voice) return; // reader moved on while loading
-    applyPick();
+    applyVoice();
   }
 
   function goFree() {
-    if (!state.voice && !state.source) return;
+    if (!state.voice) return;
     state.voice = null;
-    state.source = null;
     syncButtons();
+    syncCompare();
     render();
   }
 
@@ -669,24 +839,17 @@ export function mount(root) {
       syncButtons();
     });
   };
-  const onNext = () => {
-    if (!state.voice) return;
-    state.pickIndex += 1;
-    applyPick();
-  };
-
   if (range) range.addEventListener("input", onRange);
   for (const b of voiceButtons) b.addEventListener("click", onVoice);
-  if (nextButton) nextButton.addEventListener("click", onNext);
   const unsubscribeTheme = onThemeChange(() => render());
 
   syncButtons();
+  syncCompare();
   render();
 
   return () => {
     if (range) range.removeEventListener("input", onRange);
     for (const b of voiceButtons) b.removeEventListener("click", onVoice);
-    if (nextButton) nextButton.removeEventListener("click", onNext);
     unsubscribeTheme();
     loop.destroy();
     handle.destroy();
