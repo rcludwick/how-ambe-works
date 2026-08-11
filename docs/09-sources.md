@@ -78,10 +78,11 @@ project holds itself to.
   and no synthesis. The data it draws was captured from hardware and
   stored as JSON. Generic display DSP — plotting a waveform, taking an
   FFT of something already on screen — is the extent of the arithmetic.
-- **Implementation-level detail stops at full-rate AMBE and IMBE**, which
-  the expired patents cover. AMBE+2 and the half-rate codec are discussed
-  as landscape only. Two patents remain in force there; see
-  [The patent landscape](08-patents.md).
+- **The subject here is full-rate AMBE and IMBE**, the codec D-STAR uses.
+  AMBE+2 and the half-rate codec are covered at the level of history and
+  patent status rather than mechanism, because they are a different codec
+  and not what this site set out to explain. See
+  [The patent landscape](08-patents.md) for where each patent stands.
 
 If you want a working codec, this is not that repository, and no part of
 it can be compiled into one.
@@ -202,12 +203,13 @@ Development Center technical report, DTIC
 **TIA-102.BABA-1, "APCO Project 25 Half-Rate Vocoder Addendum."** In the
 [TIA-102 series document collection on archive.org](https://archive.org/details/TIA-102_Series_Documents).
 
-: Listed for completeness because readers will ask. It is a public
-  specification of the 3600 bps half-rate vocoder, and it is the document
-  the amateur community generally equates with AMBE+2 half-rate. **No
-  technical content on this site is drawn from it**, because the half-rate
-  frame remains covered by a live patent with claims on both encoding and
-  decoding until 2028-05-20. See [The patent landscape](08-patents.md).
+: A public specification of the 3600 bps half-rate vocoder, and the
+  document the amateur community generally equates with AMBE+2 half-rate.
+  Freely readable, and a legitimate source for anyone working on that
+  codec. This site draws little from it for the simple reason that its
+  subject is full-rate AMBE as used by D-STAR. See
+  [The patent landscape](08-patents.md) for the half-rate patent
+  position.
 
 ### Vendor documentation
 

@@ -99,7 +99,7 @@ mush of the same spectrum.
     changes completely while the spectrum, and very nearly the sound, does
     not. That is the freedom the decoder is left with.
     <span class="anim-figure__source">Frame 121 of
-    <code>assets/data/ryan-b/</code> (all eight bands measured periodic),
+    <code>assets/data/norman-b/</code> (all eight bands measured periodic),
     captured from a DVSI AMBE-3000. Amplitudes are read off the measured
     spectrum at multiples of the measured pitch; the sum is drawn at zero
     phase, which is why the pulse is symmetric. The frame carries no phase at

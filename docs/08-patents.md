@@ -53,18 +53,21 @@ at Patent Center rather than taking either figure on trust.
 What matters most is the breadth. **The independent claims cover both
 encoding and decoding.** There are encoding claims — dividing speech into
 frames, computing MBE model parameters, quantizing pitch, voicing and
-gain, combining selected bits into a 12-bit parameter codeword, applying
-error control codes — and there are separate decoding claims: extracting
+gain, combining selected bits into a 12-bit parameter codeword, applying error
+control codes — and there are separate decoding claims: extracting
 FEC codewords from a received frame, error-control decoding them,
 reconstructing pitch, voicing and gain, and synthesizing speech samples.
 A decoder-only implementation is not outside this patent the way it would
 be outside an analysis-only patent.
 
-The frame the claims describe is 3600 bps: 72 bits per 20 ms frame, of
-which 49 are voice or tone bits (7 pitch, 5 voicing, 37 spectral
-magnitude) and 23 are FEC — one [24,12] extended Golay code and one
-[23,12] Golay code protecting the 24 most error-sensitive bits, with the
-remaining 25 bits unprotected.
+The claims describe a 3600 bps frame: 72 bits per 20 ms, of which 49 are
+voice or tone bits (7 pitch, 5 voicing, 37 spectral magnitude) and 23 are
+FEC, using one [24,12] extended Golay code and one [23,12] Golay code to
+protect the 24 most error-sensitive bits and leaving the remaining 25
+unprotected. The field widths are set out in
+[the patent itself](https://patents.google.com/patent/US8359197B2/en).
+Publishing that disclosure is what a patent trades for the exclusive
+right, so reading it and describing it is the intended use.
 
 That is structurally the half-rate frame used by DMR, dPMR, NXDN and
 YSF's narrow mode. **The equivalence is community consensus, not a legal
@@ -218,8 +221,7 @@ voicing-independent magnitudes, predictive residual-DCT quantization,
 Golay and Hamming FEC with bit prioritization, pseudo-random scrambling
 for error detection, frame repeat and mute, adaptive spectral
 enhancement, and regenerated-phase synthesis all appear in patents that
-lapsed between 2010 and 2015. Nothing on this site's technical pages
-draws on anything still in force.
+lapsed between 2010 and 2015.
 
 **Half-rate AMBE+2 is a different question.** US 8,359,197 has claims
 covering both directions until 2028-05-20, so the usual "a decoder is

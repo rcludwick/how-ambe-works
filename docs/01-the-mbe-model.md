@@ -66,7 +66,7 @@ actually takes away from a fifth of a second of somebody talking.
     male CQ capture, at 2.82 s, where six bands read periodic and the top two
     read noise.
     <span class="anim-figure__source">Drawn from
-    <code>assets/data/ryan-b/</code>, captured from a DVSI AMBE-3000. The
+    <code>assets/data/norman-b/</code>, captured from a DVSI AMBE-3000. The
     per-band voicing strengths are an autocorrelation measurement of the
     decoded audio, not a field the device reports. Model: Griffin &amp; Lim
     1988, §II.</span>

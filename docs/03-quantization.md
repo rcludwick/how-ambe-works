@@ -262,7 +262,7 @@ it unpacks wrong, because every subsequent field boundary moves.
 
 ```text
 PSEUDOCODE — NOT EXECUTABLE, ILLUSTRATIVE ONLY.
-Shape of the allocation. Sizes and tables are deliberately omitted.
+Shape of the allocation. Codebook contents omitted.
 
   given pitch_index (received, or chosen by the encoder):
 

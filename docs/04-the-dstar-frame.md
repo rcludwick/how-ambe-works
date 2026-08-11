@@ -45,7 +45,7 @@ back to sound.
     far end. The 7 + 8 + 57 bar it draws is the patent's example allocation,
     not D-STAR's, which is unpublished.
     <span class="anim-figure__source">Measured values from
-    <code>assets/data/ryan-b/</code>, captured from a DVSI AMBE-3000; pitch
+    <code>assets/data/norman-b/</code>, captured from a DVSI AMBE-3000; pitch
     and band voicing are DSP over the recordings, not device state.
     L = ⌊α·π/ω₀⌋: US 5,754,974. Rates: JARL D-STAR spec §1.1(3),
     §2.1.2(2).</span>
@@ -210,8 +210,10 @@ cleverer than whitening.
 The patent scrambles the lower-priority code vectors with a pseudo-random
 sequence *"where the bit vector u₀ is interpreted as an unsigned 12 bit
 number in the range [0, 4095]."*[^405] The generator is a linear
-congruential recurrence, given as an equation in the patent; its exact
-constants are not reproduced here, since the point is structural.
+congruential recurrence, stated as an equation with its constants in
+[US 5,870,405](https://patents.google.com/patent/US5870405A/en), which
+expired in 2016. What matters here is the structure rather than the
+arithmetic.
 
 The point is this. The decoder must correct u₀'s codeword first, then use
 the recovered u₀ to derive the descrambling sequence for everything else.

@@ -68,7 +68,7 @@ docs/assets/data/
   SCHEMA.md          this document
   clips.json         index of all eight clips
   frames.json    \
-  waveform.json   >  the featured clip (ryan-b), also present in ryan-b/
+  waveform.json   >  the featured clip (norman-b), also present in norman-b/
   spectra.json   /
   <clip-id>/         the same three files for each of the eight clips
     frames.json
@@ -79,8 +79,8 @@ docs/assets/data/
 ```
 
 Clip ids are `<voice>-<sentence>`, voice ∈ {`ryan` (male), `hfc` (female)},
-sentence ∈ {`a`, `b`, `c`, `d`}. The featured clip is `ryan-b`; load
-`assets/data/frames.json` for it, or `assets/data/hfc-c/frames.json` for
+sentence ∈ {`a`, `b`, `c`, `d`}. The featured clip is `norman-b`; load
+`assets/data/frames.json` for it, or `assets/data/lj-c/frames.json` for
 another.
 
 All internal paths (`original_audio`, `decoded_audio`, `channel_frames`) are
@@ -123,7 +123,7 @@ Each entry of `clips`:
 
 | Field | Type | Units | Provenance | Meaning |
 | --- | --- | --- | --- | --- |
-| `id` | string | — | — | e.g. `ryan-b` |
+| `id` | string | — | — | e.g. `norman-b` |
 | `voice` | object | — | — | `{id, sex, model}`; `sex` is the voice's intended sex, `model` names the Piper voice |
 | `sentence` | string | — | — | `a`–`d` |
 | `text` | string | — | — | exact sentence spoken |
