@@ -963,7 +963,17 @@ body {
 
 /* ---------------------------------------------------------------------------
    7. Utility classes for page authors
-   Use with attr_list, e.g.  Some sentence.{: .cite }
+
+   attr_list applies these to a whole BLOCK, on the line after it:
+
+       Some paragraph.
+       {: .lede }
+
+   It does NOT work inside a paragraph. Writing `Some sentence.{: .cite }`
+   mid-paragraph puts the literal braces on the page. For a run of text inside
+   a paragraph, write the span yourself:
+
+       <span class="cite">US 5,754,974</span>
    ------------------------------------------------------------------------ */
 
 /* Standfirst paragraph under an h1. */

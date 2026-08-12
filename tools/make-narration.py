@@ -85,6 +85,30 @@ RATE = "44100"
 TARGET_RMS_DB = -20.0
 PEAK_CEIL_DB = -1.0
 
+#: Silence inserted between sentences, and between paragraphs.
+#:
+#: Piper synthesises a whole cue in one pass and puts its own short pause at a
+#: full stop, which is tighter than a person reading aloud to camera. Each
+#: sentence is therefore synthesised on its own, trimmed, and rejoined with a
+#: measured gap. That also makes the pacing a number in this file rather than a
+#: property of the voice model.
+#:
+#: Raising these makes the videos longer. Every scene holds a stage open until
+#: its line has finished, so the gaps are real screen time and not just air.
+#:
+#: Measured for calibration rather than picked: Piper's own pause at a full
+#: stop runs 0.23 to 0.29 s. A gap set near that is indistinguishable from
+#: doing nothing, which is what the first attempt at this was. These are about
+#: double it, which is audibly more room to follow a sentence before the next
+#: one starts, without the delivery going slack.
+SENTENCE_GAP_S = 0.50
+PARAGRAPH_GAP_S = 0.85
+
+#: Splits on a full stop, question mark or exclamation followed by a space and
+#: something that starts a sentence. It deliberately will not split "8 kHz." in
+#: mid-line or a decimal, because those are not followed by a capital.
+SENTENCE_RE = re.compile(r'(?<=[.!?])\s+(?=[A-Z"“])')
+
 CUE_RE = re.compile(r"^\[([a-z0-9-]+)\]\s*$")
 
 
@@ -166,9 +190,33 @@ def gain_for(path: Path, label: str) -> float:
     return min(TARGET_RMS_DB - rms_db, PEAK_CEIL_DB - peak_db)
 
 
-def synthesise(text: str, out_path: Path, model: Path, tmp: Path) -> None:
-    """Piper -> raw wav -> sox -> normalised, trimmed, 44.1 kHz mono."""
-    raw = tmp / "raw.wav"
+def segments(text: str) -> list[tuple[str, float]]:
+    """
+    Split a cue into (sentence, gap_after_seconds).
+
+    Paragraphs are separated by a blank line in the script and get the longer
+    gap. The last segment gets no gap: trailing silence is the scene's business,
+    not this file's, and narration.py already holds a tail after each line.
+    """
+    out: list[tuple[str, float]] = []
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    for pi, paragraph in enumerate(paragraphs):
+        sentences = [s.strip() for s in SENTENCE_RE.split(paragraph) if s.strip()]
+        for si, sentence in enumerate(sentences):
+            last_in_paragraph = si == len(sentences) - 1
+            last_overall = last_in_paragraph and pi == len(paragraphs) - 1
+            if last_overall:
+                gap = 0.0
+            elif last_in_paragraph:
+                gap = PARAGRAPH_GAP_S
+            else:
+                gap = SENTENCE_GAP_S
+            out.append((sentence, gap))
+    return out
+
+
+def speak(text: str, model: Path, dest: Path, label: str) -> None:
+    """One sentence: Piper -> 44.1 kHz mono, trimmed of silence at both ends."""
     # The ~/.local/bin/piper wrapper drops --output_file and writes the WAV to
     # stdout, which is also how tools/make-audio.sh drives it. Pass the flag
     # anyway for a plain piper build, and take the audio from stdout.
@@ -180,31 +228,66 @@ def synthesise(text: str, out_path: Path, model: Path, tmp: Path) -> None:
         cmd, input=text.encode("utf-8"), capture_output=True, check=False
     )
     if proc.returncode != 0:
-        die(f"piper failed for {out_path.name}: {proc.stderr.decode()[:400]}")
+        die(f"piper failed for {label}: {proc.stderr.decode()[:400]}")
     if not proc.stdout.startswith(b"RIFF"):
         # A wrapper that prints diagnostics instead of audio would otherwise
         # sail straight into sox and produce nonsense.
-        die(f"piper output for {out_path.name} is not a RIFF/WAV stream: "
+        die(f"piper output for {label} is not a RIFF/WAV stream: "
             f"{proc.stdout[:80]!r} {proc.stderr.decode()[:200]}")
+    raw = dest.with_suffix(".raw.wav")
     raw.write_bytes(proc.stdout)
 
-    # Trim leading and trailing silence first: measuring the level before this
-    # would read whatever noise floor Piper left on the ends.
-    trimmed = tmp / "trimmed.wav"
+    # Trim each sentence's own silence, so the gap between sentences is the one
+    # set above rather than that plus whatever Piper left on the ends.
     sox = subprocess.run(
         [
-            "sox", str(raw), "-r", RATE, "-c", "1", "-b", "16", str(trimmed),
+            "sox", str(raw), "-r", RATE, "-c", "1", "-b", "16", str(dest),
             "silence", "1", "0.05", "0.5%", "reverse",
             "silence", "1", "0.05", "0.5%", "reverse",
         ],
         capture_output=True, check=False,
     )
-    if sox.returncode != 0 or not trimmed.is_file():
-        die(f"sox trim failed for {out_path.name}: {sox.stderr.decode()[:400]}")
+    raw.unlink(missing_ok=True)
+    if sox.returncode != 0 or not dest.is_file():
+        die(f"sox trim failed for {label}: {sox.stderr.decode()[:400]}")
 
-    gain_db = gain_for(trimmed, out_path.name)
+
+def synthesise(text: str, out_path: Path, model: Path, tmp: Path) -> None:
+    """Sentence at a time, rejoined with measured gaps, then levelled once."""
+    parts = segments(text)
+    if not parts:
+        die(f"no sentences in the text for {out_path.name}")
+
+    pieces: list[Path] = []
+    for i, (sentence, gap) in enumerate(parts):
+        piece = tmp / f"s{i:02d}.wav"
+        speak(sentence, model, piece, f"{out_path.name} sentence {i + 1}")
+        pieces.append(piece)
+        if gap > 0:
+            silence = tmp / f"g{i:02d}.wav"
+            sox = subprocess.run(
+                ["sox", "-n", "-r", RATE, "-c", "1", "-b", "16", str(silence),
+                 "trim", "0.0", f"{gap:.3f}"],
+                capture_output=True, check=False,
+            )
+            if sox.returncode != 0 or not silence.is_file():
+                die(f"sox could not make a {gap}s gap: {sox.stderr.decode()[:300]}")
+            pieces.append(silence)
+
+    joined = tmp / "joined.wav"
     sox = subprocess.run(
-        ["sox", str(trimmed), str(out_path), "gain", f"{gain_db:.3f}"],
+        ["sox", *[str(p) for p in pieces], str(joined)],
+        capture_output=True, check=False,
+    )
+    if sox.returncode != 0 or not joined.is_file():
+        die(f"sox concat failed for {out_path.name}: {sox.stderr.decode()[:400]}")
+
+    # One gain for the whole cue, not one per sentence. Levelling each sentence
+    # on its own would flatten the delivery, making a quiet clause as loud as
+    # an emphatic one.
+    gain_db = gain_for(joined, out_path.name)
+    sox = subprocess.run(
+        ["sox", str(joined), str(out_path), "gain", f"{gain_db:.3f}"],
         capture_output=True, check=False,
     )
     if sox.returncode != 0 or not out_path.is_file():

@@ -73,10 +73,19 @@ function fittedTicks(domain, pixels, perLabel = 62) {
 }
 
 /**
- * "She sells sea shells by the sea shore", female voice. Chosen because it is
- * the one clip in the set whose loudest vowel and loudest fricative are within
- * a decibel of each other, so the contrast the figure draws is a contrast in
- * shape and not in level.
+ * "She sells sea shells by the sea shore", female voice. Chosen because it has
+ * the smallest gap in the set between its loudest vowel and its loudest
+ * fricative, 10.7 dB. Every clip has a gap: turbulence is a much less
+ * efficient sound source than the vocal folds, so a fricative is always
+ * quieter than a vowel. The panels are therefore each scaled to their own
+ * peak, and the caption says so, because the contrast the figure is making is
+ * in shape and drawing them at true relative level would hide it.
+ *
+ * An earlier version of this claimed the two were within a decibel. That came
+ * from a selection bug: the closeup picked the loudest frame the pitch tracker
+ * failed on, which on this clip was a loud low-frequency sound with 93% of its
+ * energy below 1 kHz, and called it a fricative. See closeups() in
+ * tools/make-data.py.
  */
 const CLIP = "lj-c";
 
@@ -128,12 +137,14 @@ const CAPTIONS = {
     "how often it repeats, and you appear to have described the vowel. " +
     "Press play to hear the sentence, and watch where in it this window sits.",
   unvoiced:
-    "The same sentence, a fraction of a second later. There is no pulse and " +
+    "The “sh” of “shells”, from the same sentence. There is no pulse and " +
     "no rate to send. A fricative is air forced through a narrow gap, and it " +
     "is noise. Any description built on a repeating shape has nothing to hold " +
     "on to here, which is why a coder ends up having to decide, band by band, " +
     "which of the two it is looking at. Play it and listen for the hiss as " +
-    "the cursor crosses the marked window.",
+    "the cursor crosses the marked window. This panel is scaled up: the " +
+    "fricative is 10.7 dB quieter than the vowel, because turbulence is a " +
+    "far weaker sound source than the vocal folds.",
 };
 
 const SOURCE_NOTE =
@@ -357,8 +368,19 @@ export async function mount(root) {
     captionEl.innerHTML = `${CAPTIONS[state.which]} ${SOURCE_NOTE}`;
   }
 
+  // A sentence with no fricative in it gets no `unvoiced` window, which is the
+  // honest outcome rather than a fabricated one. Disable the button instead of
+  // silently showing the vowel under a "fricative" label.
+  for (const el of buttons) {
+    if (!data.closeups[el.dataset.window]) {
+      el.disabled = true;
+      el.title = "this sentence has no fricative loud enough to show";
+    }
+  }
+
   for (const el of buttons) {
     el.addEventListener("click", () => {
+      if (el.disabled) return;
       state.which = el.dataset.window;
       for (const other of buttons) {
         other.setAttribute("aria-pressed", other === el ? "true" : "false");

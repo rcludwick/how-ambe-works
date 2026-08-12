@@ -911,7 +911,14 @@ class Pipeline(MovingCameraScene):
             "to code the V/UV decisions in 8 different frequency bands”   ·   US 5,754,974",
             INK3,
         )
-        quote.move_to(np.array([0.2, -2.22, 0.0]))
+        # Hang the quote off whatever is actually above it, rather than at a
+        # hardcoded y. The fixed -2.22 put its first line straight through the
+        # third card, over "30 amplitudes": the cards are 1.15 tall with 0.34
+        # between them, so their stack reaches -2.21 and the quote's top edge
+        # sat above that. Any change to a card's height or the buff would have
+        # reintroduced it. Measuring means it cannot come back.
+        above = min(cards.get_bottom()[1], budget.get_bottom()[1])
+        quote.move_to(np.array([0.2, above - quote.height / 2 - 0.30, 0.0]))
         # The caveat that used to sit under the quote (that this is the
         # patent's example allocation, not D-STAR's, whose field layout is
         # unpublished) has been removed: at this camera position it landed on

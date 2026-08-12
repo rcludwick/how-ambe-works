@@ -38,7 +38,7 @@ back to sound.
   </video>
 
   <figcaption class="anim-figure__caption">
-    A hundred and fifteen narrated seconds for a fifth of a second of speech. Frame 48 of the
+    A hundred and twenty narrated seconds for a fifth of a second of speech. Frame 48 of the
     male CQ capture: the window, its spectrum, the pitch, eight band
     decisions, twenty-three harmonic amplitudes, the nine bytes the chip
     actually emitted (<code>1e987ff4dc6d784858</code>), and the decoded audio

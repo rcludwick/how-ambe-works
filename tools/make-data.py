@@ -56,6 +56,13 @@ BAND_VOICED_THRESH = 0.55  # band-limited autocorrelation above this reads as vo
 CLOSEUP_SAMPLES = 480  # 60 ms of raw samples — about seven male pitch periods
 CLOSEUP_VOICED_CONF = 0.6  # confidently periodic, for the "vowel" closeup
 CLOSEUP_UNVOICED_CONF = 0.3  # confidently aperiodic, for the "fricative" one
+CLOSEUP_FRICATIVE_HZ = 2000.0  # a fricative puts its energy above this
+CLOSEUP_FRICATIVE_SHARE = 0.5  # and most of it, or it is not one
+#: ...and it has to be audible. Silence is broadband, so the share test alone
+#: passes the noise floor between words: on "We were away a year ago", which
+#: contains no fricative at all, it selected a frame at -96 dBFS. A sentence
+#: with nothing to show gets no `unvoiced` window rather than a fake one.
+CLOSEUP_FRICATIVE_FLOOR_DB = -45.0
 
 # Hardware identification, as reported by `thumbdv-rig probe` on the device
 # that produced these captures. Update if you recapture on another stick.
@@ -358,7 +365,22 @@ def closeups(x, rows):
     by hand, so they follow the audio if a clip is ever recaptured:
 
       voiced    loudest confidently-periodic frame — a vowel, and a pulse train
-      unvoiced  loudest confidently-aperiodic frame — a fricative, and noise
+      unvoiced  loudest frame that is both aperiodic AND high-frequency
+                dominant — a fricative, and noise
+
+    The high-frequency test is not optional, and leaving it out was a real
+    error. "Aperiodic" alone selects whatever the pitch tracker happened to
+    fail on, which on this material is usually a loud LOW-frequency sound at a
+    voicing boundary, not a fricative at all. On lj-c it picked frame 24, which
+    has 93% of its energy below 1 kHz and 0.7% above 2.5 kHz. A figure calling
+    that "a fricative" is simply wrong, and two chapters said so before this
+    was caught.
+
+    Real fricatives are quiet. Across all eight clips the loudest true
+    fricative sits 10 to 24 dB below the loudest vowel, which is a fact about
+    speech rather than a defect in the selection: turbulence is a far less
+    efficient sound source than the vocal folds. Any figure drawing the two
+    together has to normalise them, and has to say that it did.
 
     Level is measured over the window that is actually returned, not over the
     20 ms frame that selected it. The window is three frames wide, so a frame
@@ -378,11 +400,28 @@ def closeups(x, rows):
             return SPEC_FLOOR_DB
         return db(float(math.sqrt(float((seg * seg).mean()))))
 
+    def high_fraction(i):
+        """Share of the window's energy above CLOSEUP_FRICATIVE_HZ."""
+        _, seg = window(i)
+        if len(seg) < 2:
+            return 0.0
+        spec = np.abs(np.fft.rfft(seg * np.hanning(len(seg)))) ** 2
+        freqs = np.fft.rfftfreq(len(seg), 1.0 / SR)
+        total = float(spec.sum())
+        if total <= 0:
+            return 0.0
+        return float(spec[freqs > CLOSEUP_FRICATIVE_HZ].sum()) / total
+
     d = [r["derived"] for r in rows]
     idx = range(len(rows))
     picks = {
         "voiced": [i for i in idx if d[i]["orig_f0_confidence"] >= CLOSEUP_VOICED_CONF],
-        "unvoiced": [i for i in idx if d[i]["orig_f0_confidence"] < CLOSEUP_UNVOICED_CONF],
+        "unvoiced": [
+            i for i in idx
+            if d[i]["orig_f0_confidence"] < CLOSEUP_UNVOICED_CONF
+            and high_fraction(i) >= CLOSEUP_FRICATIVE_SHARE
+            and window_rms_db(i) >= CLOSEUP_FRICATIVE_FLOOR_DB
+        ],
     }
 
     out = {}
