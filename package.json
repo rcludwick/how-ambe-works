@@ -1,0 +1,16 @@
+{
+  "name": "how-ambe-works-dev",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only tooling: type checks and figure tests. The site does not load any of this.",
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/three": "0.185.1",
+    "typescript": "5.6.3"
+  },
+  "scripts": {
+    "typecheck": "tsc -p jsconfig.json",
+    "test:figures": "playwright test"
+  }
+}

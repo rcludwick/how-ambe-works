@@ -1,0 +1,22 @@
+{
+  "slug": "harmonic-sum",
+  "page": "11-synthesis/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": false,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/harmonic-sum.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "front",
+    "side"
+  ],
+  "animation": "The sum accumulates: each new harmonic grows at its slot in the highlight, slides forward to the sum's plane at the sum's scale, the sum morphs to take it in, and it settles back; a step to every harmonic adds them one at a time, so the pulse forms as the crests line up; a phase change slides the curtains along time so the crests near t = 0 drift out of line from the dashed zero-phase sum.",
+  "highlight": "the newest harmonic (chip \"newest: harmonic k\")",
+  "zoom": true,
+  "allowance": 17788,
+  "rebaseline": [],
+  "rebaselineReason": null
+}

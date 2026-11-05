@@ -1,0 +1,28 @@
+{
+  "slug": "complex",
+  "page": "02-fourier-and-the-dft/",
+  "opens": "2d",
+  "alsoOn": [
+    "18-glossary/"
+  ],
+  "status": "live",
+  "screens": true,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/complex.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "end",
+    "real",
+    "imag",
+    "corner"
+  ],
+  "animation": "A sine wave is the shadow of a point going round a circle.",
+  "highlight": "the rotating point and its radius at the now-plane",
+  "zoom": true,
+  "allowance": 16256,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "Steps back (2026-10-14): the frame now sits under the step panel; its picture, step 1 at 35 degrees, is unchanged."
+}

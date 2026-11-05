@@ -1,0 +1,18 @@
+{
+  "slug": "vq-space",
+  "page": "09-quantization/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": false,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/vq-space.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": ["front", "top", "corner"],
+  "animation": "A stretched cloud leaves most cubes empty: from the Front view the camera turns to a raised three-quarter view, the dots lift into depth, the cells fade in as faint cubes, the empty ones dim to bare edges and a chip counts them, and the camera sweeps round the cube to the corner, one beat at a time.",
+  "highlight": "the probe's entry (a large highlight disc with a ring, its spokes and its cube; chip \"entry n of 64\"); with the probe off the cloud, its error (chip \"probe error 0.45, grid 0.0025\"); with the Speech dots, the cloud's long axis (chip \"most of the spread lies along this line: 21.3 dB\")",
+  "zoom": true,
+  "allowance": 16830,
+  "rebaseline": [],
+  "rebaselineReason": null
+}

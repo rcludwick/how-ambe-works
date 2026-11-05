@@ -1,0 +1,78 @@
+# Build and deploy the site to GitHub Pages.
+#
+# Triggers are deliberately limited to `push` on main and manual dispatch.
+# Do NOT add a `pull_request` trigger: the repo is public, and if this is ever
+# moved back to self-hosted hardware a fork PR could execute code on it.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # Type-checks the figure scripts. Runs on GitHub-hosted runners only, and
+  # the deploy needs it, so a push that breaks a checked script fails here
+  # instead of shipping.
+  check:
+    # The private repo holds the same file; it skips there, so the site is
+    # only ever built and deployed from the public repo.
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    # Only reads the repo. npm ci runs dev-dependency install scripts, which
+    # get neither Pages write nor an OIDC token; tsc needs none of them.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx tsc -p jsconfig.json
+      - run: bash tools/check-ts-pragma.sh
+      # The vendored three.js must be byte-for-byte what tools/vendor-three.sh
+      # copied, with no other file beside it. tools/verify-site.py also
+      # checks the built copy against upstream hashes it holds itself.
+      - run: bash tools/check-vendor-three.sh
+
+  deploy:
+    needs: [check]
+    if: github.event.repository.private == false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/configure-pages@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: 3.x
+
+      # zensical comes from uv.lock, so the build does not change version
+      # under a push that did not ask for it; --locked fails the run if the
+      # lock no longer matches pyproject.toml. --strict passed on 4df1a52.
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --locked --group docs
+      - run: uv run --locked --group docs zensical build --clean --strict
+
+      # Reads the built tree, not the repo: every figure's module and data
+      # files must be in site/. Never put this inside a cached step.
+      - name: Verify the built site
+        run: python3 tools/verify-site.py site
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - uses: actions/deploy-pages@v5
+        id: deployment

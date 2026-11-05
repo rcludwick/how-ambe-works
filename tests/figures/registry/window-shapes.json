@@ -1,0 +1,24 @@
+{
+  "slug": "window-shapes",
+  "page": "03-windows-and-frames/",
+  "opens": "2d",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/window-shapes.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "front",
+    "corner"
+  ],
+  "animation": "The window settles onto the block, pressing its ends down to zero (Hann) or nearly zero (Hamming) while the middle keeps its size, so the joint disappears.",
+  "highlight": "the block under the reader's window (chip: \"Hann: ends 0.00, middle 1.00\")",
+  "zoom": true,
+  "allowance": 12288,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "Steps back and one host (2026-10-14): the frame sits under the step panel; step 1 is still the rectangular window."
+}

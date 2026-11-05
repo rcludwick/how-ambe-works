@@ -1,0 +1,16 @@
+/* Applied while screens.spec.js takes a picture. The sticky site header
+   and the "Back to top" button cover whatever part of a figure sits under
+   them, which depends on the scroll position rather than on the figure, so
+   they are hidden. The button shows only after the page scrolls up.
+   visibility keeps their space, so nothing moves. */
+.md-header,
+.md-top {
+  visibility: hidden !important;
+}
+
+/* The ambient glows (extra.css section 9) drift and sit behind a figure's
+   rounded corners and the page around it; a picture is of the figure. */
+body::before,
+body::after {
+  content: none !important;
+}

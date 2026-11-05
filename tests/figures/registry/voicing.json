@@ -1,0 +1,23 @@
+{
+  "slug": "voicing",
+  "page": "07-multi-band-excitation/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/voicing.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "top",
+    "side"
+  ],
+  "animation": "One frame is one row of the whole clip: the view starts at Side on the frame on screen alone, which lines up with the One frame view's bands, then turns to Corner while the ridges, curtains and floor grow out along time from that frame; a threshold change slides the plane and recolours the ridges and floor as it passes them.",
+  "highlight": "where the threshold cuts the frame on screen (a 3.25 px highlight segment across its eight bands at the threshold, a dashed ink stem from each band's dot to it; chip \"threshold 0.55: 7 of 8 bands above\" in free stage, its leader to the segment's band 8 end)",
+  "sideMatch": "Side lines up with the One frame view in band position only (each band where the One frame view centres it, within 0.5 px). Its strength axis, 0 to 1, is laid on the One frame spectrum's height as a teaching choice: the One frame view draws band strength as small bars in the chips above the spectrum, not as height in it. matchPlot is not used, since it handles only the Front pose.",
+  "zoom": true,
+  "allowance": 22273,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "Task Z (QA): the One frame view's level strip, shown before the band strengths are measured, is drawn on the site's level ramp (--ambe-ramp-*, as tradeoff's spectrogram) instead of grey."
+}

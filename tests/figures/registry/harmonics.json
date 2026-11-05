@@ -1,0 +1,27 @@
+{
+  "slug": "harmonics",
+  "page": "07-multi-band-excitation/",
+  "alsoOn": [
+    ""
+  ],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/harmonics.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "front",
+    "corner",
+    "top",
+    "side"
+  ],
+  "animation": "A lower pitch packs more harmonics under the same 3.7 kHz cutoff.",
+  "highlight": "the comb at the current fundamental (chip: \"f0 <f0> Hz: L = <L> harmonics\")",
+  "zoom": true,
+  "allowance": 10240,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "the cutoff label on the canvas reads \"cutoff at 3.7 kHz\" (lib/cutoff.js), and the em dash it carried is gone"
+}

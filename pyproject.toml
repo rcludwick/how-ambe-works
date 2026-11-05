@@ -1,0 +1,35 @@
+# Python dependencies for this repository, managed with uv.
+#
+# There is no Python package here to install. This file exists so that `uv`
+# can build an environment reproducibly, and so the Python VERSION is pinned
+# rather than left to whatever `python3` happens to be.
+#
+# `uv` fetches 3.12 if the machine does not have it.
+#
+#   uv run --group docs zensical build              # build the site
+#   uv run --group data python tools/make-data.py   # regenerate figure data
+#
+# Regenerate the lock after editing:  uv lock
+[project]
+name = "how-ambe-works"
+version = "0"
+description = "Tooling for the How AMBE Works site: data and audio."
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+# Nothing here is importable as a library, so do not try to build it.
+[tool.uv]
+package = false
+
+[dependency-groups]
+# Generating the figure data (make-data.py) and drawing the figure fallback
+# images (make-posters.py).
+data = [
+  "numpy>=1.26",
+  "pillow>=10",
+]
+
+# Building the site.
+docs = [
+  "zensical",
+]

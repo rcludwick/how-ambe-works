@@ -1,0 +1,26 @@
+{
+  "slug": "probe",
+  "page": "02-fourier-and-the-dft/",
+  "host": "#fig-2-2",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/probe.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "end",
+    "top",
+    "front",
+    "corner"
+  ],
+  "animation": "Multiplying by the test wave and adding up gives a large sum only at the matching frequency.",
+  "highlight": "the running sum's path and its end on the plane of the two sums",
+  "zoom": true,
+  "allowance": 16256,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "Steps back and one experiment per host (2026-10-14): the shared specs test #fig-2-2, both tests on, on its first step (recording at 90 degrees)."
+}

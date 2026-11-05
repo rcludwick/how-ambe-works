@@ -1,0 +1,19 @@
+{
+  "slug": "utterance-spectra",
+  "page": "01-why-sinusoids/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/utterance-spectra.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": ["front", "corner", "top"],
+  "animation": "A sentence is a run of different spectra, one every 20 ms.",
+  "highlight": "the selected window's spectrum (chip: this frame: 20 ms at <t> s)",
+  "zoom": true,
+  "allowance": 14272,
+  "maxSegments": 60000,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "step 1 applies the low-heavy pick at init (window 24, not 40% of the way), the selected spectrum is drawn in the highlight, the frame is 16 / 10 (4 / 3.4 on a phone), the frequency axis is labelled in Hz as in 3D, and the energy strip has headroom so the sentence's label never covers its peaks"
+}

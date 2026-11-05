@@ -1,0 +1,131 @@
+[project]
+site_url = "https://rcludwick.github.io/how-ambe-works/"
+site_name = "How AMBE Works"
+site_description = "An illustrated, source-cited explanation of the AMBE voice codec"
+copyright = "Rob Ludwick, AJ7HR"
+
+repo_url = "https://github.com/rcludwick/how-ambe-works"
+repo_name = "rcludwick/how-ambe-works"
+
+nav = [
+  { "How AMBE Works" = "index.md" },
+  { "Part I: The mathematics" = [
+    { "Sinusoids" = "01-why-sinusoids.md" },
+    { "The Fourier transform and the DFT" = "02-fourier-and-the-dft.md" },
+    { "Windows and frames" = "03-windows-and-frames.md" },
+    { "Why vocoders discard phase" = "04-phase.md" },
+  ] },
+  { "Part II: How speech works" = [
+    { "Voice as source and filter" = "05-source-and-filter.md" },
+    { "Reading a spectrogram" = "06-reading-a-spectrogram.md" },
+  ] },
+  { "Part III: The model" = [
+    { "Multi-band excitation" = "07-multi-band-excitation.md" },
+    { "How the encoder measures pitch, voicing and amplitudes" = "08-analysis.md" },
+    { "Turning measurements into bits" = "09-quantization.md" },
+    { "The D-STAR frame on the air" = "10-the-dstar-frame.md" },
+    { "Synthesis: rebuilding the voice" = "11-synthesis.md" },
+  ] },
+  { "Part IV: Hearing it" = [
+    { "Listen: real hardware examples" = "12-listen.md" },
+  ] },
+  { "Part V: Reference" = [
+    { "The patent landscape" = "16-patents.md" },
+    { "Sources and method" = "17-sources.md" },
+    { "Glossary" = "18-glossary.md" },
+    { "Interactive diagrams" = "19-diagrams.md" },
+  ] },
+]
+
+extra_css = ["stylesheets/extra.css", "stylesheets/anim.css"]
+
+# One entry point: javascripts/anim.js imports the shared runtime
+# (anim-core.js) and then every figure module, so load order is fixed by the
+# module graph rather than by the order of this list. Register a new figure in
+# javascripts/anim.js, not here.
+#
+# It is an ES module and MUST be declared with type = "module" — a bare string
+# entry emits a classic <script>, and the import statements fail to parse.
+extra_javascript = [
+  { path = "javascripts/anim.js", type = "module" },
+]
+
+[project.theme]
+language = "en"
+# The CSS sets the Apple system font stack, so the theme's webfonts were
+# fetched from fonts.googleapis.com on every page view and never used.
+font = false
+features = [
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+  "toc.integrate",
+]
+
+# Dark by default: built-in "slate" scheme.
+[project.theme.palette]
+scheme = "slate"
+primary = "indigo"
+accent = "amber"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+toc = {
+  permalink = true
+}
+pymdownx.arithmatex = {
+  generic = true
+}
+pymdownx.betterem = {}
+pymdownx.caret = {}
+pymdownx.details = {}
+pymdownx.emoji = {
+  emoji_generator = "zensical.extensions.emoji.to_svg",
+  emoji_index = "zensical.extensions.emoji.twemoji",
+}
+pymdownx.highlight = {
+  anchor_linenums = true,
+  line_spans = "__span",
+  pygments_lang_class = true,
+}
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.magiclink = {}
+pymdownx.mark = {}
+pymdownx.smartsymbols = {}
+pymdownx.superfences = {
+  custom_fences = [
+    {
+      name = "mermaid",
+      class = "mermaid",
+      format = "pymdownx.superfences.fence_code_format",
+    },
+  ],
+}
+pymdownx.tabbed = {
+  alternate_style = true,
+  combine_header_slug = true
+}
+pymdownx.tasklist = {
+  custom_checkbox = true
+}
+pymdownx.tilde = {}

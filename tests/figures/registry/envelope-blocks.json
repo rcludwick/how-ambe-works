@@ -1,0 +1,23 @@
+{
+  "slug": "envelope-blocks",
+  "page": "09-quantization/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/envelope-blocks.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "front",
+    "oblique"
+  ],
+  "animation": "Keeping fewer coefficients loses detail first, tilt next, level never.",
+  "highlight": "the selected k slice (chip on frame 112 at k = 2: \"2 coefficients: 96.3% of the energy\")",
+  "zoom": true,
+  "allowance": 13985,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "a new figure: these are its first frame-reduced baselines, not a change to existing ones"
+}

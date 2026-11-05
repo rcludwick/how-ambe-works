@@ -1,0 +1,24 @@
+{
+  "slug": "envelope",
+  "page": "09-quantization/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-ref=\"view3d\"]",
+  "poster": "assets/posters/envelope.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "front",
+    "top"
+  ],
+  "animation": "Over a voiced stretch, each 20 ms frame gives a similar envelope with a different number of harmonics under it.",
+  "highlight": "frame 112's row (chip: \"frame 112: L = 28\")",
+  "zoom": true,
+  "allowance": 13985,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "the header moved from the canvas to DOM readouts, the harmonics stop at the 3.7 kHz cutoff, and the Frame slider runs over the voiced stretch only"
+}

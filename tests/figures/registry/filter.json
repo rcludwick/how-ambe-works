@@ -1,0 +1,18 @@
+{
+  "slug": "filter",
+  "page": "01-why-sinusoids/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": null,
+  "poster": "assets/posters/filter.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [],
+  "animation": null,
+  "highlight": null,
+  "zoom": false,
+  "allowance": 0,
+  "rebaseline": [],
+  "rebaselineReason": null
+}

@@ -1,0 +1,18 @@
+{
+  "slug": "utterance",
+  "page": "01-why-sinusoids/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/utterance.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": ["front", "corner", "along"],
+  "animation": "A vowel is one pitch period repeated; a fricative has no period to stack.",
+  "highlight": "the period that holds the window's largest sample",
+  "zoom": true,
+  "allowance": 14272,
+  "rebaseline": [],
+  "rebaselineReason": null
+}

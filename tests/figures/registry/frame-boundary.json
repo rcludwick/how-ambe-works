@@ -1,0 +1,19 @@
+{
+  "slug": "frame-boundary",
+  "page": "11-synthesis/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "[data-view=\"3d\"]",
+  "poster": "assets/posters/frame-boundary.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": ["front", "oblique", "side"],
+  "opens": "2d",
+  "animation": "Crossfading at the boundary barely touches the low harmonics and takes every harmonic from 5 up below half; above harmonic 8 the envelope dips more than once.",
+  "highlight": "each rule's subject: harmonic 8's envelope (lane l = 8), the first harmonic the patent always crossfades; harmonic 4 once the pitch gate closes; harmonic 10, a handover lane, in the voicing change",
+  "zoom": true,
+  "allowance": 13506,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "a new figure: its first baselines (the flat view at step 1, the crossfade)"
+}
