@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "skipLibCheck": true,
+    "types": [],
+    "rootDirs": ["docs/javascripts", "tests/figures/fixtures/javascripts"]
+  },
+  "include": ["docs/javascripts/**/*.js", "tests/figures/fixtures/javascripts/*.js", "types/**/*.d.ts"],
+  "exclude": ["docs/javascripts/vendor/**/*.js", "site/**", "node_modules/**"]
+}

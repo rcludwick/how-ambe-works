@@ -1,0 +1,24 @@
+{
+  "slug": "leakage",
+  "page": "03-windows-and-frames/",
+  "opens": "2d",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/leakage.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "front",
+    "corner"
+  ],
+  "animation": "Off a bin, one tone spreads into every bin; a window trades that spread for a wider peak.",
+  "highlight": "the selected row: the spectrum of the reader's setting, along its stem tips",
+  "zoom": true,
+  "allowance": 16256,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "Steps back and one host (2026-10-14): the frame sits under the step panel; step 1 is still six whole cycles, rectangular, under reduced motion."
+}

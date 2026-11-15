@@ -1,0 +1,18 @@
+{
+  "slug": "pitch-search",
+  "page": "08-analysis/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/pitch-search.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": ["corner", "front", "side", "top"],
+  "animation": "The score adds the correlation at every multiple of a candidate period, so half the true period also scores high.",
+  "highlight": "the candidate period's comb (chip: \"P = 46 samples: Ψ 44.45\"; at 23, \"79% of the score at 46\"); in the whole clip, the tracker's step into the selected frame, an arrow (chip: \"frame 67: tracker 57.3 samples\")",
+  "zoom": true,
+  "allowance": 16256,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "A new figure: these are its first 2D baselines, added, not changed."
+}

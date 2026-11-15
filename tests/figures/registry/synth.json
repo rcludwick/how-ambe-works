@@ -1,0 +1,24 @@
+{
+  "slug": "synth",
+  "page": "11-synthesis/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/synth.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "front",
+    "top"
+  ],
+  "animation": "Each frame's spectrum is built from two generators, chosen band by band.",
+  "highlight": "the selected frame's slice: its measured spectrum, outlined, with the chip \"this frame: <f0> Hz, <n> of 8 bands voiced\"",
+  "zoom": true,
+  "allowance": 13506,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "The flat view's panel labels lose their em dashes (\"Voiced: harmonic oscillator bank\")."
+}

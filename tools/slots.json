@@ -1,0 +1,603 @@
+{
+  "comment": "Who owns what (three-everywhere plan decision 15). A figure task changes only its own files (globs) and the lines between its own slot markers. tools/check-slots.py checks a branch against base; --inventory checks that every block exists as often as listed here.",
+  "base": "main",
+  "markers": {
+    ".js": [
+      "/* slot: {slug} */",
+      "/* end slot: {slug} */"
+    ],
+    ".css": [
+      "/* slot: {slug} */",
+      "/* end slot: {slug} */"
+    ],
+    ".md": [
+      "<!-- slot: {slug} -->",
+      "<!-- end slot: {slug} -->"
+    ],
+    ".py": [
+      "# slot: {slug}",
+      "# end slot: {slug}"
+    ]
+  },
+  "slugs": {
+    "utterance": {
+      "files": [
+        "docs/javascripts/anim-utterance.js",
+        "docs/javascripts/anim-utterance-3d.js",
+        "docs/javascripts/lib/periods.js",
+        "tools/posters/utterance.py",
+        "tests/tools/test_poster_utterance.py",
+        "docs/assets/posters/utterance.png",
+        "tests/figures/registry/utterance.json",
+        "tests/figures/utterance.spec.js",
+        "tests/figures/utterance-3d.spec.js",
+        "tests/figures/utterance-lib.spec.js",
+        "tests/figures/__screenshots__/utterance.spec.js/*",
+        "tests/figures/__screenshots__/utterance-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-utterance-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-utterance-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/01-why-sinusoids.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "filter": {
+      "files": [
+        "docs/javascripts/anim-filter.js",
+        "docs/javascripts/lib/filter.js",
+        "tools/posters/filter.py",
+        "tests/tools/test_poster_filter.py",
+        "docs/assets/posters/filter.png",
+        "tests/figures/registry/filter.json",
+        "tests/figures/filter.spec.js",
+        "tests/figures/filter-lib.spec.js",
+        "tests/figures/__screenshots__/filter.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-filter-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-filter-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/01-why-sinusoids.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "three-numbers": {
+      "files": [
+        "docs/javascripts/anim-three-numbers.js",
+        "docs/javascripts/anim-three-numbers-3d.js",
+        "tools/posters/three_numbers.py",
+        "tests/tools/test_poster_three_numbers.py",
+        "docs/assets/posters/three-numbers.png",
+        "tests/figures/registry/three-numbers.json",
+        "tests/figures/three-numbers.spec.js",
+        "tests/figures/three-numbers-3d.spec.js",
+        "tests/figures/three-numbers-lib.spec.js",
+        "tests/figures/__screenshots__/three-numbers.spec.js/*",
+        "tests/figures/__screenshots__/three-numbers-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-three-numbers-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-three-numbers-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/01-why-sinusoids.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "utterance-spectra": {
+      "files": [
+        "docs/javascripts/anim-utterance-spectra.js",
+        "docs/javascripts/anim-utterance-spectra-3d.js",
+        "tools/posters/utterance_spectra.py",
+        "tests/tools/test_poster_utterance_spectra.py",
+        "docs/assets/posters/utterance-spectra.png",
+        "tests/figures/registry/utterance-spectra.json",
+        "tests/figures/utterance-spectra.spec.js",
+        "tests/figures/utterance-spectra-3d.spec.js",
+        "tests/figures/utterance-spectra-lib.spec.js",
+        "tests/figures/__screenshots__/utterance-spectra.spec.js/*",
+        "tests/figures/__screenshots__/utterance-spectra-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-utterance-spectra-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-utterance-spectra-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/01-why-sinusoids.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/javascripts/lib/picks.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-data.py": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "complex": {
+      "files": [
+        "docs/javascripts/anim-complex.js",
+        "docs/javascripts/anim-complex-3d.js",
+        "tools/posters/complex.py",
+        "tests/tools/test_poster_complex.py",
+        "docs/assets/posters/complex.png",
+        "tests/figures/registry/complex.json",
+        "tests/figures/complex.spec.js",
+        "tests/figures/complex-3d.spec.js",
+        "tests/figures/complex-lib.spec.js",
+        "tests/figures/__screenshots__/complex.spec.js/*",
+        "tests/figures/__screenshots__/complex-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-complex-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-complex-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/02-fourier-and-the-dft.md": 1,
+        "docs/18-glossary.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "probe": {
+      "files": [
+        "docs/javascripts/anim-probe.js",
+        "docs/javascripts/anim-probe-3d.js",
+        "docs/javascripts/lib/probe.js",
+        "tools/posters/probe.py",
+        "tests/tools/test_poster_probe.py",
+        "docs/assets/posters/probe.png",
+        "tests/figures/registry/probe.json",
+        "tests/figures/probe.spec.js",
+        "tests/figures/probe-3d.spec.js",
+        "tests/figures/probe-lib.spec.js",
+        "tests/figures/__screenshots__/probe.spec.js/*",
+        "tests/figures/__screenshots__/probe-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-probe-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-probe-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/02-fourier-and-the-dft.md": 4,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "window-shapes": {
+      "files": [
+        "docs/javascripts/anim-window-shapes.js",
+        "docs/javascripts/anim-window-shapes-3d.js",
+        "docs/javascripts/lib/window-shapes.js",
+        "tools/posters/window_shapes.py",
+        "tests/tools/test_poster_window_shapes.py",
+        "docs/assets/posters/window-shapes.png",
+        "tests/figures/registry/window-shapes.json",
+        "tests/figures/window-shapes.spec.js",
+        "tests/figures/window-shapes-3d.spec.js",
+        "tests/figures/window-shapes-lib.spec.js",
+        "tests/figures/__screenshots__/window-shapes.spec.js/*",
+        "tests/figures/__screenshots__/window-shapes-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-window-shapes-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-window-shapes-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/03-windows-and-frames.md": 2,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "leakage": {
+      "files": [
+        "docs/javascripts/anim-leakage.js",
+        "docs/javascripts/anim-leakage-3d.js",
+        "docs/javascripts/lib/leakage.js",
+        "tools/posters/leakage.py",
+        "tests/tools/test_poster_leakage.py",
+        "docs/assets/posters/leakage.png",
+        "tests/figures/registry/leakage.json",
+        "tests/figures/leakage.spec.js",
+        "tests/figures/leakage-3d.spec.js",
+        "tests/figures/leakage-lib.spec.js",
+        "tests/figures/__screenshots__/leakage.spec.js/*",
+        "tests/figures/__screenshots__/leakage-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-leakage-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-leakage-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/03-windows-and-frames.md": 4,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "tradeoff": {
+      "files": [
+        "docs/javascripts/anim-tradeoff.js",
+        "docs/javascripts/anim-tradeoff-3d.js",
+        "docs/javascripts/lib/fft.js",
+        "tools/posters/tradeoff.py",
+        "tests/tools/test_poster_tradeoff.py",
+        "docs/assets/posters/tradeoff.png",
+        "tests/figures/registry/tradeoff.json",
+        "tests/figures/tradeoff.spec.js",
+        "tests/figures/tradeoff-3d.spec.js",
+        "tests/figures/tradeoff-lib.spec.js",
+        "tests/figures/__screenshots__/tradeoff.spec.js/*",
+        "tests/figures/__screenshots__/tradeoff-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-tradeoff-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-tradeoff-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/03-windows-and-frames.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "frames": {
+      "files": [
+        "docs/javascripts/anim-frames.js",
+        "docs/javascripts/anim-frames-3d.js",
+        "tools/posters/frames.py",
+        "tests/tools/test_poster_frames.py",
+        "docs/assets/posters/frames.png",
+        "tests/figures/registry/frames.json",
+        "tests/figures/frames.spec.js",
+        "tests/figures/frames-3d.spec.js",
+        "tests/figures/frames-lib.spec.js",
+        "tests/figures/__screenshots__/frames.spec.js/*",
+        "tests/figures/__screenshots__/frames-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-frames-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-frames-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/08-analysis.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "pitch-search": {
+      "files": [
+        "docs/javascripts/anim-pitch-search.js",
+        "docs/javascripts/anim-pitch-search-3d.js",
+        "docs/javascripts/lib/pitch.js",
+        "tools/posters/pitch_search.py",
+        "tests/tools/test_poster_pitch_search.py",
+        "docs/assets/posters/pitch-search.png",
+        "tests/figures/registry/pitch-search.json",
+        "tests/figures/pitch-search.spec.js",
+        "tests/figures/pitch-search-3d.spec.js",
+        "tests/figures/pitch-search-lib.spec.js",
+        "tests/figures/__screenshots__/pitch-search.spec.js/*",
+        "tests/figures/__screenshots__/pitch-search-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-pitch-search-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-pitch-search-frame-reduced-*.png",
+        "tools/data/correlogram.py",
+        "docs/assets/data/*/correlogram.json"
+      ],
+      "blocks": {
+        "docs/08-analysis.md": 1,
+        "docs/assets/data/SCHEMA.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-data.py": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "harmonics": {
+      "files": [
+        "docs/javascripts/anim-harmonics.js",
+        "docs/javascripts/anim-harmonics-3d.js",
+        "tools/posters/harmonics.py",
+        "tests/tools/test_poster_harmonics.py",
+        "docs/assets/posters/harmonics.png",
+        "tests/figures/registry/harmonics.json",
+        "tests/figures/harmonics.spec.js",
+        "tests/figures/harmonics-3d.spec.js",
+        "tests/figures/harmonics-lib.spec.js",
+        "tests/figures/__screenshots__/harmonics.spec.js/*",
+        "tests/figures/__screenshots__/harmonics-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-harmonics-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-harmonics-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/07-multi-band-excitation.md": 1,
+        "docs/index.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "voicing": {
+      "files": [
+        "docs/javascripts/anim-voicing.js",
+        "docs/javascripts/anim-voicing-3d.js",
+        "tools/posters/voicing.py",
+        "tests/tools/test_poster_voicing.py",
+        "docs/assets/posters/voicing.png",
+        "tests/figures/registry/voicing.json",
+        "tests/figures/voicing.spec.js",
+        "tests/figures/voicing-3d.spec.js",
+        "tests/figures/voicing-lib.spec.js",
+        "tests/figures/__screenshots__/voicing.spec.js/*",
+        "tests/figures/__screenshots__/voicing-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-voicing-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-voicing-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/07-multi-band-excitation.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 2
+      }
+    },
+    "vq-space": {
+      "files": [
+        "docs/javascripts/anim-vq-space.js",
+        "docs/javascripts/anim-vq-space-3d.js",
+        "tools/posters/vq_space.py",
+        "tests/tools/test_poster_vq_space.py",
+        "docs/assets/posters/vq-space.png",
+        "tests/figures/registry/vq-space.json",
+        "tests/figures/vq-space.spec.js",
+        "tests/figures/vq-space-3d.spec.js",
+        "tests/figures/vq-space-lib.spec.js",
+        "tests/figures/__screenshots__/vq-space.spec.js/*",
+        "tests/figures/__screenshots__/vq-space-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-vq-space-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-vq-space-frame-reduced-*.png",
+        "tools/data/harmonic_triples.py",
+        "docs/assets/data/harmonic-triples.json"
+      ],
+      "blocks": {
+        "docs/09-quantization.md": 1,
+        "docs/assets/data/SCHEMA.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-data.py": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "envelope": {
+      "files": [
+        "docs/javascripts/anim-envelope.js",
+        "docs/javascripts/anim-envelope-3d.js",
+        "tools/posters/envelope.py",
+        "tests/tools/test_poster_envelope.py",
+        "docs/assets/posters/envelope.png",
+        "tests/figures/registry/envelope.json",
+        "tests/figures/envelope.spec.js",
+        "tests/figures/envelope-3d.spec.js",
+        "tests/figures/envelope-lib.spec.js",
+        "tests/figures/__screenshots__/envelope.spec.js/*",
+        "tests/figures/__screenshots__/envelope-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-envelope-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-envelope-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/09-quantization.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/javascripts/lib/picks.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-data.py": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "envelope-blocks": {
+      "files": [
+        "docs/javascripts/anim-envelope-blocks.js",
+        "docs/javascripts/anim-envelope-blocks-3d.js",
+        "docs/javascripts/lib/dct.js",
+        "tools/posters/envelope_blocks.py",
+        "tests/tools/test_poster_envelope_blocks.py",
+        "docs/assets/posters/envelope-blocks.png",
+        "tests/figures/registry/envelope-blocks.json",
+        "tests/figures/envelope-blocks.spec.js",
+        "tests/figures/envelope-blocks-3d.spec.js",
+        "tests/figures/envelope-blocks-lib.spec.js",
+        "tests/figures/__screenshots__/envelope-blocks.spec.js/*",
+        "tests/figures/__screenshots__/envelope-blocks-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-envelope-blocks-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-envelope-blocks-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/09-quantization.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "frame-path": {
+      "files": [
+        "docs/javascripts/anim-frame-path.js",
+        "docs/javascripts/anim-frame-path-3d.js",
+        "tools/posters/frame_path.py",
+        "tests/tools/test_poster_frame_path.py",
+        "docs/assets/posters/frame-path.png",
+        "tests/figures/registry/frame-path.json",
+        "tests/figures/frame-path.spec.js",
+        "tests/figures/frame-path-3d.spec.js",
+        "tests/figures/frame-path-lib.spec.js",
+        "tests/figures/__screenshots__/frame-path.spec.js/*",
+        "tests/figures/__screenshots__/frame-path-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-frame-path-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-frame-path-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/10-the-dstar-frame.md": 2,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "bits": {
+      "files": [
+        "docs/javascripts/anim-bits.js",
+        "docs/javascripts/anim-bits-3d.js",
+        "tools/posters/bits.py",
+        "tests/tools/test_poster_bits.py",
+        "docs/assets/posters/bits.png",
+        "tests/figures/registry/bits.json",
+        "tests/figures/bits.spec.js",
+        "tests/figures/bits-3d.spec.js",
+        "tests/figures/bits-lib.spec.js",
+        "tests/figures/__screenshots__/bits.spec.js/*",
+        "tests/figures/__screenshots__/bits-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-bits-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-bits-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/10-the-dstar-frame.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "fec-protection": {
+      "files": [
+        "docs/javascripts/anim-fec-protection.js",
+        "docs/javascripts/anim-fec-protection-3d.js",
+        "docs/javascripts/lib/fec.js",
+        "tools/posters/fec_protection.py",
+        "tests/tools/test_poster_fec_protection.py",
+        "docs/assets/posters/fec-protection.png",
+        "tests/figures/registry/fec-protection.json",
+        "tests/figures/fec-protection.spec.js",
+        "tests/figures/fec-protection-3d.spec.js",
+        "tests/figures/fec-protection-lib.spec.js",
+        "tests/figures/__screenshots__/fec-protection.spec.js/*",
+        "tests/figures/__screenshots__/fec-protection-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-fec-protection-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-fec-protection-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/10-the-dstar-frame.md": 2,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "harmonic-sum": {
+      "files": [
+        "docs/javascripts/anim-harmonic-sum.js",
+        "docs/javascripts/anim-harmonic-sum-3d.js",
+        "tools/posters/harmonic_sum.py",
+        "tests/tools/test_poster_harmonic_sum.py",
+        "docs/assets/posters/harmonic-sum.png",
+        "tests/figures/registry/harmonic-sum.json",
+        "tests/figures/harmonic-sum.spec.js",
+        "tests/figures/harmonic-sum-3d.spec.js",
+        "tests/figures/harmonic-sum-lib.spec.js",
+        "tests/figures/__screenshots__/harmonic-sum.spec.js/*",
+        "tests/figures/__screenshots__/harmonic-sum-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-harmonic-sum-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-harmonic-sum-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/11-synthesis.md": 2,
+        "docs/javascripts/anim.js": 1,
+        "docs/javascripts/lib/harmonics.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "synth": {
+      "files": [
+        "docs/javascripts/anim-synth.js",
+        "docs/javascripts/anim-synth-3d.js",
+        "docs/javascripts/lib/synth-model.js",
+        "tools/posters/synth.py",
+        "tests/tools/test_poster_synth.py",
+        "docs/assets/posters/synth.png",
+        "tests/figures/registry/synth.json",
+        "tests/figures/synth.spec.js",
+        "tests/figures/synth-3d.spec.js",
+        "tests/figures/synth-lib.spec.js",
+        "tests/figures/__screenshots__/synth.spec.js/*",
+        "tests/figures/__screenshots__/synth-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-synth-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-synth-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/11-synthesis.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "frame-boundary": {
+      "files": [
+        "docs/javascripts/anim-frame-boundary.js",
+        "docs/javascripts/anim-frame-boundary-3d.js",
+        "docs/javascripts/lib/boundary.js",
+        "tools/posters/frame_boundary.py",
+        "tests/tools/test_poster_frame_boundary.py",
+        "docs/assets/posters/frame-boundary.png",
+        "tests/figures/registry/frame-boundary.json",
+        "tests/figures/frame-boundary.spec.js",
+        "tests/figures/frame-boundary-3d.spec.js",
+        "tests/figures/frame-boundary-lib.spec.js",
+        "tests/figures/__screenshots__/frame-boundary.spec.js/*",
+        "tests/figures/__screenshots__/frame-boundary-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-frame-boundary-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-frame-boundary-frame-reduced-*.png"
+      ],
+      "blocks": {
+        "docs/11-synthesis.md": 3,
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "listen-terrain": {
+      "files": [
+        "docs/javascripts/anim-listen-terrain.js",
+        "docs/javascripts/anim-listen-terrain-3d.js",
+        "tools/posters/listen_terrain.py",
+        "tests/tools/test_poster_listen_terrain.py",
+        "docs/assets/posters/listen-terrain.png",
+        "tests/figures/registry/listen-terrain.json",
+        "tests/figures/listen-terrain.spec.js",
+        "tests/figures/listen-terrain-3d.spec.js",
+        "tests/figures/listen-terrain-lib.spec.js",
+        "tests/figures/__screenshots__/listen-terrain.spec.js/*",
+        "tests/figures/__screenshots__/listen-terrain-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-listen-terrain-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-listen-terrain-frame-reduced-*.png",
+        "docs/12-listen.md",
+        "tools/listen-stats.py"
+      ],
+      "blocks": {
+        "docs/javascripts/anim.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-site.py": 1
+      }
+    },
+    "gain-definitions": {
+      "files": [
+        "docs/javascripts/anim-gain-definitions.js",
+        "docs/javascripts/anim-gain-definitions-3d.js",
+        "tools/posters/gain_definitions.py",
+        "tests/tools/test_poster_gain_definitions.py",
+        "docs/assets/posters/gain-definitions.png",
+        "tests/figures/registry/gain-definitions.json",
+        "tests/figures/gain-definitions.spec.js",
+        "tests/figures/gain-definitions-3d.spec.js",
+        "tests/figures/gain-definitions-lib.spec.js",
+        "tests/figures/__screenshots__/gain-definitions.spec.js/*",
+        "tests/figures/__screenshots__/gain-definitions-3d.spec.js/*",
+        "tests/figures/__screenshots__/screens.spec.js/*-gain-definitions-figure-*.png",
+        "tests/figures/__screenshots__/screens.spec.js/*-gain-definitions-frame-reduced-*.png",
+        "tools/gain-stats.py"
+      ],
+      "blocks": {
+        "docs/13-what-is-not-established.md": 1,
+        "docs/javascripts/anim.js": 1,
+        "docs/javascripts/lib/picks.js": 1,
+        "docs/stylesheets/anim.css": 1,
+        "tools/verify-data.py": 1,
+        "tools/verify-site.py": 1
+      }
+    }
+  }
+}

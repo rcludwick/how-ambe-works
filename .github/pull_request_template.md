@@ -1,0 +1,3 @@
+- [ ] No JS path turns a sequence of frames into audio.
+- [ ] No JS path reads `hex` bits into parameters.
+- [ ] No figure module hard-codes a frame index.

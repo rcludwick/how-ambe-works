@@ -1,0 +1,22 @@
+{
+  "slug": "fec-protection",
+  "page": "10-the-dstar-frame/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/fec-protection.png",
+  "monolith": false,
+  "headOn": true,
+  "presets": [
+    "front"
+  ],
+  "animation": "Interleaving spreads a burst of errors so each codeword sees few enough to correct.",
+  "highlight": "the codeword with the most errors",
+  "zoom": true,
+  "allowance": 12368,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "A new figure: its 2D default-state baselines (step 1's end state, desktop and phone) are recorded for the first time. At Task Z its phone labels grew from 9 to 11 CSS px."
+}

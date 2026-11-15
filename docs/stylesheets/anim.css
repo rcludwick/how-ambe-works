@@ -1,0 +1,3925 @@
+/* ===========================================================================
+   How AMBE Works: animation figure chrome
+   ---------------------------------------------------------------------------
+   Presentation only. Nothing here knows anything about AMBE; it is the frame
+   around a canvas or an image, plus the controls that drive it.
+   Every colour comes from a token defined in extra.css.
+
+   Host markup, in the chapter (figures added from 2026-10-08 on)
+   ---------------------------------------------------------------------------
+   <div data-anim="harmonic-sum" data-clips="lj-b,lr-a" markdown="1">
+   <figure class="anim-fallback" markdown="0">
+     <img src="../assets/posters/harmonic-sum.png" width="1280" height="720"
+          loading="lazy" alt="...">
+     <figcaption>The same caption as the live figure.</figcaption>
+   </figure>
+   <ol class="anim-steps" markdown="1">
+   <li data-n="1" markdown="block">Step text, with a source.[^key]</li>
+   </ol>
+   </div>
+
+   The <ol> needs markdown="1" as well as each <li> markdown="block", or the
+   step text is not parsed (tests/tools/test_markup.py). Older figures use a
+   bare <div data-anim="..."></div>.
+
+   Live figure, appended by the module after the fallback
+   ---------------------------------------------------------------------------
+   <figure class="anim-figure">
+     <div class="anim-figure__head">
+       <p class="anim-figure__title">Pitch track over one utterance</p>
+     </div>
+     <div class="anim-figure__scroll">          <!-- optional: wide plots -->
+       <div class="anim-figure__frame">         <!-- the house aspect -->
+         <canvas class="anim-figure__canvas" role="img" aria-label="..."></canvas>
+       </div>
+     </div>
+     <div class="anim-figure__step">            <!-- stepped figures -->
+       <ol class="anim-steps">...</ol>          <!-- moved here, not copied -->
+       <div class="anim-steps__nav">...</div>
+     </div>
+     <ul class="anim-legend">...</ul>
+     <div class="anim-controls">
+       <button class="anim-btn anim-btn--play" data-kind="motion" type="button"
+               aria-pressed="false">Play</button>
+       <label class="anim-field">
+         <span class="anim-field__label">Frame</span>
+         <input class="anim-range" type="range" min="0" max="0" step="1" value="0">
+       </label>
+       <output class="anim-readout">0.00 s</output>
+     </div>
+     <p class="anim-figure__hint">Shown under reduced motion.</p>
+     <figcaption class="anim-figure__caption">
+       What the reader is looking at. <span class="anim-badge anim-badge--derived"
+       data-from="decoded">derived (from the chip's decoded audio)</span>
+       <span class="anim-figure__source">Source: ...</span>
+     </figcaption>
+   </figure>
+
+   MIT licensed (see LICENSE-MIT).
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Figure surface
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-figure,
+.anim-figure {
+  background-color: var(--ambe-surface-1);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-lg);
+  box-shadow: var(--ambe-shadow-1);
+  color: var(--ambe-text-2);
+  contain: layout paint;
+  display: block;
+  /* zensical's `.md-typeset figure` is `width: fit-content; margin: auto;
+     text-align: center` — none of which suits a full-width instrument. */
+  margin: 2.2rem 0;
+  max-width: var(--ambe-measure-wide);
+  padding: 0.9rem;
+  text-align: left;
+  width: 100%;
+}
+
+/* Opt-in full-bleed within the content column, for wide spectrograms.
+   Note the `.md-typeset` prefix throughout this file: base rules have to
+   match zensical's own specificity, so modifiers must match it too. */
+.md-typeset .anim-figure--wide,
+.anim-figure--wide {
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Figure frames: 16:10
+   A live figure spans the content column (--ambe-measure-wide is the
+   column, extra.css). Frames that were 16:9 take the house aspect, 16:10
+   from 45em, so a wide figure gains height as well as width; a phone keeps
+   16:9.
+   ------------------------------------------------------------------------ */
+
+.anim-figure {
+  --anim-aspect-house: 16 / 9;
+}
+
+@media screen and (min-width: 45em) {
+  .anim-figure {
+    --anim-aspect-house: 16 / 10;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   View row (lib/view-switch.js): the Camera group, the Zoom group's slot
+   and Expand. A 3D control that is hidden in 2D keeps its room here, so
+   the figure is as tall in 2D as in 3D; without WebGL 2 the row gives the
+   room back (data-no3d).
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-figure .anim-view,
+.anim-figure .anim-view {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  margin-top: 0.5rem;
+}
+
+/* The view row shows only in 3D: in 2D its hidden groups and the Zoom
+   slot take no room, and a row with nothing to show goes. */
+.md-typeset .anim-figure .anim-view > [hidden],
+.anim-figure .anim-view > [hidden],
+.md-typeset .anim-figure .anim-view > .anim-view__slot,
+.anim-figure .anim-view > .anim-view__slot,
+.md-typeset .anim-figure .anim-view[data-no3d] > :not(.anim-view__expand),
+.anim-figure .anim-view[data-no3d] > :not(.anim-view__expand) {
+  display: none;
+}
+
+.md-typeset .anim-figure .anim-view:not(:has(> :not([hidden], .anim-view__slot))),
+.anim-figure .anim-view:not(:has(> :not([hidden], .anim-view__slot))),
+.md-typeset .anim-figure .anim-view[data-no3d]:not(:has(> .anim-view__expand)),
+.anim-figure .anim-view[data-no3d]:not(:has(> .anim-view__expand)) {
+  display: none;
+}
+
+.md-typeset .anim-view__expand,
+.anim-view__expand {
+  margin-left: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Expanded (lib/expand.js): the whole figure full screen, or laid over the
+   page where an element cannot go full screen. The view frame takes the
+   screen's height less what stands above it and a peek of what follows
+   (--anim-full-h); the rest scrolls under "Exit full screen", which stays
+   in the top right corner. No containment, so that button is fixed to
+   the screen and not to the figure.
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-figure.is-full,
+.anim-figure.is-full {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  contain: none;
+  height: 100%;
+  margin: 0;
+  max-width: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: max(0.9rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right))
+    max(0.9rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+  width: 100%;
+}
+
+.anim-figure::backdrop {
+  background-color: var(--ambe-surface-1);
+}
+
+.md-typeset .anim-figure.is-full .anim-figure__frame--full,
+.anim-figure.is-full .anim-figure__frame--full {
+  aspect-ratio: auto;
+  height: var(--anim-full-h, 70vh);
+}
+
+/* The viewport's units, not 100%: with the root's stable scrollbar gutter
+   the fixed box's containing block stops short of the right edge. dvh
+   follows a phone's toolbars. */
+.md-typeset .anim-figure.is-overlay,
+.anim-figure.is-overlay {
+  height: 100vh;
+  height: 100dvh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 10;
+}
+
+html.anim-locked,
+html.anim-locked body {
+  overflow: hidden;
+}
+
+html.anim-still,
+html.anim-still body {
+  overflow-anchor: none;
+}
+
+.md-typeset .anim-figure__close,
+.anim-figure__close {
+  position: fixed;
+  right: max(0.9rem, env(safe-area-inset-right));
+  top: max(0.6rem, env(safe-area-inset-top));
+  z-index: 3;
+}
+
+/* The title keeps clear of it, and the row's Expand stands down. */
+.md-typeset .anim-figure.is-full > .anim-figure__head,
+.anim-figure.is-full > .anim-figure__head {
+  padding-right: 8.5rem;
+}
+
+.md-typeset .anim-figure.is-full .anim-view__expand,
+.anim-figure.is-full .anim-view__expand {
+  display: none;
+}
+
+.md-typeset .anim-figure__close[hidden],
+.anim-figure__close[hidden] {
+  display: none;
+}
+
+@media print {
+  .anim-figure__close,
+  .anim-figure__placeholder {
+    display: none;
+  }
+}
+
+.anim-figure__head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+
+.md-typeset .anim-figure__title,
+.anim-figure__title {
+  color: var(--ambe-text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  line-height: 1.3;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.md-typeset .anim-figure__title[data-fig-num]::before,
+.anim-figure__title[data-fig-num]::before {
+  color: var(--ambe-accent);
+  content: attr(data-fig-num) " · ";
+  font-family: inherit;
+  font-weight: 700;
+}
+
+.md-typeset .anim-figure__subtitle,
+.anim-figure__subtitle {
+  display: none;
+}
+
+/* Ciechanowski-style simplified UI: hide multi-row telemetry readout boxes
+   and keep secondary multi-row toolbars hidden while stepping through a
+   guided walkthrough so the 3D diagram and primary controls stay clean. */
+.md-typeset .anim-figure .anim-forms,
+.anim-figure .anim-forms,
+.anim-figure:has(.anim-steps):not([data-steps="free"]) .voicing-controls--tight,
+.anim-figure:has(.anim-steps):not([data-steps="free"]) .voicing-tour,
+.anim-figure:has(.anim-steps):not([data-steps="free"]) .frame-path__tour {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Plot area
+   The canvas is sized entirely by CSS; anim-core.js matches the backing store
+   to the CSS box at devicePixelRatio. Authors set --anim-aspect (by default
+   the house aspect: 16/10, 16/9 on a phone) and, for plots that must not
+   squash, --anim-min-width to trigger internal horizontal scrolling instead
+   of page-level scrolling.
+   ------------------------------------------------------------------------ */
+
+.anim-figure__scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ambe-border) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.anim-figure__frame {
+  aspect-ratio: var(--anim-aspect, var(--anim-aspect-house, 16 / 9));
+  background-color: var(--ambe-plot-bg);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  min-width: var(--anim-min-width, 0);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.anim-figure__canvas,
+.anim-figure__frame > canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+/* An overlay layer for HTML labels pinned over the canvas (crisper text than
+   canvas fillText for anything the reader must select or a screen reader must
+   see). Position children absolutely inside it. */
+/* A double-click on a 3D frame zooms; it never selects a label's or a
+   chip's text. */
+.anim-figure__overlay {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.anim-figure__overlay > * {
+  pointer-events: auto;
+}
+
+.anim-figure__label {
+  color: var(--ambe-text-3);
+  font-size: 0.6rem;
+  left: 0;
+  line-height: 1.2;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+/* Loading / empty state while precomputed JSON is in flight. */
+.anim-figure__frame[data-state="loading"]::after {
+  align-items: center;
+  color: var(--ambe-text-4);
+  content: "Loading data…";
+  display: flex;
+  font-size: 0.62rem;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+.anim-figure__frame[data-state="error"]::after {
+  align-items: center;
+  color: var(--ambe-accent-warm);
+  content: "This figure's data failed to load.";
+  display: flex;
+  font-size: 0.62rem;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+/* ---------------------------------------------------------------------------
+   Static fallback and steps
+   A figure host carries a static <figure class="anim-fallback"> and an
+   <ol class="anim-steps">, written in the chapter. Without JS, and in print,
+   both show. A module appends its live figure after them, moves the step
+   list into the figure, then calls markEnhanced(host), which hides the
+   fallback on screen.
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-fallback,
+.anim-fallback {
+  margin: 2.2rem 0 1rem;
+  max-width: var(--ambe-measure-wide);
+  text-align: left;
+  width: 100%;
+}
+
+.md-typeset .anim-fallback img,
+.anim-fallback img {
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.md-typeset .is-enhanced > .anim-fallback,
+.is-enhanced > .anim-fallback {
+  display: none;
+}
+
+/* The step panel inside a live figure: one step's text, then the nav. */
+.md-typeset .anim-figure__step,
+.anim-figure__step {
+  border-top: 1px solid var(--ambe-hairline);
+  color: var(--ambe-text-2);
+  font-size: 0.7rem;
+  line-height: 1.55;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+}
+
+.md-typeset .anim-figure__step .anim-steps,
+.anim-figure__step .anim-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.md-typeset .anim-figure__step .anim-steps > li,
+.anim-figure__step .anim-steps > li {
+  margin: 0;
+}
+
+.anim-steps__nav {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+  margin-top: 0.6rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Provenance badges (anim-badges.js). Wording lives in the module.
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-badge,
+.anim-badge {
+  border-radius: var(--ambe-radius-sm);
+  display: inline-block;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  padding: 0 0.4em;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.anim-badge--measured {
+  background-color: var(--ambe-accent-cool-soft);
+  color: var(--ambe-accent-cool);
+}
+
+.anim-badge--derived {
+  background-color: var(--ambe-accent-soft);
+  color: var(--ambe-accent);
+}
+
+.anim-badge--input {
+  background-color: var(--ambe-surface-2);
+  color: var(--ambe-text-2);
+}
+
+.anim-badge--synthetic,
+.anim-badge--illustrative {
+  background-color: var(--ambe-accent-warm-soft);
+  color: var(--ambe-accent-warm);
+}
+
+/* ---------------------------------------------------------------------------
+   Legend
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-legend,
+.anim-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  list-style: none;
+  margin: 0.7rem 0 0;
+  padding: 0;
+}
+
+.md-typeset .anim-legend__item,
+.anim-legend__item {
+  align-items: center;
+  color: var(--ambe-text-3);
+  display: flex;
+  font-size: 0.62rem;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.anim-legend__swatch {
+  background-color: var(--ambe-data-4);
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.anim-legend__swatch.is-data-1 { background-color: var(--ambe-data-1); }
+.anim-legend__swatch.is-data-2 { background-color: var(--ambe-data-2); }
+.anim-legend__swatch.is-data-3 { background-color: var(--ambe-data-3); }
+.anim-legend__swatch.is-data-4 { background-color: var(--ambe-data-4); }
+
+/* Line-style swatches, for series drawn as strokes rather than fills. */
+.anim-legend__swatch--line {
+  border-radius: 999px;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch--dashed {
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor 0 4px,
+    transparent 4px 7px
+  );
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+/* The ghosted comparison series: vertical dashes, matching the faint dashed
+   stems the canvas draws for the voice the reader did not select. */
+.anim-legend__swatch--ghost {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ambe-plot-muted) 0 1px,
+    transparent 1px 4px
+  );
+  border-radius: 0;
+  height: 0.5rem;
+  opacity: 0.7;
+  width: 0.9rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Two-voice comparison strip
+
+   Shown under the harmonics figure once a voice is selected. The canvas makes
+   the difference visible; this makes it readable — and gives a screen reader
+   something better than a picture of two combs.
+   ------------------------------------------------------------------------ */
+
+.anim-compare {
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  margin-top: 0.7rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.anim-compare[hidden] {
+  display: none;
+}
+
+.anim-compare__row {
+  align-items: center;
+  color: var(--ambe-text-3);
+  display: grid;
+  font-size: 0.62rem;
+  gap: 0 0.6rem;
+  grid-template-columns: 4.2rem 3.6rem 4rem 1fr;
+}
+
+.anim-compare__row + .anim-compare__row {
+  margin-top: 0.3rem;
+}
+
+/* The selected voice is the one the solid comb belongs to. */
+.anim-compare__row.is-current {
+  color: var(--ambe-text);
+  font-weight: 600;
+}
+
+.anim-compare__f0,
+.anim-compare__l {
+  font-family: var(--ambe-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.anim-compare__bar {
+  background: var(--ambe-sunken);
+  border-radius: var(--ambe-radius-pill);
+  display: block;
+  height: 0.35rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.anim-compare__bar > i {
+  background: var(--ambe-data-4);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  transition: width var(--ambe-dur-med) var(--ambe-ease);
+  width: 0;
+}
+
+.anim-compare__row.is-current .anim-compare__bar > i {
+  background: var(--ambe-data-1);
+}
+
+.md-typeset .anim-compare__delta,
+.anim-compare__delta {
+  border-top: 1px solid var(--ambe-hairline);
+  color: var(--ambe-text-2);
+  font-size: 0.62rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 0;
+  padding-top: 0.45rem;
+}
+
+/* On a phone the three number columns already consume the row: the bar column
+   collapses to a few pixels and reads as a rendering artefact rather than a
+   comparison. Drop it and keep the numbers, which carry the point anyway. */
+@media screen and (max-width: 30em) {
+  .anim-compare__row {
+    grid-template-columns: 1fr auto auto;
+  }
+
+  .anim-compare__bar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-compare__bar > i {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Controls: transport, sliders, toggles
+   ------------------------------------------------------------------------ */
+
+.anim-controls {
+  align-items: center;
+  border-top: 1px solid var(--ambe-hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+}
+
+.anim-controls__group {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* -- Buttons ----------------------------------------------------------- */
+
+.md-typeset .anim-btn,
+.anim-btn {
+  appearance: none;
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  border-radius: var(--ambe-radius-pill);
+  color: var(--ambe-text-2);
+  cursor: pointer;
+  flex: none;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 550;
+  letter-spacing: -0.004em;
+  line-height: 1;
+  padding: 0.4rem 0.8rem;
+  transition:
+    background-color var(--ambe-dur-fast) var(--ambe-ease),
+    border-color var(--ambe-dur-fast) var(--ambe-ease),
+    color var(--ambe-dur-fast) var(--ambe-ease);
+  user-select: none;
+}
+
+.anim-btn:hover {
+  background-color: var(--ambe-surface-3);
+  border-color: var(--ambe-border-strong);
+  color: var(--ambe-text);
+}
+
+.anim-btn:active {
+  transform: translateY(0.5px);
+}
+
+.anim-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ambe-focus-ring);
+}
+
+.anim-btn[disabled],
+.anim-btn[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Primary transport button (play/pause). anim-core.js flips aria-pressed. */
+.md-typeset .anim-btn--play,
+.anim-btn--play {
+  background-color: var(--ambe-accent-soft);
+  border-color: color-mix(in srgb, var(--ambe-accent) 45%, transparent);
+  color: var(--ambe-accent);
+  min-width: 4.4rem;
+}
+
+.md-typeset .anim-btn--play:hover,
+.anim-btn--play:hover {
+  background-color: color-mix(in srgb, var(--ambe-accent) 22%, transparent);
+  border-color: var(--ambe-accent);
+  color: var(--ambe-accent-hover);
+}
+
+/* Segmented toggles: a row of .anim-btn with aria-pressed. */
+.md-typeset .anim-btn[aria-pressed="true"],
+.anim-btn[aria-pressed="true"] {
+  background-color: var(--ambe-accent-soft);
+  border-color: var(--ambe-accent);
+  color: var(--ambe-accent);
+}
+
+.anim-toggle-group {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-pill);
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.md-typeset .anim-toggle-group .anim-btn,
+.anim-toggle-group .anim-btn {
+  background-color: transparent;
+  border-color: transparent;
+  padding: 0.3rem 0.7rem;
+}
+
+.md-typeset .anim-toggle-group .anim-btn[aria-pressed="true"],
+.anim-toggle-group .anim-btn[aria-pressed="true"] {
+  background-color: var(--ambe-surface-3);
+  border-color: transparent;
+  color: var(--ambe-text);
+}
+
+/* On a phone a group may wrap onto a second row; a pill round two rows
+   reads as a lozenge with an orphan, so there each group is a tidy block. */
+@media screen and (max-width: 30em) {
+  .md-typeset .anim-toggle-group,
+  .anim-toggle-group {
+    border-radius: var(--ambe-radius-md);
+  }
+}
+
+/* -- Fields and sliders ------------------------------------------------ */
+
+.md-typeset .anim-field,
+.anim-field {
+  align-items: center;
+  display: flex;
+  flex: 1 1 12rem;
+  gap: 0.5rem;
+  margin: 0;
+  min-width: 8rem;
+}
+
+.anim-field__label {
+  color: var(--ambe-text-4);
+  flex: none;
+  font-size: 0.6rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.md-typeset .anim-range,
+.anim-range {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  flex: 1 1 auto;
+  height: 1rem;
+  margin: 0;
+  min-width: 5rem;
+  padding: 0;
+  width: 100%;
+}
+
+.anim-range:focus-visible {
+  outline: none;
+}
+
+.anim-range::-webkit-slider-runnable-track {
+  background-color: var(--ambe-surface-3);
+  border-radius: 999px;
+  height: 3px;
+}
+
+.anim-range::-moz-range-track {
+  background-color: var(--ambe-surface-3);
+  border-radius: 999px;
+  height: 3px;
+}
+
+.anim-range::-moz-range-progress {
+  background-color: var(--ambe-accent);
+  border-radius: 999px;
+  height: 3px;
+}
+
+.anim-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--ambe-text);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  height: 0.62rem;
+  margin-top: calc((0.62rem - 3px) / -2);
+  transition: transform var(--ambe-dur-fast) var(--ambe-ease);
+  width: 0.62rem;
+}
+
+.anim-range::-moz-range-thumb {
+  background-color: var(--ambe-text);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  height: 0.62rem;
+  width: 0.62rem;
+}
+
+.anim-range:hover::-webkit-slider-thumb,
+.anim-range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.anim-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--ambe-focus-ring);
+}
+
+.anim-range:focus-visible::-moz-range-thumb {
+  box-shadow: var(--ambe-focus-ring);
+}
+
+/* Checkbox/radio options inside a control row. */
+.anim-check {
+  accent-color: var(--ambe-accent);
+  margin: 0 0.3rem 0 0;
+}
+
+/* -- Readout ----------------------------------------------------------- */
+
+.md-typeset .anim-readout,
+.anim-readout {
+  color: var(--ambe-text-3);
+  flex: none;
+  font-family: var(--ambe-font-mono);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 5.5ch;
+  text-align: right;
+}
+
+.md-typeset .anim-readout--wide,
+.anim-readout--wide {
+  min-width: 12ch;
+}
+
+.anim-readout em {
+  color: var(--ambe-text);
+  font-style: normal;
+}
+
+/* ---------------------------------------------------------------------------
+   Caption, source line, reduced-motion hint
+   ------------------------------------------------------------------------ */
+
+.md-typeset .anim-figure__caption,
+/* The short caption under each figure (from the host's data-caption), and
+   the closed section below it that holds the figure's long caption, badges
+   and sources. anim-core's shortCaption() builds both. */
+.md-typeset .anim-figure__summary,
+.anim-figure__summary {
+  color: var(--ambe-text-2);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  margin: 1.1rem 0 0;
+  max-width: var(--ambe-measure);
+}
+
+/* A plain text link, not the theme's boxed admonition. */
+.md-typeset details.anim-figure__more {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  font-size: inherit;
+  margin: 0.3rem 0 0;
+  overflow: visible;
+  padding: 0;
+}
+
+.md-typeset details.anim-figure__more > summary {
+  background: none;
+  border: 0;
+  color: var(--ambe-text-4);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+  width: fit-content;
+}
+
+.md-typeset details.anim-figure__more > summary::before,
+.md-typeset details.anim-figure__more > summary::after {
+  display: none;
+}
+
+.md-typeset details.anim-figure__more > summary::marker,
+.md-typeset details.anim-figure__more > summary::-webkit-details-marker {
+  content: "";
+  display: none;
+}
+
+.md-typeset details.anim-figure__more > summary span[aria-hidden] {
+  display: inline-block;
+  margin-left: 0.3em;
+  transition: transform var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.md-typeset details.anim-figure__more[open] > summary span[aria-hidden] {
+  transform: rotate(90deg);
+}
+
+.md-typeset details.anim-figure__more > summary:hover,
+.md-typeset details.anim-figure__more > summary:focus-visible {
+  color: var(--ambe-accent);
+}
+
+.anim-figure__more > .anim-figure__caption {
+  margin-top: 0.4rem;
+}
+
+@media print {
+  /* Paper can't open a section: print the sources. */
+  .anim-figure__more > summary {
+    display: none;
+  }
+
+  .anim-figure__more::details-content {
+    content-visibility: visible;
+    display: contents;
+  }
+}
+
+.anim-figure__caption {
+  color: var(--ambe-text-3);
+  font-size: 0.64rem;
+  font-style: normal;
+  line-height: 1.6;
+  margin: 0.8rem 0 0;
+  max-width: var(--ambe-measure);
+  text-align: left;
+}
+
+.anim-figure__caption > :last-child {
+  margin-bottom: 0;
+}
+
+/* Every figure names where its data came from. */
+.md-typeset .anim-figure__source,
+.anim-figure__source {
+  color: var(--ambe-text-4);
+  display: block;
+  font-size: 0.92em;
+  margin-top: 0.3em;
+}
+
+/* Shown only when the reader asks for reduced motion. */
+.md-typeset .anim-figure__hint,
+.anim-figure__hint {
+  color: var(--ambe-text-4);
+  display: none;
+  font-size: 0.6rem;
+  line-height: 1.5;
+  margin: 0.6rem 0 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion
+   Figures hold on a representative static frame (anim-core.js does not start
+   the rAF loop); the hint appears and the transport stays usable so the
+   reader can step through by hand.
+   ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* `.md-typeset` prefix required: the base rule that hides the hint is
+     `.md-typeset .anim-figure__hint`, so an unprefixed override loses. */
+  .md-typeset .anim-figure__hint,
+  .anim-figure__hint {
+    display: block;
+  }
+
+  /* Only controls that start motion hide. A control that plays sound stays:
+     playback is an explicit request, and createAudioPlayer in anim-core.js
+     keeps working under reduced motion. */
+  .md-typeset .anim-btn--play[data-kind="motion"],
+  .anim-btn--play[data-kind="motion"] {
+    display: none;
+  }
+}
+
+/* JS can force the same presentation with .is-static on the figure. */
+.md-typeset .anim-figure.is-static .anim-btn--play[data-kind="motion"],
+.anim-figure.is-static .anim-btn--play[data-kind="motion"] {
+  display: none;
+}
+
+.md-typeset .anim-figure.is-static .anim-figure__hint,
+.anim-figure.is-static .anim-figure__hint {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   3D view (anim-three.js)
+   The 3D canvas sits over the 2D canvas in the same frame. pan-y keeps a
+   one-finger vertical swipe scrolling the page, and a two-finger pinch
+   zooms the page, except where the figure has zoom of its own
+   (lib/orbit.js marks the frame): there the pinch is the figure's.
+   ------------------------------------------------------------------------ */
+
+.anim-figure__canvas--3d {
+  inset: 0;
+  position: absolute;
+  touch-action: pan-y pinch-zoom;
+}
+
+.anim-figure__frame--zoom > .anim-figure__canvas--3d {
+  touch-action: pan-y;
+}
+
+/* Every 3D canvas is a tab stop. The frame clips the canvas, so the ring
+   goes on the frame. */
+.anim-figure__canvas--3d:focus-visible {
+  outline: none;
+}
+
+.anim-figure__frame:has(> .anim-figure__canvas--3d:focus-visible) {
+  box-shadow: var(--ambe-focus-ring);
+}
+
+/* The Zoom group (createOrbit({zoom: true})), beside the Camera group:
+   text buttons and a readout. */
+.md-typeset .anim-zoom,
+.anim-zoom {
+  align-items: center;
+}
+
+.md-typeset .anim-zoom__readout,
+.anim-zoom__readout {
+  color: var(--ambe-text-2);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 4.5ch;
+  text-align: center;
+}
+
+/* Shown for 1.5 s when a plain wheel over the canvas scrolls the page. */
+.md-typeset .anim-zoom-hint,
+.anim-zoom-hint {
+  background-color: var(--ambe-bg-veil);
+  border-radius: var(--ambe-radius-sm);
+  color: var(--ambe-text-2);
+  font-size: 0.6rem;
+  left: 50%;
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+  pointer-events: none;
+  position: absolute;
+  top: 0.5rem;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.md-typeset .anim-zoom-hint[hidden],
+.anim-zoom-hint[hidden] {
+  display: none;
+}
+
+/* The stage behind a live 3D view (mountThree({stage: true})): the canvas
+   clears to transparent over a soft gradient and a glow behind the subject
+   (three-visual-language design §3). Print flattens it to the plot. */
+.anim-figure__frame--stage {
+  background:
+    radial-gradient(60% 55% at 50% 45%, var(--ambe-stage-glow), transparent 70%),
+    linear-gradient(var(--ambe-stage-top), var(--ambe-stage-bottom));
+}
+
+@media print {
+  .anim-figure__frame--stage {
+    background: var(--ambe-plot-bg);
+  }
+}
+
+/* A chip (lib/labels.js createChip): the highlight's fact, its leader and
+   the dot on its anchor. Pinned at the frame's edge, it points at the
+   anchor with an arrow instead. */
+.anim-chip,
+.anim-chip__dot {
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+}
+
+.anim-chip {
+  align-items: center;
+  background-color: var(--ambe-highlight-chip);
+  border: 1.5px solid var(--ambe-highlight);
+  border-radius: var(--ambe-radius-sm);
+  color: var(--ambe-plot-ink);
+  display: inline-flex;
+  font-size: 0.6rem;
+  gap: 0.3rem;
+  line-height: 1.2;
+  padding: 0.15rem 0.4rem;
+  white-space: nowrap;
+}
+
+.anim-chip__swatch {
+  background-color: var(--ambe-highlight);
+  border-radius: 2px;
+  height: 3px;
+  width: 0.8rem;
+}
+
+.anim-chip__dot {
+  background-color: var(--ambe-highlight);
+  border-radius: 50%;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  width: 7px;
+}
+
+.anim-chip__leader {
+  height: 100%;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+
+.anim-chip__leader line {
+  stroke: var(--ambe-highlight);
+  stroke-width: 1.5;
+}
+
+.anim-chip-layer--pinned .anim-chip__dot,
+.anim-chip-layer--pinned .anim-chip__leader {
+  display: none;
+}
+
+.anim-chip[data-edge]::after {
+  border: 5px solid transparent;
+  content: "";
+  position: absolute;
+}
+
+.anim-chip[data-edge="left"]::after {
+  border-right-color: var(--ambe-highlight);
+  right: 100%;
+  top: calc(50% - 5px);
+}
+
+.anim-chip[data-edge="right"]::after {
+  border-left-color: var(--ambe-highlight);
+  left: 100%;
+  top: calc(50% - 5px);
+}
+
+.anim-chip[data-edge="top"]::after {
+  border-bottom-color: var(--ambe-highlight);
+  bottom: 100%;
+  left: calc(50% - 5px);
+}
+
+.anim-chip[data-edge="bottom"]::after {
+  border-top-color: var(--ambe-highlight);
+  left: calc(50% - 5px);
+  top: 100%;
+}
+
+.md-typeset .anim-figure__resume,
+.anim-figure__resume {
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.md-typeset .anim-figure__resume[hidden],
+.anim-figure__resume[hidden] {
+  display: none;
+}
+
+.anim-figure__frame[data-state="paused"]::after {
+  background-color: var(--ambe-bg-scrim);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* The WebGL hint shows whenever a figure un-hides it, not only under
+   reduced motion like the other hints. */
+.md-typeset .anim-figure__hint--webgl:not([hidden]),
+.anim-figure__hint--webgl:not([hidden]) {
+  display: block;
+}
+
+.md-typeset .anim-figure__hint--webgl[hidden],
+.anim-figure__hint--webgl[hidden] {
+  display: none;
+}
+
+/* The view switch (lib/view-switch.js). The 3D control is an .anim-btn
+   with aria-pressed, like any toggle; a figure's 2D canvas steps aside
+   while its 3D view is up, and comes back while the view is parked
+   (anim-three.js header item 4), redrawn from the current state. */
+.anim-figure__frame > canvas[hidden] {
+  display: none;
+}
+
+.anim-figure__frame[data-three="parked"] > canvas:not(.anim-figure__canvas--3d):not([hidden]) {
+  display: block;
+}
+
+.md-typeset .anim-figure .anim-toggle-group[hidden],
+.anim-figure .anim-toggle-group[hidden] {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   harmonic-sum (anim-harmonic-sum.js, ch11). Its task adds rules between
+   its slot markers below, and nowhere else.
+   ------------------------------------------------------------------------ */
+
+/* slot: harmonic-sum */
+
+.anim-hsum__frame {
+  --anim-aspect: var(--anim-aspect-house);
+}
+
+.anim-hsum .anim-figure__canvas[hidden],
+.md-typeset .anim-hsum .anim-toggle-group[hidden],
+.anim-hsum .anim-toggle-group[hidden] {
+  display: none;
+}
+
+.md-typeset .anim-hsum__readouts,
+.anim-hsum__readouts {
+  margin-top: 0.6rem;
+}
+
+.md-typeset .anim-hsum__readouts .anim-readout,
+.anim-hsum__readouts .anim-readout {
+  color: var(--ambe-text-2);
+  display: block;
+  text-align: left;
+}
+
+.anim-hsum__segment {
+  white-space: nowrap;
+}
+
+.md-typeset .anim-hsum__notes,
+.anim-hsum__notes {
+  color: var(--ambe-text-4);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.58rem;
+  gap: 0.2rem 0.9rem;
+  margin: 0.25rem 0 0;
+}
+
+.md-typeset .anim-hsum__input,
+.anim-hsum__input {
+  margin-top: 0.7rem;
+}
+
+.md-typeset .anim-hsum__input-title,
+.anim-hsum__input-title {
+  color: var(--ambe-text-3);
+  font-size: 0.6rem;
+  margin: 0 0 0.3rem;
+}
+
+.anim-hsum__input-frame {
+  --anim-aspect: 16 / 2.6;
+}
+
+.md-typeset .anim-hsum__group,
+.anim-hsum__group {
+  align-items: center;
+  border: 0;
+  display: flex;
+  /* Shrinks to the row, so Re-roll wraps under the radios on a phone. */
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
+.md-typeset .anim-hsum__group legend,
+.anim-hsum__group legend {
+  float: left;
+  margin-right: 0.1rem;
+  padding: 0;
+}
+
+.md-typeset .anim-hsum__radio,
+.anim-hsum__radio {
+  align-items: center;
+  color: var(--ambe-text-2);
+  display: inline-flex;
+  font-size: 0.62rem;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.anim-hsum__radio input {
+  accent-color: var(--ambe-accent);
+  margin: 0;
+}
+
+.md-typeset .anim-hsum__select,
+.anim-hsum__select {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  border-radius: var(--ambe-radius-sm);
+  color: var(--ambe-text-2);
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: 0.62rem;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+}
+
+.anim-hsum__select:focus-visible {
+  box-shadow: var(--ambe-focus-ring);
+  outline: none;
+}
+
+.md-typeset .anim-hsum__player,
+.anim-hsum__player {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.anim-legend__swatch.anim-hsum__swatch--ink { background-color: var(--ambe-plot-ink); }
+.anim-legend__swatch.anim-hsum__swatch--muted { background-color: var(--ambe-plot-muted); }
+.anim-legend__swatch.anim-hsum__swatch--ramp {
+  background-image: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  width: 1.1rem;
+}
+.anim-legend__swatch.anim-hsum__swatch--highlight {
+  background-color: var(--ambe-highlight-chip);
+  box-shadow: inset 0 0 0 2px var(--ambe-highlight);
+}
+.anim-legend__swatch.anim-hsum__swatch--dash {
+  background-image: linear-gradient(90deg, var(--ambe-plot-ink) 55%, transparent 55%);
+  background-color: transparent;
+  background-size: 5px 100%;
+  height: 2px;
+  width: 0.9rem;
+}
+
+/* Play: the walk-through's row and its caption, under the frame. */
+.md-typeset .anim-hsum__play,
+.anim-hsum__play {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin: 0.55rem 0 0;
+}
+
+.anim-hsum__play[hidden],
+.anim-hsum__caption[hidden],
+.anim-hsum__scaled[hidden] {
+  display: none;
+}
+
+.md-typeset .anim-hsum__scrub,
+.anim-hsum__scrub {
+  flex: 1 1 10rem;
+  max-width: 22rem;
+}
+
+.anim-hsum__scrub .anim-range {
+  flex: 1;
+}
+
+.md-typeset .anim-hsum__caption,
+.anim-hsum__caption {
+  border-left: 3px solid var(--ambe-accent);
+  color: var(--ambe-text);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin: 0.55rem 0 0;
+  min-height: 2.9em;
+  padding: 0.1rem 0 0.1rem 0.6rem;
+}
+
+/* Scaled: the alpha slider and the note on where its form comes from. */
+.md-typeset .anim-hsum__scaled,
+.anim-hsum__scaled {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.md-typeset .anim-hsum__note,
+.anim-hsum__note {
+  color: var(--ambe-text-3);
+  flex: 1 1 18rem;
+  font-size: 0.6rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.anim-hsum[data-view="3d"] .anim-legend__item[data-for="2d"],
+.anim-hsum[data-view="2d"] .anim-legend__item[data-for="3d"] {
+  display: none;
+}
+
+/* After the first view, the Next button pulses twice: the next step adds every harmonic. */
+.anim-hsum--nudge [data-step="next"] {
+  animation: anim-hsum-nudge 1.1s ease-in-out 2;
+}
+
+@keyframes anim-hsum-nudge {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 5px var(--ambe-accent-soft), 0 0 0 1.5px var(--ambe-accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-hsum--nudge [data-step="next"] {
+    animation: none;
+  }
+}
+
+@media screen and (max-width: 44.9375em) {
+  .anim-hsum__frame {
+    --anim-aspect: 4 / 3;
+  }
+
+  .anim-hsum__input-frame {
+    --anim-aspect: 16 / 4;
+  }
+
+  .md-typeset .anim-hsum__player,
+  .anim-hsum__player {
+    margin-left: 0;
+  }
+}
+
+/* end slot: harmonic-sum */
+
+/* ---------------------------------------------------------------------------
+   vq-space (anim-vq-space.js, ch09). Its task adds rules between
+   its slot markers below, and nowhere else.
+   ------------------------------------------------------------------------ */
+
+/* slot: vq-space */
+
+.anim-vq .anim-vq__plot {
+  cursor: crosshair;
+  touch-action: pan-y pinch-zoom;
+}
+
+.anim-vq .anim-vq__plot:focus-visible,
+.anim-vq .anim-figure__canvas--3d:focus-visible {
+  box-shadow: var(--ambe-focus-ring);
+  outline: none;
+}
+
+.md-typeset .anim-vq .anim-toggle-group[hidden],
+.anim-vq .anim-toggle-group[hidden],
+.anim-vq .anim-legend__item[hidden] {
+  display: none;
+}
+
+/* The 2D canvas steps aside while the 3D view is up. */
+.anim-vq .anim-figure__frame > canvas[hidden] {
+  display: none;
+}
+
+/* The theme's list rule outranks .anim-legend; keep the keys on one row. */
+.md-typeset .anim-vq .anim-legend {
+  display: flex;
+  /* Two rows of keys (four on a phone) are kept, so the figure does not
+     change height as keys come and go, nor by part of a pixel. */
+  min-height: calc(2 * 0.62rem * 1.75 + 0.4rem + 0.015px);
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .anim-vq .anim-legend {
+    min-height: calc(4 * 0.62rem * 1.75 + 3 * 0.4rem + 0.015px);
+  }
+}
+
+.md-typeset .anim-vq__readout,
+.anim-vq__readout {
+  color: var(--ambe-text-3);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  margin: 0.55rem 0 0;
+  min-height: 3em;
+}
+
+/* The probe keys stay listed, not only under reduced motion. */
+.md-typeset .anim-vq .anim-vq__keys,
+.anim-vq .anim-vq__keys {
+  display: block;
+}
+
+.anim-vq__key {
+  display: inline-block;
+  flex: none;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.anim-vq__key--dot {
+  background-color: var(--ambe-plot-ink);
+  border-radius: 50%;
+  height: 0.3rem;
+  opacity: 0.75;
+  width: 0.3rem;
+}
+
+.anim-vq__key--entry {
+  background-color: var(--ambe-plot-ink);
+  border: 1.5px solid var(--ambe-plot-ink);
+  border-radius: 50%;
+}
+
+.anim-vq__key--ring {
+  border: 1.5px solid var(--ambe-plot-muted);
+  border-radius: 50%;
+}
+
+.anim-vq__key--hatch {
+  background-image: repeating-linear-gradient(
+    -45deg, var(--ambe-plot-axis) 0 1px, transparent 1px 4px);
+  border: 1px solid var(--ambe-plot-axis);
+}
+
+.anim-vq__key--probe {
+  background-color: var(--ambe-accent-warm);
+  border-radius: 50%;
+}
+
+/* In 3D the probe is drawn as a ring, so its key is one. */
+.anim-vq__key--probe.anim-vq__key--probe-ring {
+  background-color: transparent;
+  border: 2px solid var(--ambe-accent-warm);
+}
+
+/* Axis labels over the cube: backed, so edges and dots do not cross the
+   text, as drawLabel backs the 2D labels. */
+.anim-vq .anim-figure__label {
+  background-color: var(--ambe-plot-bg);
+  border-radius: 2px;
+  padding: 0 0.25em;
+}
+
+.anim-vq .anim-figure__label--tick {
+  color: var(--ambe-text-4);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.55rem;
+}
+
+/* A phone gets a square frame: the plot is square, and 4:3 left it small. */
+@media screen and (max-width: 44.9375em) {
+  .anim-vq .anim-figure__frame {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* A label keeps its line; the names break where anim-vq-space-3d.js
+     puts the break. */
+  .anim-vq .anim-figure__label {
+    font-size: 0.55rem;
+    white-space: nowrap;
+  }
+}
+
+/* The 3D labels and chips show with the 3D canvas, never over the 2D plot. */
+.anim-vq .anim-vq__frame--flat > .anim-figure__overlay:has(> .anim-figure__label),
+.anim-vq .anim-vq__frame--flat > .anim-chip-layer {
+  visibility: hidden;
+}
+
+/* In 3D an empty cube is drawn as bare dim edges, so its key is one. */
+.anim-vq__key--hatch.anim-vq__key--bare {
+  background-image: none;
+  border-color: var(--ambe-plot-muted);
+}
+
+/* Play: the button, the step slider and its readout on one row. */
+/* Whole pixels, so the figure's height keeps its fraction of a pixel and
+   nothing below it on the page moves by part of one. */
+.anim-vq .anim-vq__play {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  height: 42px;
+  overflow: hidden;
+  padding-top: 10px;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .anim-vq .anim-vq__play {
+    height: 76px;
+  }
+}
+
+.anim-vq .anim-vq__play[hidden],
+.anim-vq .anim-vq__caption[hidden] {
+  display: none;
+}
+
+.anim-vq .anim-vq__scrub {
+  flex: 1 1 10rem;
+  max-width: 22rem;
+}
+
+.anim-vq .anim-vq__scrub .anim-range {
+  flex: 1;
+}
+
+/* The walk-through's caption: the sentence on show, under the frame. */
+.md-typeset .anim-vq__caption,
+.anim-vq__caption {
+  border-left: 3px solid var(--ambe-accent);
+  color: var(--ambe-text);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin: 0.55rem 0 0;
+  /* Three lines held (four on a phone), so nothing below moves as the
+     sentences change. */
+  min-height: calc(3 * 1.45em);
+  padding: 0.1rem 0 0.1rem 0.6rem;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .anim-vq__caption,
+  .anim-vq__caption {
+    min-height: calc(4 * 1.45em);
+  }
+}
+
+.anim-vq__key--chosen {
+  background-color: var(--ambe-highlight);
+  border: 2px solid var(--ambe-plot-ink);
+  border-radius: 50%;
+  height: 0.65rem;
+  width: 0.65rem;
+}
+
+/* The chips state the facts; they lie over the axis labels, never under. */
+.anim-vq .anim-chip-layer {
+  z-index: 1;
+}
+
+/* A long chip (the Speech axis) wraps on a phone instead of leaving the frame. */
+@media screen and (max-width: 44.9375em) {
+  .anim-vq .anim-chip {
+    max-width: 11rem;
+    white-space: normal;
+  }
+}
+
+/* end slot: vq-space */
+
+/* ---------------------------------------------------------------------------
+   voicing (anim-voicing.js, ch07). Its task adds rules between
+   its slot markers below, and nowhere else.
+   ------------------------------------------------------------------------ */
+
+/* slot: voicing */
+
+/* Legend swatches in the voicing tokens. */
+.anim-legend__swatch.voicing-swatch--voiced { background-color: var(--ambe-voiced); }
+.anim-legend__swatch.voicing-swatch--unvoiced { background-color: var(--ambe-unvoiced); }
+.anim-legend__swatch.voicing-swatch--noise { background-color: var(--ambe-unvoiced); opacity: 0.45; }
+.anim-legend__swatch.voicing-swatch--mismatch {
+  background-color: var(--ambe-mismatch);
+  outline: 1px solid var(--ambe-border);
+}
+
+.md-typeset .anim-figure--voicing .anim-legend__item[hidden],
+.anim-figure--voicing .anim-legend__item[hidden],
+.md-typeset .anim-figure--voicing .anim-controls__group[hidden],
+.anim-figure--voicing .anim-controls__group[hidden],
+.md-typeset .anim-figure--voicing .anim-field[hidden],
+.anim-figure--voicing .anim-field[hidden] {
+  display: none;
+}
+
+/* The readout carries the counts, so it gets a line of its own. */
+.md-typeset .anim-figure--voicing .voicing-readout,
+.anim-figure--voicing .voicing-readout {
+  flex: 1 1 100%;
+  text-align: left;
+  white-space: normal;
+}
+
+.anim-figure--voicing .voicing-controls--tight {
+  border-top: 0;
+  margin-top: 0.4rem;
+  padding-top: 0;
+}
+
+.anim-figure--voicing .voicing-threshold {
+  flex: 1 1 10rem;
+  max-width: 16rem;
+}
+
+/* Eight band switches, coloured by the choice: voiced or unvoiced. */
+.voicing-bands {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(8, auto);
+}
+
+.md-typeset .anim-figure--voicing .voicing-band,
+.anim-figure--voicing .voicing-band,
+.md-typeset .anim-figure--voicing .voicing-band[aria-pressed="false"],
+.anim-figure--voicing .voicing-band[aria-pressed="false"] {
+  background-color: var(--ambe-surface-2);
+  border-color: var(--ambe-unvoiced);
+  color: var(--ambe-unvoiced);
+  font-family: var(--ambe-font-mono);
+  min-width: 1.8rem;
+  padding-inline: 0.45rem;
+}
+
+.md-typeset .anim-figure--voicing .voicing-band[aria-pressed="true"],
+.anim-figure--voicing .voicing-band[aria-pressed="true"] {
+  background-color: var(--ambe-accent-cool-soft);
+  border-color: var(--ambe-voiced);
+  color: var(--ambe-voiced);
+}
+
+.md-typeset .anim-figure--voicing .voicing-clips,
+.anim-figure--voicing .voicing-clips {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.anim-figure--voicing .voicing-badges {
+  display: block;
+  margin-top: 0.3em;
+}
+
+@media screen and (max-width: 30em) {
+  .voicing-bands {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* The 3D legend: the hatch on unvoiced floor cells, the threshold plane,
+   the frame on screen (ink, thick) and where the threshold cuts it. */
+.anim-legend__swatch.voicing-swatch--hatch {
+  background: repeating-linear-gradient(-45deg, var(--ambe-unvoiced) 0 3px, var(--ambe-plot-bg) 3px 4.5px);
+}
+.anim-legend__swatch.voicing-swatch--plane {
+  background-color: color-mix(in srgb, var(--ambe-accent) 30%, transparent);
+  outline: 1.5px solid var(--ambe-accent);
+}
+.anim-legend__swatch--line.voicing-swatch--frame {
+  background-color: var(--ambe-plot-ink);
+  box-shadow: 0 0 0 2px var(--ambe-highlight-glow);
+  height: 3px;
+}
+.anim-legend__swatch--line.voicing-swatch--cut {
+  background-color: var(--ambe-highlight);
+  height: 3px;
+}
+
+/* The walk-through: Play on one row (the step row below the figure is its
+   one stepping control; its own slider and readout stay hidden), and the
+   sentence on show under the frame. */
+.anim-figure--voicing .voicing-tour {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  margin: 0.55rem 0 0;
+}
+
+.anim-figure--voicing .voicing-tour[hidden],
+.anim-figure--voicing .voicing-tour [hidden],
+.anim-figure--voicing .voicing-tour__caption[hidden] {
+  display: none;
+}
+
+.anim-figure--voicing .voicing-tour__scrub {
+  flex: 1 1 10rem;
+  max-width: 22rem;
+}
+
+.anim-figure--voicing .voicing-tour__scrub .anim-range {
+  flex: 1;
+}
+
+.md-typeset .voicing-tour__caption,
+.voicing-tour__caption {
+  border-left: 3px solid var(--ambe-accent);
+  color: var(--ambe-text);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  margin: 0.55rem 0 0;
+  min-height: 2.9em;
+  padding: 0.1rem 0 0.1rem 0.6rem;
+}
+
+/* The frame gets its own compositing layer. On a phone, Chrome drew the
+   frame's rounded corners a shade differently for each whole pixel the
+   frame moved down the page. In its own layer the corners come out the
+   same wherever the frame sits. */
+.anim-figure--voicing .anim-figure__frame {
+  will-change: transform;
+}
+
+/* end slot: voicing */
+
+/* ---------------------------------------------------------------------------
+   frame-path (anim-frame-path.js, ch10). Its task adds rules between
+   its slot markers below, and nowhere else.
+   ------------------------------------------------------------------------ */
+
+/* slot: frame-path */
+
+.md-typeset .frame-path__stages,
+.frame-path__stages {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+  width: 100%;
+}
+
+.md-typeset .frame-path__stages .anim-btn,
+.frame-path__stages .anim-btn {
+  flex: 1 1 auto;
+  padding-inline: 0.4rem;
+  white-space: nowrap;
+}
+
+/* On a phone the seven stages sit in even columns as wide as their
+   labels allow, inside the group's border; a label never breaks. */
+@media screen and (max-width: 30em) {
+  .md-typeset .frame-path__stages,
+  .frame-path__stages {
+    border-radius: var(--ambe-radius-md);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  }
+
+  .md-typeset .frame-path__stages .anim-btn,
+  .frame-path__stages .anim-btn {
+    border-radius: var(--ambe-radius-sm);
+    line-height: 1.25;
+    min-width: 0;
+    padding: 0.3rem 0.15rem;
+    white-space: nowrap;
+  }
+}
+
+.frame-path__frame {
+  --anim-aspect: var(--anim-aspect-house);
+}
+
+.frame-path__frame .anim-figure__canvas--3d {
+  cursor: grab;
+}
+
+.frame-path__frame > canvas[hidden] {
+  display: none;
+}
+
+.md-typeset .frame-path [data-ref="presets"][hidden],
+.frame-path [data-ref="presets"][hidden] {
+  display: none;
+}
+
+.frame-path__readout {
+  align-items: baseline;
+  color: var(--ambe-text-2);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.64rem;
+  gap: 0.25rem 0.5rem;
+  line-height: 1.5;
+  margin-top: 0.6rem;
+  min-height: 2.9em;
+}
+
+.frame-path__badge[hidden] {
+  display: none;
+}
+
+.frame-path__text {
+  flex: 1 1 18rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.md-typeset .frame-path__hex code,
+.frame-path__hex code {
+  background: none;
+  border: 0;
+  color: var(--ambe-text);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.66rem;
+  padding: 0;
+}
+
+.frame-path__hex[hidden] {
+  display: none;
+}
+
+.frame-path__player {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.anim-legend__swatch.frame-path__swatch--ink,
+.anim-legend__swatch.frame-path__swatch--one {
+  background-color: var(--ambe-plot-ink);
+}
+
+.anim-legend__swatch.frame-path__swatch--neighbour {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.frame-path__swatch--neighbour-bars {
+  background: linear-gradient(90deg, var(--ambe-voiced) 0 50%, var(--ambe-unvoiced) 50%);
+  border-radius: 0;
+  height: 2px;
+  opacity: 0.7;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.frame-path__swatch--unvoiced {
+  background-color: var(--ambe-unvoiced);
+}
+
+.anim-legend__swatch.frame-path__swatch--highlight {
+  background-color: var(--ambe-highlight-chip);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 2px var(--ambe-highlight);
+}
+
+.anim-legend__swatch.frame-path__swatch--data {
+  background-color: var(--ambe-data-slot);
+}
+
+.anim-legend__swatch.frame-path__swatch--sync {
+  background-color: var(--ambe-sync-slot);
+}
+
+.anim-legend__swatch.frame-path__swatch--zero {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--ambe-plot-axis);
+}
+
+.anim-legend__swatch.frame-path__swatch--voiced {
+  background-color: var(--ambe-voiced);
+}
+
+/* The walk-through: Play, one pip per step, and the step's text as a
+   caption under the frame while it runs. */
+.frame-path__tour {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.5rem;
+}
+
+/* The bar waits for Free play while the reader steps. A walk-through
+   started there steps the figure itself, so its bar (Pause, the pips)
+   stays up while the walk-through runs (over the !important that hides
+   it while stepping). */
+@media screen {
+  .anim-figure[data-tour]:has(.anim-steps) .frame-path__tour {
+    display: flex !important;
+  }
+}
+
+.md-typeset .frame-path__play,
+.frame-path__play {
+  min-width: 11.5rem;
+}
+
+.frame-path__pips {
+  display: flex;
+  flex: 1 1 10rem;
+  gap: 0.25rem;
+}
+
+/* Each pip is a 24 px tall tap target (WCAG 2.5.8) round a thin bar. */
+.frame-path__pip {
+  background: none;
+  border: 0;
+  border-radius: var(--ambe-radius-sm);
+  cursor: pointer;
+  flex: 1 1 0;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  padding: 0;
+  position: relative;
+}
+
+.frame-path__pip::before,
+.frame-path__pip > i {
+  border-radius: 999px;
+  box-sizing: border-box;
+  height: 0.55rem;
+  left: 0;
+  margin-top: -0.275rem;
+  position: absolute;
+  right: 0;
+  top: 50%;
+}
+
+.frame-path__pip::before {
+  background: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  content: "";
+}
+
+.frame-path__pip:focus-visible {
+  box-shadow: var(--ambe-focus-ring);
+  outline: none;
+}
+
+.frame-path__pip > i {
+  background: var(--ambe-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.frame-path__pip[aria-current="step"]::before {
+  border-color: var(--ambe-accent);
+}
+
+.frame-path__pip.is-done > i {
+  transform: scaleX(1);
+}
+
+.frame-path__caption {
+  background: var(--ambe-surface-1);
+  border-left: 3px solid var(--ambe-accent);
+  border-radius: var(--ambe-radius-sm);
+  color: var(--ambe-text);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  margin: 0.5rem 0 0;
+  min-height: calc(6 * 1.55em + 0.9rem);
+  padding: 0.45rem 0.7rem;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .frame-path__caption {
+    min-height: 0;
+  }
+}
+
+.frame-path__caption[hidden] {
+  display: none;
+}
+
+/* While the walk-through runs, the caption shows the step's text, so the
+   step list below is only read out, not shown twice. */
+.frame-path[data-tour] .anim-figure__step > ol {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.anim-legend__swatch.frame-path__swatch--comb {
+  background: repeating-linear-gradient(90deg, var(--ambe-accent-cool) 0 3px, transparent 3px 6px);
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.frame-path__swatch--threshold {
+  background: repeating-linear-gradient(90deg, var(--ambe-accent) 0 4px, transparent 4px 7px);
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.frame-path__swatch--ghost {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-muted) 0 3px, transparent 3px 6px);
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .frame-path__stages,
+  .frame-path__stages {
+    border-radius: var(--ambe-radius-md);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  }
+
+  .md-typeset .frame-path__stages .anim-btn,
+  .frame-path__stages .anim-btn {
+    border-radius: var(--ambe-radius-sm);
+    padding-inline: 0.3rem;
+  }
+
+  .frame-path__frame {
+    --anim-aspect: 4 / 3;
+  }
+}
+
+@media print {
+  .frame-path__stages,
+  .frame-path__readout,
+  .frame-path__tour,
+  .frame-path__caption {
+    display: none;
+  }
+}
+
+/* end slot: frame-path */
+
+/* ---------------------------------------------------------------------------
+   One slot per figure (three-everywhere plan, "Slots the prelude creates").
+   A figure's task adds the layout its figure needs between its own slot
+   markers and nowhere else in this file; tools/check-slots.py checks it.
+   The four shipped 3D figures have their slots in their sections above.
+   ------------------------------------------------------------------------ */
+
+/* slot: utterance */
+/* Two canvases in one frame. While the 3D view is up the 2D canvas lies
+   over it and draws only the sentence strip and, laid end to end at the
+   front, the closeup's grid, axis and bracket; it lets the pointer
+   through to the 3D canvas, and fades out when the view turns away. */
+.anim-figure__frame > canvas.anim-utterance__over {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--ambe-dur-med) var(--ambe-ease);
+  z-index: 1;
+}
+
+.anim-figure__frame > canvas.anim-utterance__over[data-away] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-figure__frame > canvas.anim-utterance__over {
+    transition: none;
+  }
+}
+
+.md-typeset .anim-utterance .anim-controls__group[hidden],
+.anim-utterance .anim-controls__group[hidden] {
+  display: none;
+}
+
+.md-typeset .anim-utterance .anim-forms output,
+.anim-utterance .anim-forms output {
+  color: var(--ambe-text);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+}
+/* end slot: utterance */
+
+/* slot: filter */
+.anim-legend__swatch.filter-swatch--ink { background-color: var(--ambe-plot-ink); }
+.anim-legend__swatch.filter-swatch--muted { color: var(--ambe-plot-muted); }
+.anim-legend__swatch.filter-swatch--warm { background-color: var(--ambe-accent-warm); }
+.anim-legend__swatch.filter-swatch--highlight { background-color: var(--ambe-highlight); height: 3px; }
+.anim-legend__swatch.filter-swatch--dot { background-color: var(--ambe-plot-ink); border-radius: 50%; height: 0.4rem; width: 0.4rem; }
+.anim-legend__swatch.filter-swatch--wall { background-color: var(--ambe-accent-soft); border: 1px solid var(--ambe-accent); }
+.anim-legend__swatch.filter-swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  width: 1.2rem;
+}
+.md-typeset .anim-figure--filter .anim-legend__item[hidden],
+.anim-figure--filter .anim-legend__item[hidden],
+.md-typeset .anim-figure--filter .anim-controls__group[hidden],
+.anim-figure--filter .anim-controls__group[hidden] { display: none; }
+.md-typeset .filter-readouts .anim-forms__row,
+.filter-readouts .anim-forms__row { grid-template-columns: 7.5rem 1fr; }
+.filter-readouts output { color: var(--ambe-text); font-family: var(--ambe-font-mono); font-size: 0.62rem; }
+@media (max-width: 30em) {
+  .md-typeset .filter-readouts .anim-forms__row,
+  .filter-readouts .anim-forms__row { grid-template-columns: 1fr; }
+  .filter-readouts .anim-forms__tag { text-align: left; }
+}
+/* The house aspect on a wide page; a phone gets 4:3, so the lanes and the chip have room. */
+.anim-figure--filter .anim-figure__frame { --anim-aspect: var(--anim-aspect-house); }
+/* The labels over the lanes keep a patch of plot under them. */
+.anim-figure--filter .anim-figure__label { background-color: var(--ambe-plot-bg); border-radius: 2px; padding: 0 0.2em; }
+@media screen and (max-width: 44.9375em) {
+  .anim-figure--filter .anim-figure__frame { --anim-aspect: 4 / 3; }
+  /* The chip on two lines, so it covers less of a small frame. */
+  .anim-figure--filter .anim-chip { max-width: 6.8rem; white-space: normal; }
+}
+/* end slot: filter */
+
+/* slot: three-numbers */
+/* three-numbers: the legend and readout rows of one view hide in the
+   other (data-view on the figure, set by its view switch). */
+.anim-tn[data-view="3d"] .anim-legend__item[data-for="2d"],
+.anim-tn[data-view="2d"] [data-for="3d"] {
+  display: none;
+}
+
+.anim-legend__swatch.anim-tn__swatch--highlight {
+  background-color: var(--ambe-highlight);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px var(--ambe-highlight-glow);
+  height: 3px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-tn__swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2),
+    var(--ambe-ramp-3), var(--ambe-ramp-4));
+  border-radius: 999px;
+  height: 1.5px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-tn__swatch--ink {
+  background-color: var(--ambe-plot-ink);
+  border-radius: 999px;
+  height: 2px;
+  width: 0.9rem;
+}
+
+/* Taller than the other ch01 panels: the 3D view lays every phase out
+   in depth, and a phone's frame would otherwise be about 120 px tall. */
+.anim-tn .anim-figure__frame {
+  --anim-aspect: 2 / 1;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .anim-tn .anim-figure__frame {
+    --anim-aspect: 3 / 2;
+  }
+}
+
+/* The 3D view's labels and chip wait for the swap from the 2D canvas,
+   then fade in (anim-three-numbers-3d.js sets data-tn-wait). */
+.anim-tn .anim-figure__frame > .anim-figure__overlay {
+  transition: opacity var(--ambe-dur-med) var(--ambe-ease);
+}
+
+.anim-tn .anim-figure__frame[data-tn-wait] > .anim-figure__overlay {
+  opacity: 0;
+  transition: none;
+}
+
+/* The live wave's marks, on a plate as the 2D canvas draws them; they
+   fade out with the turn, and the note on the crest lines fades in. */
+.anim-tn .anim-figure__frame > .anim-tn__marks,
+.anim-tn .anim-figure__frame > .anim-tn__notes {
+  opacity: var(--tn-fade, 1);
+}
+
+.anim-tn__marks .anim-figure__label,
+.anim-tn__notes .anim-figure__label {
+  background-color: var(--ambe-plot-bg);
+  border-radius: 2px;
+  padding: 0 0.25em;
+}
+
+.anim-tn__marks .anim-figure__label:first-child {
+  color: var(--ambe-accent-cool);
+}
+
+.anim-tn__marks .anim-figure__label:nth-child(2) {
+  color: var(--ambe-accent-warm);
+}
+
+.anim-tn__notes .anim-figure__label {
+  color: var(--ambe-plot-ink);
+}
+/* end slot: three-numbers */
+
+/* slot: utterance-spectra */
+
+/* utterance-spectra (anim-utterance-spectra.js, ch01). The legend lists
+   what the view on show draws; the Camera group shows only in 3D. */
+.anim-uspec[data-view="3d"] .anim-legend__item[data-for="2d"],
+.anim-uspec[data-view="2d"] .anim-legend__item[data-for="3d"],
+.md-typeset .anim-uspec .anim-controls__group[hidden],
+.anim-uspec .anim-controls__group[hidden] {
+  display: none;
+}
+
+.anim-legend__swatch.uspec__swatch--this {
+  background-color: var(--ambe-highlight);
+  box-shadow: 0 0 0 1px var(--ambe-highlight-chip);
+  height: 3px;
+}
+
+.anim-legend__swatch.uspec__swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2),
+    var(--ambe-ramp-3), var(--ambe-ramp-4));
+  height: 0.5rem;
+  width: 1.4rem;
+}
+
+.anim-legend__swatch.uspec__swatch--wall {
+  background: linear-gradient(180deg, var(--ambe-plot-muted), var(--ambe-3d-floor));
+  box-shadow: inset 0 2px 0 var(--ambe-plot-ink);
+  height: 0.6rem;
+  width: 0.9rem;
+}
+
+/* A taller frame than the default 16 / 9: two panels in 2D, a deep box
+   in 3D. Taller still on a phone. */
+.anim-uspec .anim-figure__frame {
+  --anim-aspect: 16 / 10;
+}
+
+@media (max-width: 559px) {
+  .anim-uspec .anim-figure__frame {
+    --anim-aspect: 4 / 3.4;
+  }
+}
+
+/* end slot: utterance-spectra */
+
+/* slot: complex */
+.md-typeset .anim-complex .anim-legend[hidden],
+.anim-complex .anim-legend[hidden] {
+  display: none;
+}
+
+/* Four presets fit a phone only on two rows. */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .anim-complex .anim-toggle-group .anim-btn,
+  .anim-complex .anim-toggle-group .anim-btn {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+.anim-complex .anim-toggle-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Legend keys of the 3D view: the highlight, the helix by turn (violet to
+   indigo, anim-complex-3d.js HELIX), the dashed path, and the shadows, x in
+   teal and y in amber as the 2D legend draws them. */
+.anim-complex__key {
+  display: inline-block;
+  flex: none;
+  height: 0.25rem;
+  width: 1.1rem;
+}
+
+.anim-complex__key--point {
+  background: var(--ambe-highlight);
+  border-radius: 2px;
+  height: 0.3rem;
+}
+
+.anim-complex__key--turns {
+  background: linear-gradient(90deg, var(--ambe-cat-5), var(--ambe-cat-1));
+  background: linear-gradient(in oklab 90deg, var(--ambe-cat-5), var(--ambe-cat-1));
+  border-radius: 2px;
+}
+
+.anim-complex__key--path {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-muted) 0 3px, transparent 3px 6px);
+  height: 2px;
+}
+
+.anim-complex__key--x,
+.anim-complex__key--y {
+  height: 2px;
+}
+
+.anim-complex__key--x {
+  background: var(--ambe-cat-2);
+}
+
+.anim-complex__key--y {
+  background: var(--ambe-cat-3);
+}
+/* end slot: complex */
+
+/* slot: probe */
+.md-typeset .anim-probe .anim-legend[hidden],
+.anim-probe .anim-legend[hidden],
+.anim-probe .anim-legend__item[hidden],
+.anim-probe__strip[hidden] {
+  display: none;
+}
+
+.md-typeset .anim-probe output.anim-forms,
+.anim-probe output.anim-forms {
+  display: block;
+}
+
+/* The sweep strip: its own canvas under the frame, so it shows in 2D and 3D. */
+.anim-probe__strip {
+  aspect-ratio: 16 / 3.6;
+  background: var(--ambe-plot-bg);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  margin-top: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.anim-probe__strip canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .anim-probe__strip {
+    aspect-ratio: 16 / 7;
+  }
+
+  .md-typeset .anim-probe .anim-toggle-group .anim-btn,
+  .anim-probe .anim-toggle-group .anim-btn {
+    padding: 0.3rem 0.5rem;
+  }
+}
+
+.anim-probe .anim-toggle-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Legend keys: the recording, the two test waves, the stems on the ramp by
+   sample, the running sum in the highlight, the ring of the sums plane. */
+.anim-probe__key {
+  display: inline-block;
+  flex: none;
+  height: 0.25rem;
+  width: 1.1rem;
+}
+
+.anim-probe__key--signal {
+  background: var(--ambe-plot-ink);
+  border-radius: 2px;
+  height: 2px;
+}
+
+.anim-probe__key--sine {
+  background: repeating-linear-gradient(90deg, var(--ambe-cat-1) 0 4px, transparent 4px 7px);
+  height: 2px;
+}
+
+.anim-probe__key--cosine {
+  background: repeating-linear-gradient(90deg, var(--ambe-cat-2) 0 2px, transparent 2px 5px);
+  height: 2px;
+}
+
+.anim-probe__key--stems {
+  background: repeating-linear-gradient(90deg, transparent 0 2px, var(--ambe-plot-bg) 2px 3px),
+    linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  height: 0.6rem;
+}
+
+.anim-probe__key--sum {
+  background: var(--ambe-highlight);
+  border-radius: 2px;
+  height: 0.3rem;
+}
+
+.anim-probe__key--ring {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-muted) 0 3px, transparent 3px 6px);
+  height: 2px;
+}
+/* The 3D labels sit over the stems in places: a halo in the plot
+   background keeps them readable. */
+.anim-probe .anim-figure__label {
+  text-shadow:
+    0 0 2px var(--ambe-plot-bg),
+    0 0 3px var(--ambe-plot-bg),
+    0 0 5px var(--ambe-plot-bg);
+}
+/* end slot: probe */
+
+/* slot: window-shapes */
+.md-typeset .anim-ws .anim-legend[hidden],
+.anim-ws .anim-legend[hidden] {
+  display: none;
+}
+
+.anim-ws .anim-toggle-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Legend keys: the highlighted block, the window (dashed), the plain block
+   (dashed), the joint's step, the family on the ramp and the rails. */
+.anim-ws__key {
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+  height: 0.3rem;
+  width: 1.1rem;
+}
+
+.anim-ws__key--this {
+  background: var(--ambe-highlight);
+}
+
+.anim-ws__key--window {
+  background: repeating-linear-gradient(90deg, var(--ambe-accent) 0 5px, transparent 5px 8px);
+  border-radius: 0;
+  height: 2px;
+}
+
+.anim-ws__key--tone {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-muted) 0 4px, transparent 4px 7px);
+  border-radius: 0;
+  height: 1px;
+}
+
+.anim-ws__key--joint {
+  background: var(--ambe-accent-warm);
+  height: 0.3rem;
+  width: 0.3rem;
+}
+
+.anim-ws__key--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  height: 0.45rem;
+}
+
+.anim-ws__key--rail {
+  background: var(--ambe-plot-ink);
+  height: 1px;
+}
+
+/* The names of the three windows sit over the family's lines: a halo of
+   the plot's ground keeps them legible. */
+.anim-ws .anim-figure__label:not(.anim-figure__label--tick) {
+  background-color: var(--ambe-plot-bg);
+  border-radius: 2px;
+  padding: 0 0.25em;
+}
+/* end slot: window-shapes */
+
+/* slot: leakage */
+/* The strip above the frame: three copies of the block, in both views. */
+.anim-leakage__strip {
+  background-color: var(--ambe-plot-bg);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  height: 6.5rem;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.anim-leakage__strip-canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .anim-leakage__strip {
+    height: 5.5rem;
+  }
+}
+
+.md-typeset .anim-leakage .anim-legend[hidden],
+.anim-leakage .anim-legend[hidden],
+.md-typeset .anim-leakage .anim-forms__row[hidden],
+.anim-leakage .anim-forms__row[hidden] {
+  display: none;
+}
+
+.anim-leakage .anim-toggle-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Legend keys: the ramp by level, the -40 dB line, the joint's step and
+   the highlighted row. */
+.anim-leakage__key {
+  border-radius: 2px;
+  display: inline-block;
+  flex: none;
+  height: 0.25rem;
+  width: 1.1rem;
+}
+
+.anim-leakage__key--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  height: 0.45rem;
+}
+
+.anim-leakage__key--count {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-ink) 0 4px, transparent 4px 7px);
+  border-radius: 0;
+  height: 1px;
+}
+
+.anim-leakage__key--joint {
+  background: var(--ambe-accent-warm);
+  height: 0.3rem;
+}
+
+.anim-leakage__key--this {
+  background: var(--ambe-highlight);
+  height: 0.3rem;
+}
+
+/* The 3D view's names (the weak tone, the close-up's -6.02 dB) sit over
+   the field's lines: a halo of the plot's ground keeps them legible. */
+.anim-leakage .anim-figure__label:not(.anim-figure__label--tick) {
+  background-color: var(--ambe-plot-bg);
+  border-radius: 2px;
+  padding: 0 0.25em;
+}
+/* end slot: leakage */
+
+/* slot: tradeoff */
+.anim-tradeoff__frame {
+  --anim-aspect: 4 / 3;
+  --anim-min-width: 300px;
+}
+
+@media screen and (max-width: 46em) {
+  .anim-tradeoff__frame {
+    --anim-aspect: 4 / 5;
+  }
+}
+
+.md-typeset .anim-tradeoff__readouts,
+.anim-tradeoff__readouts {
+  margin: 0.45rem 0 0;
+}
+
+.md-typeset .anim-tradeoff__line,
+.anim-tradeoff__line {
+  font-size: 0.62rem;
+  margin: 0.15rem 0 0;
+}
+
+.anim-tradeoff__value {
+  color: var(--ambe-text-2);
+  font-family: var(--ambe-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.anim-legend__swatch.anim-tradeoff__key--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  height: 4px;
+}
+
+.anim-legend__swatch.anim-tradeoff__key--box {
+  background: none;
+  border: 2px solid var(--ambe-highlight);
+  border-radius: 1px;
+  height: 0.5rem;
+}
+
+.anim-legend__swatch.anim-tradeoff__key--highlight {
+  background-color: var(--ambe-highlight);
+  height: 3px;
+}
+
+.anim-legend__swatch.anim-tradeoff__key--comb {
+  background: repeating-linear-gradient(180deg, var(--ambe-plot-muted) 0 3px, transparent 3px 6px);
+  border-radius: 0;
+  height: 0.6rem;
+  width: 2px;
+}
+
+.anim-legend__swatch.anim-tradeoff__key--lobe {
+  background: none;
+  border: 1.5px solid var(--ambe-plot-ink);
+  border-bottom: none;
+  border-radius: 0;
+  height: 4px;
+}
+
+/* "4/T" beside its bar, readable over the waterfall. */
+.anim-tradeoff .anim-figure__label[data-ref="lobe"] {
+  background-color: var(--ambe-plot-bg);
+  border-radius: 2px;
+  color: var(--ambe-plot-ink);
+  padding: 0 0.25em;
+}
+
+/* On a phone the chip breaks at its colon, so it covers less of the frame. */
+@media screen and (max-width: 46em) {
+  .anim-tradeoff .anim-chip {
+    white-space: pre-line;
+  }
+}
+
+/* The 3D view's labels and chip wait for its first frame (anim-tradeoff-3d.js). */
+.anim-tradeoff__frame--opening .anim-figure__overlay {
+  visibility: hidden;
+}
+
+.anim-tradeoff[data-view="3d"] .anim-legend__item[data-for="2d"],
+.anim-tradeoff[data-view="2d"] .anim-legend__item[data-for="3d"] {
+  display: none;
+}
+/* end slot: tradeoff */
+
+/* slot: frames */
+
+/* frames (anim-frames.js, ch08): the whole clip over a three-frame inset,
+   a readout panel, and a 3D view that sits over the inset only. */
+.frames .frames__main {
+  --anim-aspect: 4 / 3;
+  --anim-min-width: 300px;
+}
+
+@media screen and (max-width: 46em) {
+  .frames .frames__main { --anim-aspect: 4 / 5; }
+}
+
+/* The 3D host: placed over the inset by the module, see-through and out of
+   the pointer's way until a live view puts the stage behind its canvas. */
+.frames .frames__main > .frames__overlay {
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  min-width: 0;
+  pointer-events: none;
+  position: absolute;
+  width: auto;
+}
+
+.frames .frames__main > .frames__overlay:not(.anim-figure__frame--stage) {
+  background: transparent;
+}
+
+.frames .frames__overlay:not(.anim-figure__frame--stage) > .anim-figure__overlay {
+  display: none;
+}
+
+.frames .frames__main > .frames__overlay.anim-figure__frame--stage {
+  pointer-events: auto;
+}
+
+@media print {
+  .frames .frames__main > .frames__overlay { display: none; }
+}
+
+.md-typeset .fp,
+.fp {
+  display: grid;
+  gap: 0.35rem;
+  /* Four columns at most, so on a wide figure the four cells fill the row. */
+  grid-template-columns: repeat(auto-fit, minmax(max(7rem, calc((100% - 1.05rem) / 4)), 1fr));
+  margin-top: 0.6rem;
+}
+
+.fp__cell {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-sm);
+  padding: 0.4rem 0.55rem;
+}
+
+.fp__cell--wide { grid-column: 1 / -1; }
+
+.fp__key {
+  align-items: baseline;
+  color: var(--ambe-text-4);
+  display: flex;
+  font-size: 0.55rem;
+  gap: 0.35rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fp__key em {
+  color: var(--ambe-accent-cool);
+  font-size: 0.9em;
+  font-style: normal;
+  letter-spacing: 0.02em;
+}
+
+.fp__key em.is-measured { color: var(--ambe-accent-warm); }
+
+.fp__val {
+  color: var(--ambe-text);
+  display: block;
+  font-family: var(--ambe-font-mono);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.15rem;
+  word-break: break-all;
+}
+
+.fp__val--dim { color: var(--ambe-text-3); }
+
+.frames__window {
+  display: grid;
+  gap: 0.35rem 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+}
+
+.fp__bands {
+  align-items: flex-end;
+  display: flex;
+  gap: 3px;
+  margin-top: 0.28rem;
+}
+
+.fp__band {
+  background-color: var(--ambe-surface-3);
+  border-radius: 2px;
+  display: block;
+  flex: 1 1 auto;
+  height: 1.15rem;
+  max-width: 1.6rem;
+  position: relative;
+}
+
+.fp__band::after {
+  background-color: var(--ambe-text-4);
+  border-radius: 2px;
+  bottom: 0;
+  content: "";
+  height: calc(var(--v, 0) * 100%);
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.fp__band[data-on="1"]::after { background-color: var(--ambe-accent-cool); }
+
+.fp__scale {
+  color: var(--ambe-text-4);
+  display: flex;
+  font-size: 0.5rem;
+  justify-content: space-between;
+  margin-top: 0.2rem;
+}
+
+/* Legend swatches state the encoding: thick, thin, dashed, shaded. */
+.frames__key--this .anim-legend__swatch {
+  background-color: var(--ambe-highlight);
+  border-radius: 999px;
+  height: 3px;
+  width: 0.9rem;
+}
+
+.frames__key--near .anim-legend__swatch {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  border-radius: 999px;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.frames__key--window .anim-legend__swatch {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-ink) 0 4px, transparent 4px 7px);
+  border-radius: 0;
+  height: 1.5px;
+  width: 0.9rem;
+}
+
+/* The shared samples are one colour everywhere: the inset's bands, the 3D
+   bands and floor strips, and this swatch. */
+.frames__key--shared .anim-legend__swatch {
+  background-color: color-mix(in srgb, var(--ambe-cat-5) 20%, transparent);
+  border: 1px solid var(--ambe-cat-5);
+}
+
+.frames__key--note .anim-legend__swatch { visibility: hidden; }
+
+/* The 3D view's labels read on any row behind them. */
+.frames .frames__overlay .anim-figure__label {
+  background-color: color-mix(in srgb, var(--ambe-plot-bg) 82%, transparent);
+  border-radius: 3px;
+  color: var(--ambe-text-2);
+  padding: 0 0.2rem;
+}
+
+/* end slot: frames */
+
+/* slot: pitch-search */
+/* pitch-search: rows of one mode (data-show) or one view (data-for) hide in
+   the other; data-mode and data-view sit on the figure. Tall frame on a
+   phone, where the score panel goes under the autocorrelation. */
+.anim-ps[data-mode="frame"] [data-show="clip"],
+.anim-ps[data-mode="clip"] [data-show="frame"],
+.anim-ps[data-view="2d"] [data-for="3d"],
+.anim-ps[data-view="3d"] [data-for="2d"] {
+  display: none;
+}
+
+@media (max-width: 619.98px) {
+  .anim-ps {
+    --anim-ps-aspect: 4 / 5;
+  }
+}
+
+/* A chip on a narrow frame breaks before its comparison ("\n" in its text). */
+.anim-ps .anim-chip__text {
+  white-space: pre;
+}
+
+.anim-ps__readout {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.anim-legend__swatch.anim-ps__swatch--highlight {
+  background-color: var(--ambe-highlight);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px var(--ambe-highlight-glow);
+  height: 3px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-ps__swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2),
+    var(--ambe-ramp-3), var(--ambe-ramp-4));
+  border-radius: 999px;
+  height: 4px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-ps__swatch--ink {
+  background-color: var(--ambe-plot-ink);
+  border-radius: 999px;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-ps__swatch--cool {
+  background-color: var(--ambe-accent-cool);
+  border-radius: 999px;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-ps__swatch--muted {
+  color: var(--ambe-plot-ink);
+}
+/* end slot: pitch-search */
+
+/* slot: harmonics */
+
+/* The waveform under the 3D view (anim-harmonics.js); the flat view draws
+   it inside the frame. */
+.harmonics-strip {
+  aspect-ratio: 16 / 3.4;
+  border-radius: var(--ambe-radius-md);
+  display: block;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.harmonics-strip[hidden],
+.md-typeset .anim-figure--harmonics .anim-legend__item[hidden],
+.anim-figure--harmonics .anim-legend__item[hidden] {
+  display: none;
+}
+
+/* Labels over the 3D scene sit on a soft backing of the plot ground, so a
+   stem, the staircase or a dashed edge behind one never strikes it out. */
+.anim-figure--harmonics .anim-figure__label {
+  background-color: color-mix(in srgb, var(--ambe-plot-bg) 70%, transparent);
+  border-radius: 2px;
+  padding: 0 0.2em;
+}
+
+.harmonics-cutoff {
+  color: var(--ambe-text-3);
+  font-size: 0.62rem;
+}
+
+/* The highlight (thick, outlined) and the ramp, in words beside them. */
+.harmonics-swatch--highlight {
+  background-color: var(--ambe-highlight);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1.5px var(--ambe-highlight-chip), 0 0 0 2.5px var(--ambe-highlight);
+  height: 3px;
+  width: 0.9rem;
+}
+
+.harmonics-swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  width: 1.4rem;
+}
+
+/* end slot: harmonics */
+
+/* slot: envelope */
+.anim-env__frame {
+  --anim-aspect: var(--anim-aspect-house);
+  --anim-min-width: 300px;
+}
+
+@media screen and (max-width: 46em) {
+  .anim-env__frame {
+    --anim-aspect: 4 / 3;
+  }
+}
+
+/* The header and the hover text the canvas used to draw, as readouts. */
+.md-typeset .anim-env__readouts,
+.anim-env__readouts {
+  margin: 0.45rem 0 0;
+}
+
+.md-typeset .anim-env__line,
+.anim-env__line {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.62rem;
+  gap: 0.2rem 0.9rem;
+  margin: 0.15rem 0 0;
+}
+
+.anim-env__frame-info,
+.anim-env__error,
+.anim-env__hover {
+  font-family: var(--ambe-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.anim-env__frame-info {
+  color: var(--ambe-text);
+}
+
+.anim-env__cutoff,
+.anim-env__error,
+.anim-env__hover {
+  color: var(--ambe-text-3);
+}
+
+.anim-env__error.is-rounded {
+  color: var(--ambe-accent-warm);
+}
+
+.anim-env__check {
+  cursor: pointer;
+}
+
+.anim-legend__swatch.anim-env__key--dot {
+  background-color: var(--ambe-highlight);
+  border-radius: 999px;
+}
+
+.anim-legend__swatch.anim-env__key--dashed {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-muted) 0 4px, transparent 4px 7px);
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.anim-env__key--moved {
+  background-color: var(--ambe-data-3);
+  border-radius: 1px;
+  height: 0.6rem;
+  width: 2px;
+}
+
+.anim-legend__swatch.anim-env__key--ring {
+  background: none;
+  border: 1.3px solid var(--ambe-plot-ink);
+  border-radius: 999px;
+}
+
+.anim-legend__swatch.anim-env__key--highlight {
+  background-color: var(--ambe-highlight);
+  height: 3px;
+}
+
+.anim-legend__swatch.anim-env__key--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  height: 2px;
+}
+
+.anim-legend__swatch.anim-env__key--spectrum {
+  background-color: var(--ambe-plot-muted);
+  height: 1px;
+}
+
+.anim-legend__swatch.anim-env__key--dots {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  border-radius: 999px;
+}
+
+.anim-legend__swatch.anim-env__key--end {
+  background: linear-gradient(180deg, var(--ambe-ramp-0), var(--ambe-ramp-4));
+  border-radius: 1px;
+  height: 0.6rem;
+  width: 2px;
+}
+
+.anim-env[data-view="3d"] .anim-legend__item[data-for="2d"],
+.anim-env[data-view="2d"] .anim-legend__item[data-for="3d"],
+.md-typeset .anim-env .anim-legend__item[hidden],
+.anim-env .anim-legend__item[hidden] {
+  display: none;
+}
+
+/* The 2D plot's axes, drawn by the 3D view at Front: the same text as the
+   2D canvas's, in the same margins. */
+.anim-env__axis {
+  color: var(--ambe-text-3);
+  font-size: 11px;
+}
+
+.anim-env__axis--x {
+  transform: translate(-50%, 0);
+}
+
+.anim-env__axis--y {
+  transform: translate(-100%, -50%);
+}
+
+.anim-env__axis--name {
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+/* A row's harmonic count, shown as it lands in the first-view animation. */
+.anim-env__count {
+  font-family: var(--ambe-font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+/* end slot: envelope */
+
+/* slot: envelope-blocks */
+.anim-eb .anim-figure__frame {
+  --anim-aspect: 3 / 2;
+}
+
+@media screen and (max-width: 46em) {
+  .anim-eb .anim-figure__frame { --anim-aspect: 5 / 4; }
+}
+
+.anim-eb .anim-figure__frame > canvas[hidden],
+.anim-eb .anim-toggle-group[hidden] {
+  display: none;
+}
+
+.anim-eb[data-view="2d"] .anim-legend__item[data-for="3d"] {
+  display: none;
+}
+
+/* A halo of the ground under the 3D labels, so a line under one does not cut it. */
+.anim-eb .anim-figure__label {
+  text-shadow: 0 0 2px var(--ambe-plot-bg), 0 0 2px var(--ambe-plot-bg), 0 0 3px var(--ambe-plot-bg);
+}
+
+/* The slider's thumb at the top of its track stays clear of the readout:
+   the track shrinks inside its field rather than run under the output. */
+.anim-eb .anim-field .anim-range {
+  min-width: 3rem;
+}
+
+.anim-eb output[data-ref="k-out"] {
+  margin-inline-start: 0.6rem;
+}
+
+.anim-eb__readouts {
+  color: var(--ambe-text-3);
+  font-size: 0.68rem;
+  gap: 0.4rem 1.1rem;
+}
+
+.anim-eb__readouts > span {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.anim-legend__swatch.anim-eb__swatch--kept {
+  background-color: var(--ambe-highlight);
+  height: 3px;
+}
+
+.anim-legend__swatch.anim-eb__swatch--ring {
+  background-color: transparent;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.25px var(--ambe-plot-ink);
+}
+
+.anim-legend__swatch.anim-eb__swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  height: 1.5px;
+}
+
+.anim-legend__swatch.anim-eb__swatch--level {
+  background-color: var(--ambe-plot-muted);
+  box-shadow: inset 0 2px 0 var(--ambe-plot-ink);
+  height: 0.7rem;
+  width: 0.45rem;
+}
+
+.anim-legend__swatch.anim-eb__swatch--block {
+  background-color: var(--ambe-surface-2);
+  box-shadow: inset 0 0 0 1px var(--ambe-plot-grid);
+  width: 0.9rem;
+}
+/* end slot: envelope-blocks */
+
+/* slot: bits */
+/* bits (anim-bits.js, anim-bits-3d.js). --anim-aspect is set from JS: the
+   grid has a natural height that depends on how wide the cells end up,
+   which a media query cannot see. */
+[data-anim="bits"] .anim-figure__frame { --anim-aspect: 16 / 10; }
+[data-anim="bits"] .anim-figure__canvas { cursor: crosshair; touch-action: pan-y; }
+[data-anim="bits"] .anim-figure__canvas:focus-visible {
+  outline: none;
+  box-shadow: var(--ambe-focus-ring);
+}
+[data-anim="bits"] .anim-legend__item[hidden] { display: none; }
+[data-anim="bits"] .bits-flash { flex: none; }
+[data-anim="bits"] .bits-inspect {
+  background-color: var(--ambe-sunken);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  min-height: 4.4rem;
+}
+[data-anim="bits"] .bits-inspect__head {
+  color: var(--ambe-text);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.64rem;
+  font-variant-numeric: tabular-nums;
+}
+[data-anim="bits"] .bits-inspect__meta {
+  color: var(--ambe-text-3);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+[data-anim="bits"] .bits-inspect__note {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+  line-height: 1.5;
+}
+[data-anim="bits"] .bits-inspect__note b {
+  color: var(--ambe-accent-warm);
+  font-weight: 550;
+}
+/* In 3D the change rate runs on the ramp; the legend follows. The changed
+   bits carry the highlight in both views. */
+[data-anim="bits"] .anim-figure[data-view="3d"] .bits-swatch--often { background: var(--ambe-ramp-4); }
+[data-anim="bits"] .anim-figure[data-view="3d"] .bits-swatch--seldom { background: var(--ambe-ramp-0); }
+[data-anim="bits"] .bits-swatch--changed {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--ambe-highlight);
+}
+/* The chip states a fact of the whole board, in the title line: no dot and
+   no leader to a point. */
+[data-anim="bits"] .anim-chip__dot,
+[data-anim="bits"] .anim-chip__leader { display: none; }
+/* Under reduced motion .is-static shows every hint; the WebGL hint only
+   when the view switch unhides it. */
+[data-anim="bits"] .anim-figure.is-static .anim-figure__hint--webgl[hidden] { display: none; }
+/* end slot: bits */
+
+/* slot: fec-protection */
+/* fec-protection (anim-fec-protection.js, anim-fec-protection-3d.js).
+   --anim-aspect is set from JS: the frame's height follows the width the
+   rows of cells end up with, which a media query cannot see. */
+[data-anim="fec-protection"] .anim-figure__frame { --anim-aspect: 16 / 11; }
+[data-anim="fec-protection"] .anim-figure__canvas { cursor: crosshair; touch-action: pan-y; }
+[data-anim="fec-protection"] .anim-figure__canvas:focus-visible {
+  outline: none;
+  box-shadow: var(--ambe-focus-ring);
+}
+[data-anim="fec-protection"] .anim-legend__item[hidden] { display: none; }
+[data-anim="fec-protection"] .fec-check { flex: none; }
+/* A slider and its readout wrap as one, so a readout never starts a row
+   on its own; on a phone the pair is no box at all and the row is as it was. */
+[data-anim="fec-protection"] .fec-pair { display: contents; }
+@media screen and (min-width: 45em) {
+  [data-anim="fec-protection"] .fec-pair { align-items: center; display: flex; flex: 1 1 14rem; gap: 0.5rem; }
+}
+[data-anim="fec-protection"] .fec-status {
+  background-color: var(--ambe-sunken);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  color: var(--ambe-text-2);
+  font-size: 0.62rem;
+  line-height: 1.5;
+  margin: 0.6rem 0 0;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.7rem;
+}
+/* Legend swatches: each group's line (solid, dashed, dotted) in its
+   category colour, an error, check bits, the subject and a failed row. */
+[data-anim="fec-protection"] .fec-swatch--g0 { background-color: var(--ambe-cat-1); }
+[data-anim="fec-protection"] .fec-swatch--dashed,
+[data-anim="fec-protection"] .fec-swatch--dotted {
+  background-color: transparent;
+  border-radius: 0;
+  height: 2px;
+  width: 0.9rem;
+}
+[data-anim="fec-protection"] .fec-swatch--dashed.fec-swatch--g1 {
+  background-image: repeating-linear-gradient(90deg, var(--ambe-cat-2) 0 5px, transparent 5px 8px);
+}
+[data-anim="fec-protection"] .fec-swatch--dotted.fec-swatch--g2 {
+  background-image: repeating-linear-gradient(90deg, var(--ambe-cat-3) 0 2px, transparent 2px 4px);
+}
+[data-anim="fec-protection"] .fec-swatch--error { background-color: var(--ambe-plot-ink); }
+[data-anim="fec-protection"] .fec-swatch--check {
+  background-color: color-mix(in srgb, var(--ambe-cat-1) 25%, var(--ambe-plot-bg));
+}
+[data-anim="fec-protection"] .fec-swatch--subject {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--ambe-highlight);
+}
+[data-anim="fec-protection"] .fec-swatch--fails {
+  background-color: var(--ambe-mismatch);
+  box-shadow: inset 0 0 0 1px var(--ambe-border);
+}
+/* end slot: fec-protection */
+
+/* slot: synth */
+
+/* synth (anim-synth.js, ch11). The frame's aspect is set from JS, which
+   knows the stacked layout's natural height. */
+.synth .synth-frame {
+  --anim-aspect: 16 / 10;
+}
+
+/* A grid, so the rows do not change as the numbers change during playback
+   and the controls below never move. */
+.md-typeset .synth .synth-readouts,
+.synth .synth-readouts {
+  color: var(--ambe-text-3);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+  font-family: var(--ambe-font-mono);
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  gap: 0.25rem 1.1rem;
+  margin-top: 0.6rem;
+}
+
+.synth .synth-readouts > span:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+.synth .synth-readouts > span {
+  min-width: 0;
+}
+
+/* A long value wraps inside the row on a phone rather than run off it. */
+.synth .synth-readouts b {
+  color: var(--ambe-text);
+  font-weight: 550;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* A double-click on the frame zooms; it never selects the chip's text. */
+.synth .synth-frame .anim-figure__overlay {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The opening's own labels name the two generators and the ribbon while
+   the split plays, and fade as the camera turns. */
+.synth .synth-frame .synth-intro-labels {
+  transition: opacity 0.35s ease;
+}
+
+.synth .synth-frame .synth-intro-labels[data-gone] {
+  opacity: 0;
+}
+
+.synth .synth-intro-labels .anim-figure__label {
+  border-left: 3px solid var(--ambe-plot-ink);
+  color: var(--ambe-text);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding-left: 0.3em;
+}
+
+.synth .synth-intro-labels .anim-figure__label:nth-child(1) {
+  border-left-color: var(--ambe-voiced);
+}
+
+.synth .synth-intro-labels .anim-figure__label:nth-child(2) {
+  border-left-color: var(--ambe-unvoiced);
+}
+
+.md-typeset .synth .synth-controls--tight,
+.synth .synth-controls--tight {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0.4rem;
+}
+
+.md-typeset .synth .anim-controls__group[hidden],
+.synth .anim-controls__group[hidden] {
+  display: none;
+}
+
+.synth .synth-field--check {
+  flex: none;
+}
+
+.synth[data-view="3d"] .anim-legend__item[data-for="2d"],
+.synth[data-view="2d"] .anim-legend__item[data-for="3d"] {
+  display: none;
+}
+
+.anim-legend__swatch.synth-swatch--voiced {
+  background-color: var(--ambe-voiced);
+  border-radius: 1px;
+  height: 0.65rem;
+  width: 2px;
+}
+
+.anim-legend__swatch.synth-swatch--unvoiced {
+  background-color: var(--ambe-unvoiced);
+  height: 0.35rem;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.synth-swatch--muted {
+  background-color: var(--ambe-plot-muted);
+  border-radius: 999px;
+  height: 1px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.synth-swatch--highlight {
+  background-color: var(--ambe-highlight);
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px var(--ambe-highlight-glow);
+  height: 3px;
+  width: 0.9rem;
+}
+
+.anim-legend__swatch.synth-swatch--outline {
+  background: none;
+  border: 1px dashed var(--ambe-highlight);
+  height: 0.6rem;
+  width: 0.9rem;
+}
+
+.synth[data-overlay="off"] .anim-legend__item[data-ref="measured3d"] {
+  display: none;
+}
+
+/* end slot: synth */
+
+/* slot: frame-boundary */
+.anim-legend__swatch.fb-swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-1), var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  width: 1.2rem;
+}
+.anim-legend__swatch.fb-swatch--highlight { background-color: var(--ambe-highlight); height: 3px; }
+.anim-legend__swatch.fb-swatch--thin { background-color: var(--ambe-ramp-0); height: 1px; }
+.anim-legend__swatch.fb-swatch--muted { color: var(--ambe-plot-muted); }
+.anim-legend__swatch.fb-swatch--plane { background-color: var(--ambe-accent-soft); border: 1px solid var(--ambe-accent); }
+.anim-legend__swatch.fb-swatch--bar { background-color: var(--ambe-ramp-2); width: 0.4rem; }
+.md-typeset .anim-figure--frame-boundary .anim-legend__item[hidden],
+.anim-figure--frame-boundary .anim-legend__item[hidden],
+.md-typeset .anim-figure--frame-boundary .anim-controls__group[hidden],
+.anim-figure--frame-boundary .anim-controls__group[hidden] { display: none; }
+.md-typeset .anim-figure--frame-boundary .anim-toggle-group,
+.anim-figure--frame-boundary .anim-toggle-group { flex-wrap: wrap; }
+.md-typeset .fb-readouts .anim-forms__row,
+.fb-readouts .anim-forms__row { grid-template-columns: 8rem 1fr; }
+.fb-readouts output { color: var(--ambe-text); font-family: var(--ambe-font-mono); font-size: 0.62rem; }
+/* The 3D view's labels come back after a camera turn by fading in. */
+@keyframes fb-label-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .anim-figure--frame-boundary .anim-figure__overlay .anim-figure__label { animation: fb-label-in var(--ambe-dur-med) ease-out; }
+}
+@media (max-width: 30em) {
+  .md-typeset .fb-readouts .anim-forms__row,
+  .fb-readouts .anim-forms__row { grid-template-columns: 1fr; }
+  .fb-readouts .anim-forms__tag { text-align: left; }
+}
+/* The figure and its prose would move the figures below it on ch11 by a
+   fraction of a pixel. These few hundredths keep their sub-pixel position,
+   and so their pixel baselines (screens.spec.js), at desktop and phone
+   widths. */
+@media (min-width: 60em) {
+  .md-typeset [data-anim="frame-boundary"].is-enhanced { padding-bottom: 0.90625px; }
+}
+@media (max-width: 59.9375em) {
+  .md-typeset [data-anim="frame-boundary"].is-enhanced { padding-bottom: 0.734375px; }
+}
+/* end slot: frame-boundary */
+
+/* slot: listen-terrain */
+
+/* listen-terrain (anim-listen-terrain.js, ch12). Three strips in 2D, three
+   sheets in 3D: a taller frame than 16 / 9, taller still on a phone. The
+   Camera group shows only in 3D. */
+.md-typeset .anim-lt .anim-controls__group[hidden],
+.anim-lt .anim-controls__group[hidden] {
+  display: none;
+}
+
+.anim-lt .anim-figure__frame {
+  --anim-aspect: 16 / 11;
+}
+
+.anim-legend__swatch.lt__swatch--this {
+  background-color: var(--ambe-highlight);
+  box-shadow: 0 0 0 1px var(--ambe-highlight-chip);
+  height: 3px;
+}
+
+.anim-legend__swatch.lt__swatch--ramp {
+  background: linear-gradient(90deg, var(--ambe-plot-bg), var(--ambe-ramp-0), var(--ambe-ramp-1),
+    var(--ambe-ramp-2), var(--ambe-ramp-3), var(--ambe-ramp-4));
+  height: 0.5rem;
+  width: 1.6rem;
+}
+
+.anim-legend__swatch.lt__swatch--neg { background-color: var(--ambe-diverge-neg); }
+.anim-legend__swatch.lt__swatch--pos { background-color: var(--ambe-diverge-pos); }
+
+.anim-legend__swatch.lt__swatch--mask {
+  background-color: color-mix(in srgb, var(--ambe-diverge-mid) 45%, var(--ambe-plot-bg));
+  box-shadow: inset 0 0 0 1px var(--ambe-hairline);
+}
+
+.anim-legend__swatch.lt__swatch--orig {
+  background: none;
+  border-top: 2px dashed var(--ambe-plot-muted);
+  height: 0;
+}
+
+.anim-legend__swatch.lt__swatch--gap {
+  background-color: color-mix(in srgb, var(--ambe-diverge-neg) 45%, var(--ambe-plot-bg));
+}
+
+/* The 3D view's labels and chips wait for its first frame, so they never
+   sit over the 2D strips while the 3D canvas comes up. */
+.anim-lt .anim-figure__frame .anim-figure__overlay {
+  transition: opacity var(--ambe-dur-fast) var(--ambe-ease);
+}
+
+.anim-lt .anim-figure__frame[data-lt-labels="wait"] .anim-figure__overlay {
+  opacity: 0;
+}
+
+.anim-legend__swatch.lt__swatch--dec {
+  background-color: var(--ambe-plot-ink);
+  height: 3px;
+}
+
+/* "Line up the harmonics": a 2D panel directly under the frame, in both
+   views, above the steps. */
+.anim-lt .lt-harmonics {
+  margin-top: var(--ambe-space-3);
+}
+
+.md-typeset .anim-lt .lt-harmonics__title,
+.anim-lt .lt-harmonics__title {
+  color: var(--ambe-text-2);
+  font-size: 0.8em;
+  font-weight: 650;
+  margin: 0 0 var(--ambe-space-2);
+}
+
+.anim-lt .lt-harmonics__frame {
+  aspect-ratio: 16 / 5;
+  background-color: var(--ambe-plot-bg);
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  overflow: hidden;
+}
+
+@media (max-width: 559px) {
+  .anim-lt .anim-figure__frame {
+    --anim-aspect: 1 / 1;
+  }
+
+  .anim-lt .lt-harmonics__frame {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* end slot: listen-terrain */
+
+/* slot: gain-definitions */
+.md-typeset .anim-gain .anim-legend__item[hidden],
+.anim-gain .anim-legend__item[hidden],
+.md-typeset .anim-gain .anim-forms__row[hidden],
+.anim-gain .anim-forms__row[hidden] {
+  display: none;
+}
+
+.md-typeset .anim-gain output.anim-forms,
+.anim-gain output.anim-forms {
+  display: block;
+}
+
+.md-typeset .anim-gain__select,
+.anim-gain__select {
+  background-color: var(--ambe-surface-2);
+  border: 1px solid var(--ambe-border);
+  border-radius: var(--ambe-radius-sm);
+  color: var(--ambe-text-2);
+  font: inherit;
+  font-size: 0.62rem;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+}
+
+.anim-gain__select:focus-visible {
+  box-shadow: var(--ambe-focus-ring);
+  outline: none;
+}
+
+/* The slider shrinks before the readout does: the readout keeps room for
+   "spread 26.8 dB". */
+.md-typeset .anim-gain .anim-field .anim-range,
+.anim-gain .anim-field .anim-range {
+  flex: 1 1 3rem;
+  min-width: 3rem;
+}
+
+.md-typeset .anim-gain .anim-field .anim-readout,
+.anim-gain .anim-field .anim-readout {
+  flex: none;
+  min-width: 14ch;
+}
+
+/* The 3D control starts its own row, with the Camera and Zoom groups. */
+.md-typeset .anim-gain .anim-gain__view,
+.anim-gain .anim-gain__view {
+  align-items: center;
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+}
+
+.anim-gain .anim-toggle-group {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Labels in the 3D view keep a plot-ground halo, so a line under them
+   does not cross the text. */
+.anim-gain .anim-figure__label {
+  text-shadow: 0 0 2px var(--ambe-plot-bg), 0 0 3px var(--ambe-plot-bg), 0 0 5px var(--ambe-plot-bg);
+}
+
+/* The equal-spread partner's chip: ink, dotted, as its comb is drawn. */
+.anim-gain .anim-gain__partner-chip .anim-chip {
+  background-color: var(--ambe-plot-bg);
+  border-color: var(--ambe-plot-ink);
+  border-style: dotted;
+}
+
+.anim-gain .anim-gain__partner-chip .anim-chip__swatch {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-ink) 0 2px, transparent 2px 5px);
+}
+
+.anim-gain .anim-gain__partner-chip .anim-chip__dot {
+  background: var(--ambe-plot-ink);
+}
+
+.anim-gain .anim-gain__partner-chip .anim-chip__leader line {
+  stroke: var(--ambe-plot-ink);
+  stroke-dasharray: 2 3;
+}
+
+/* Legend keys: the selected comb in the highlight, G_E solid and G_L
+   dashed in ink, every frame's G_L as dots on the ramp by recording, the
+   equal-spread partner dotted, the other combs as thin ramp stems. */
+.anim-gain__key {
+  display: inline-block;
+  flex: none;
+  height: 2px;
+  width: 1.1rem;
+}
+
+.anim-gain__key--comb {
+  background: repeating-linear-gradient(90deg, var(--ambe-highlight) 0 3px, transparent 3px 6px);
+  height: 0.6rem;
+}
+
+.anim-gain__key--ge {
+  background: var(--ambe-plot-ink);
+  height: 3px;
+}
+
+.anim-gain__key--gl {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-ink) 0 6px, transparent 6px 9px);
+  height: 3px;
+}
+
+.anim-gain__key--dots {
+  background: radial-gradient(circle, var(--ambe-ramp-0) 0 2.5px, transparent 3px) 0 50% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--ambe-ramp-2) 0 2.5px, transparent 3px) 50% 50% / 6px 6px no-repeat,
+    radial-gradient(circle, var(--ambe-ramp-4) 0 2.5px, transparent 3px) 100% 50% / 6px 6px no-repeat;
+  height: 0.5rem;
+}
+
+.anim-gain__key--partner {
+  background: repeating-linear-gradient(90deg, var(--ambe-plot-ink) 0 2px, transparent 2px 5px);
+  height: 2px;
+}
+
+.anim-gain__key--context {
+  background: repeating-linear-gradient(90deg, transparent 0 2px, var(--ambe-surface-1) 2px 4px),
+    linear-gradient(90deg, var(--ambe-ramp-0), var(--ambe-ramp-2), var(--ambe-ramp-4));
+  height: 0.6rem;
+}
+/* end slot: gain-definitions */
+
+/* ---------------------------------------------------------------------------
+   Small screens
+   ------------------------------------------------------------------------ */
+
+@media screen and (max-width: 44.9375em) {
+  .anim-figure {
+    border-left: 0;
+    border-radius: var(--ambe-radius-md);
+    border-right: 0;
+    margin-inline: -0.4rem;
+    padding: 0.7rem;
+  }
+
+  .anim-controls,
+  .md-typeset .anim-figure .anim-view,
+  .anim-figure .anim-view {
+    gap: 0.45rem;
+  }
+
+  .anim-field {
+    flex-basis: 100%;
+  }
+
+  .anim-readout {
+    text-align: left;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print: keep the static frame and the caption, drop the transport.
+   ------------------------------------------------------------------------ */
+
+@media print {
+  .anim-controls,
+  .anim-view,
+  .anim-figure__hint {
+    display: none;
+  }
+
+  .anim-figure {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .md-typeset .is-enhanced > .anim-fallback,
+  .is-enhanced > .anim-fallback {
+    display: block;
+  }
+
+  .is-enhanced .anim-figure__frame,
+  .is-enhanced .anim-steps__nav {
+    display: none;
+  }
+
+  /* An enhanced host prints its fallback, which has the caption, and then
+     only the step list from the live figure: no title, legend, hint or
+     second caption, and no second box. */
+  .md-typeset .is-enhanced > .anim-figure > :not(.anim-figure__step),
+  .is-enhanced > .anim-figure > :not(.anim-figure__step) {
+    display: none;
+  }
+
+  .md-typeset .is-enhanced > .anim-figure,
+  .is-enhanced > .anim-figure {
+    background: none;
+    border: 0;
+    margin: 0 0 2.2rem;
+    padding: 0;
+  }
+
+  .md-typeset .is-enhanced .anim-figure__step,
+  .is-enhanced .anim-figure__step {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  /* The stepper hides all but the current step; print shows them all,
+     numbered as they are without JS. */
+  .md-typeset .anim-steps > li[hidden],
+  .anim-steps > li[hidden] {
+    display: list-item !important;
+  }
+
+  .md-typeset .anim-figure__step .anim-steps,
+  .anim-figure__step .anim-steps {
+    list-style: decimal;
+    margin-left: 0.625em;
+  }
+
+  .md-typeset .anim-figure__step .anim-steps > li,
+  .anim-figure__step .anim-steps > li {
+    margin-left: 1.25em;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Three-forms readout
+
+   Used by the complex-plane figure, where the point on screen is written three
+   ways at once and the whole argument is that the three never disagree. Laid
+   out as labelled rows rather than a paragraph so the eye can check them
+   against each other.
+   ------------------------------------------------------------------------ */
+
+.anim-forms {
+  border: 1px solid var(--ambe-hairline);
+  border-radius: var(--ambe-radius-md);
+  margin-top: 0.7rem;
+  padding: 0.5rem 0.7rem;
+}
+
+.md-typeset .anim-forms__row,
+.anim-forms__row {
+  align-items: baseline;
+  display: grid;
+  gap: 0 0.7rem;
+  grid-template-columns: 9.5rem 1fr;
+  margin: 0;
+}
+
+.anim-forms__row + .anim-forms__row {
+  margin-top: 0.3rem;
+}
+
+.anim-forms__tag {
+  color: var(--ambe-text-4);
+  font-size: 0.6rem;
+  text-align: right;
+}
+
+.md-typeset .anim-forms code,
+.anim-forms code {
+  background: none;
+  border: 0;
+  color: var(--ambe-text);
+  font-family: var(--ambe-font-mono);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+
+/* The label column costs more than it earns on a phone: stack instead.
+ *
+ * `.md-typeset` has to be carried into this block. A media query adds no
+ * specificity, so a bare `.anim-forms__row` here loses to the
+ * `.md-typeset .anim-forms__row` rule above and the columns never collapse.
+ * That left the readouts on a phone as a 190px label beside a 70px value,
+ * breaking every reading onto one word per line. */
+@media screen and (max-width: 30em) {
+  .md-typeset .anim-forms__row,
+  .anim-forms__row {
+    grid-template-columns: 1fr;
+  }
+
+  .md-typeset .anim-forms__tag,
+  .anim-forms__tag {
+    text-align: left;
+  }
+}

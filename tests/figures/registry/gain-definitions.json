@@ -1,0 +1,25 @@
+{
+  "slug": "gain-definitions",
+  "page": "13-what-is-not-established/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "[data-ref=\"view3d\"]",
+  "poster": "assets/posters/gain-definitions.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "front",
+    "side",
+    "corner"
+  ],
+  "opens": "2d",
+  "animation": "At equal spread the two gain definitions differ by different amounts, so no constant converts one to the other.",
+  "highlight": "the selected frame's comb, with its chip stating its spread and gap",
+  "zoom": true,
+  "allowance": 16384,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "new figure: ch13 had no figure, so its frame-reduced baselines are new"
+}

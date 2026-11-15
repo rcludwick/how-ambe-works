@@ -1,0 +1,25 @@
+{
+  "slug": "listen-terrain",
+  "page": "12-listen/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/listen-terrain.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "top",
+    "side"
+  ],
+  "animation": "The decoded speech keeps the harmonic peaks and deepens the valleys between them.",
+  "highlight": "the selected frame's slice through both sheets (chip: this frame: <t> s)",
+  "zoom": true,
+  "allowance": 16384,
+  "maxSegments": 60000,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "a new figure: its 2D default-state baselines are first recorded in this task"
+}

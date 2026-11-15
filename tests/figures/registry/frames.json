@@ -1,0 +1,18 @@
+{
+  "slug": "frames",
+  "page": "08-analysis/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/frames.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": ["corner", "front", "top"],
+  "animation": "Each analysis window overlaps its neighbours, so the coder sees more than 160 samples.",
+  "highlight": "frame i's row (chip: this frame: 160 samples, 20 ms)",
+  "zoom": true,
+  "allowance": 16256,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "The converted figure opens on step 1 (Windows on), with a taller frame, the inset coloured to match the 3D view, and the controls row and readouts the plan adds."
+}

@@ -1,0 +1,22 @@
+{
+  "slug": "frame-path",
+  "page": "10-the-dstar-frame/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": false,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/frame-path.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "front",
+    "top"
+  ],
+  "animation": "A frame is one slice of a repeating stack: the selected slice draws alone, left to right, with its fill rising, then its neighbours slide out of its plane to their 20 ms slots while the camera eases from Front to Corner; from stage 4 to 5 the 160 samples collapse onto the 72 bits, and at stage 7 the selected 96-cell row lands first and the superframe stacks in behind it.",
+  "highlight": "the selected frame's slice (chip: \"this frame: 160 samples, 20 ms\"); at stage 5 the selected row of 72 bits (chip: \"this frame: 72 bits, 20 ms\"); at stage 7 the selected 96-cell row (chip: \"this frame: 72 voice bits, 24 data bits\")",
+  "zoom": true,
+  "allowance": 20065,
+  "rebaseline": [],
+  "rebaselineReason": null
+}
