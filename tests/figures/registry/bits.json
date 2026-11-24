@@ -1,0 +1,18 @@
+{
+  "slug": "bits",
+  "page": "10-the-dstar-frame/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": "assets/posters/bits.png",
+  "monolith": false,
+  "headOn": true,
+  "presets": ["front"],
+  "animation": "Every 20 ms the chip sends a new set of 72 measured bits, and many positions change from one frame to the next.",
+  "highlight": "the set of bits that changed since the previous frame",
+  "zoom": true,
+  "allowance": 12368,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "The converted module is held to STYLE.md (check-copy): the title line above the grid loses its em dash. The byte labels are right-aligned to the cells, so on a phone the label no longer runs under the first cell (the 3D view's tiles would hide it). The changed bits are outlined in --ambe-highlight, as in the 3D view and the poster, not in --ambe-accent-warm, and the outline stays at full strength on a held frame."
+}

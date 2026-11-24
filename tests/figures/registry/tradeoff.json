@@ -1,0 +1,25 @@
+{
+  "slug": "tradeoff",
+  "page": "03-windows-and-frames/",
+  "opens": "2d",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-ref=\"view3d\"]",
+  "poster": "assets/posters/tradeoff.png",
+  "monolith": false,
+  "headOn": false,
+  "presets": [
+    "corner",
+    "front",
+    "top"
+  ],
+  "animation": "A short block sharpens time and blurs frequency; a long block does the opposite.",
+  "highlight": "the outlined block's spectrum (chip: \"block 20 ms: 1/T = 50 Hz\")",
+  "zoom": true,
+  "allowance": 16256,
+  "rebaseline": [
+    "frame-reduced"
+  ],
+  "rebaselineReason": "Steps back (2026-10-14): the frame sits under the step panel; step 1 is still 20 ms blocks at 120 Hz."
+}

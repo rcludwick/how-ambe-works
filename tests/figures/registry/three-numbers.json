@@ -1,0 +1,18 @@
+{
+  "slug": "three-numbers",
+  "page": "01-why-sinusoids/",
+  "alsoOn": [],
+  "status": "live",
+  "screens": true,
+  "control": "button[data-view=\"3d\"]",
+  "poster": null,
+  "monolith": false,
+  "headOn": false,
+  "presets": ["corner", "front", "top"],
+  "animation": "Phase slides the same wave along time; one full turn of phase moves it by one period.",
+  "highlight": "the live wave at the current phase (chip: \"phase <φ>°: shifted <x> cycles\")",
+  "zoom": true,
+  "allowance": 14272,
+  "rebaseline": ["frame-reduced"],
+  "rebaselineReason": "The frame is taller (2:1 on a desktop, 3:2 on a phone, from 16:7) so the 3D view's sheet fills about three quarters of the frame and a phone's frame is no longer about 120 px tall; the 2D plot is drawn the same way in the taller frame (review of F2)."
+}
